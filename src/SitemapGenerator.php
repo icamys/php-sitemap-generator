@@ -192,6 +192,15 @@ class SitemapGenerator
     }
 
     /**
+     * Returns array of URLs
+     * @return array
+     */
+    public function getUrls()
+    {
+        return $this->urls;
+    }
+
+    /**
      * @throws \BadMethodCallException
      * @throws \InvalidArgumentException
      * @throws \LengthException
@@ -244,7 +253,7 @@ class SitemapGenerator
             }
             if (strlen($xml->asXML()) > self::MAX_FILE_SIZE) {
                 throw new \LengthException(
-                    "Sitemap size is more than 10MB (" . MAX_FILE_SIZE . " bytes),
+                    "Sitemap size is more than 10MB (" . self::MAX_FILE_SIZE . " bytes),
                     please decrease maxURLsPerSitemap variable."
                 );
             }
