@@ -129,7 +129,8 @@ class SitemapGenerator
      * @param string $baseURL You site URL, with / at the end.
      * @param string|null $basePath Relative path where sitemap and robots should be stored.
      */
-    public function __construct($baseURL, $basePath = "")
+    public function
+    __construct($baseURL, $basePath = "")
     {
         $this->urls = new \SplFixedArray();
         $this->baseURL = $baseURL;
@@ -358,6 +359,7 @@ class SitemapGenerator
     /**
      * Will write sitemaps as files.
      * @access public
+     * @throws \BadMethodCallException
      */
     public function writeSitemap()
     {
@@ -413,6 +415,7 @@ class SitemapGenerator
      * If robots.txt file exist, will update information about newly created sitemaps.
      * If there is no robots.txt will, create one and put into it information about sitemaps.
      * @access public
+     * @throws \BadMethodCallException
      */
     public function updateRobots()
     {
@@ -453,6 +456,7 @@ class SitemapGenerator
      * @param string $yahooAppId Your site Yahoo appid.
      * @return array of messages and http codes from each search engine
      * @access public
+     * @throws \BadMethodCallException
      */
     public function submitSitemap($yahooAppId = null)
     {
