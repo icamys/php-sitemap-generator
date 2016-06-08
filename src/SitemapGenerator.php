@@ -7,6 +7,11 @@ class SitemapGenerator
     const MAX_FILE_SIZE = 10485760;
     const MAX_URLS_PER_SITEMAP = 50000;
 
+    const URL_PARAM_LOC = 0;
+    const URL_PARAM_LASTMOD = 1;
+    const URL_PARAM_CHANGEFREQ = 2;
+    const URL_PARAM_PRIORITY = 3;
+
     /**
      * Name of sitemap file
      * @var string
@@ -33,7 +38,7 @@ class SitemapGenerator
      * @var int
      * @access public
      */
-    public $maxURLsPerSitemap = 50000;
+    public $maxURLsPerSitemap = self::MAX_URLS_PER_SITEMAP;
 
     /**
      * Quantity of sitemaps per index file.
@@ -91,7 +96,7 @@ class SitemapGenerator
     );
     /**
      * Array with urls
-     * @var array of strings
+     * @var \SplFixedArray of strings
      * @access private
      */
     private $urls;
@@ -126,6 +131,7 @@ class SitemapGenerator
      */
     public function __construct($baseURL, $basePath = "")
     {
+        $this->urls = new \SplFixedArray();
         $this->baseURL = $baseURL;
         $this->basePath = $basePath;
         $this->document = new \DOMDocument("1.0");
@@ -177,18 +183,35 @@ class SitemapGenerator
                 Make sure Your server allow to use mbstring extension."
             );
         }
-        $tmp = array();
-        $tmp['loc'] = $url;
+        $tmp = new \SplFixedArray(1);
+
+        $tmp[self::URL_PARAM_LOC] = $url;
+
         if (isset($lastModified)) {
-            $tmp['lastmod'] = $lastModified;
+            $tmp->setSize(2);
+            $tmp[self::URL_PARAM_LASTMOD] = $lastModified;
         }
+
         if (isset($changeFrequency)) {
-            $tmp['changefreq'] = $changeFrequency;
+            $tmp->setSize(3);
+            $tmp[self::URL_PARAM_CHANGEFREQ] = $changeFrequency;
         }
+
         if (isset($priority)) {
-            $tmp['priority'] = $priority;
+            $tmp->setSize(4);
+            $tmp[self::URL_PARAM_PRIORITY] = $priority;
         }
-        $this->urls[] = $tmp;
+
+        if ($this->urls->getSize() === 0) {
+            $this->urls->setSize(1);
+        } else {
+            if ($this->urls->getSize() === $this->urls->key()) {
+                $this->urls->setSize($this->urls->getSize() * 2);
+            }
+        }
+
+        $this->urls[$this->urls->key()] = $tmp;
+        $this->urls->next();
     }
 
     /**
@@ -236,24 +259,45 @@ class SitemapGenerator
                                     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
                               </sitemapindex>';
 
-        foreach (array_chunk($this->urls, $this->maxURLsPerSitemap) as $sitemap) {
+
+        $nullUrls = 0;
+        foreach ($this->urls as $url) {
+            if (is_null($url)) {
+                $nullUrls++;
+            }
+        }
+
+        $nonEmptyUrls = $this->urls->getSize() - $nullUrls;
+
+        $chunks = ceil($nonEmptyUrls / $this->maxURLsPerSitemap);
+
+        for ($chunkCounter = 0; $chunkCounter < $chunks; $chunkCounter++) {
             $xml = new \SimpleXMLElement($sitemapHeader);
-            foreach ($sitemap as $url) {
+            for ($urlCounter = $chunkCounter * $this->maxURLsPerSitemap;
+                 $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $nonEmptyUrls;
+                 $urlCounter++
+            ) {
                 $row = $xml->addChild('url');
-                $row->addChild('loc', htmlspecialchars($url['loc'], ENT_QUOTES, 'UTF-8'));
-                if (isset($url['lastmod'])) {
-                    $row->addChild('lastmod', $url['lastmod']);
+
+                $row->addChild(
+                    'loc',
+                    htmlspecialchars($this->urls[$urlCounter][self::URL_PARAM_LOC], ENT_QUOTES, 'UTF-8')
+                );
+
+                if ($this->urls[$urlCounter]->getSize() > 1) {
+                    $row->addChild('lastmod', $this->urls[$urlCounter][self::URL_PARAM_LASTMOD]);
                 }
-                if (isset($url['changefreq'])) {
-                    $row->addChild('changefreq', $url['changefreq']);
+                if ($this->urls[$urlCounter]->getSize() > 2) {
+                    $row->addChild('changefreq', $this->urls[$urlCounter][self::URL_PARAM_CHANGEFREQ]);
                 }
-                if (isset($url['priority'])) {
-                    $row->addChild('priority', $url['priority']);
+                if ($this->urls[$urlCounter]->getSize() > 3) {
+                    $row->addChild('priority', $this->urls[$urlCounter][self::URL_PARAM_PRIORITY]);
                 }
             }
             if (strlen($xml->asXML()) > self::MAX_FILE_SIZE) {
                 throw new \LengthException(
-                    "Sitemap size is more than 10MB (" . self::MAX_FILE_SIZE . " bytes),
+                    "Sitemap size equals to " . strlen($xml->asXML())
+                    . " bytes is more than 10MB (" . self::MAX_FILE_SIZE . " bytes),
                     please decrease maxURLsPerSitemap variable."
                 );
             }
