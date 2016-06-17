@@ -217,11 +217,45 @@ class SitemapGenerator
 
     /**
      * Returns array of URLs
+     *
+     * Converts internal SplFixedArray to array
      * @return array
      */
     public function getUrls()
     {
-        return $this->urls;
+        $urls = $this->urls->toArray();
+
+        /**
+         * @var int $key
+         * @var \SplFixedArray $urlSplArr
+         */
+        foreach ($urls as $key => $urlSplArr) {
+            if (!is_null($urlSplArr)) {
+                $urlArr = $urlSplArr->toArray();
+                $url = [];
+                foreach ($urlArr as $paramIndex => $paramValue) {
+                    switch ($paramIndex) {
+                        case static::URL_PARAM_LOC:
+                            $url['loc'] = $paramValue;
+                            break;
+                        case static::URL_PARAM_CHANGEFREQ:
+                            $url['changefreq'] = $paramValue;
+                            break;
+                        case static::URL_PARAM_LASTMOD:
+                            $url['lastmod'] = $paramValue;
+                            break;
+                        case static::URL_PARAM_PRIORITY:
+                            $url['priority'] = $paramValue;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                $urls[$key] = $url;
+            }
+        }
+
+        return $urls;
     }
 
     /**
