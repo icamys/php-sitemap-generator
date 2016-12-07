@@ -309,8 +309,8 @@ class SitemapGenerator
         for ($chunkCounter = 0; $chunkCounter < $chunks; $chunkCounter++) {
             $xml = new \SimpleXMLElement($sitemapHeader);
             for ($urlCounter = $chunkCounter * $this->maxURLsPerSitemap;
-                 $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $nonEmptyUrls;
-                 $urlCounter++
+                $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $nonEmptyUrls;
+                $urlCounter++
             ) {
                 $row = $xml->addChild('url');
 
@@ -319,13 +319,14 @@ class SitemapGenerator
                     htmlspecialchars($this->urls[$urlCounter][self::URL_PARAM_LOC], ENT_QUOTES, 'UTF-8')
                 );
 
-                if ($this->urls[$urlCounter]->getSize() > 1) {
+                $urlSize = $this->urls[$urlCounter]->getSize();
+                if ($urlSize > 1 && isset($this->urls[$urlCounter][self::URL_PARAM_LASTMOD])) {
                     $row->addChild('lastmod', $this->urls[$urlCounter][self::URL_PARAM_LASTMOD]);
                 }
-                if ($this->urls[$urlCounter]->getSize() > 2) {
+                if ($urlSize > 2  && isset($this->urls[$urlCounter][self::URL_PARAM_CHANGEFREQ])) {
                     $row->addChild('changefreq', $this->urls[$urlCounter][self::URL_PARAM_CHANGEFREQ]);
                 }
-                if ($this->urls[$urlCounter]->getSize() > 3) {
+                if ($urlSize > 3 && isset($this->urls[$urlCounter][self::URL_PARAM_PRIORITY])) {
                     $row->addChild('priority', $this->urls[$urlCounter][self::URL_PARAM_PRIORITY]);
                 }
             }
