@@ -2,154 +2,178 @@
 
 namespace Icamys\SitemapGenerator;
 
+/**
+ * Sitemap generator class.
+ *
+ * Generate your sitemaps with ease! Inspired by Icamys\SitemapGenerator.
+ * For sitemap limitations see https://www.sitemaps.org/protocol.html
+ *
+ * @package TheIggs\SitemapGenerator
+ * @see https://github.com/icamys/php-sitemap-generator/
+ * @see https://www.sitemaps.org/protocol.html
+ */
 class SitemapGenerator
 {
-    const MAX_FILE_SIZE = 10485760;
+    /**
+     * Maximum allowed index file size, bytes.
+     */
+    const MAX_INDEX_SIZE = 10485760;
+
+    /**
+     * Maximum allowed sitemap file size, bytes.
+     */
+    const MAX_SITEMAP_SIZE = 10485760;
+
+    /**
+     * Maximum allowed number of sitemaps per index file.
+     */
+    const MAX_SITEMAPS_PER_INDEX = 50000;
+
+    /**
+     * Maximum allowed number of URLs per sitemap file.
+     */
     const MAX_URLS_PER_SITEMAP = 50000;
 
+    /**
+     * "Location" parameter index (for use in $urls array).
+     */
     const URL_PARAM_LOC = 0;
+
+    /**
+     * "Last modified" parameter index (for use in $urls array).
+     */
     const URL_PARAM_LASTMOD = 1;
+
+    /**
+     * "Change frequency" parameter index (for use in $urls array).
+     */
     const URL_PARAM_CHANGEFREQ = 2;
+
+    /**
+     * "Priority" parameter index (for use in $urls array).
+     */
     const URL_PARAM_PRIORITY = 3;
 
     /**
-     * Name of sitemap file
+     * Generator information.
+     *
      * @var string
-     * @access public
      */
-    public $sitemapFileName = "sitemap.xml";
-    /**
-     * Name of sitemap index file
-     * @var string
-     * @access public
-     */
-    public $sitemapIndexFileName = "sitemap-index.xml";
-    /**
-     * Robots file name
-     * @var string
-     * @access public
-     */
-    public $robotsFileName = "robots.txt";
-    /**
-     * Quantity of URLs per single sitemap file.
-     * According to specification max value is 50.000.
-     * If Your links are very long, sitemap file can be bigger than 10MB,
-     * in this case use smaller value.
-     * @var int
-     * @access public
-     */
-    public $maxURLsPerSitemap = self::MAX_URLS_PER_SITEMAP;
+    protected static $generatorInfo = '';
 
     /**
-     * Quantity of sitemaps per index file.
-     * According to specification max value is 50.000
-     * If Your index file is very long, index file can be bigger than 10MB,
-     * in this case use smaller value.
-     * @see http://www.sitemaps.org/protocol.html
-     * @var int
-     * @access public
-     */
-    public $maxSitemaps = 50000;
-    /**
-     * If true, two sitemap files (.xml and .xml.gz) will be created and added to robots.txt.
-     * If true, .gz file will be submitted to search engines.
-     * If quantity of URLs will be bigger than 50.000, option will be ignored,
-     * all sitemap files except sitemap index will be compressed.
+     * If true, compressed .xml.gz sitemap files will be created instead of
+     * plain .xml files. This setting doesn't apply to sitemap index files
+     * which are always plain text.
+     *
      * @var bool
-     * @access public
      */
-    public $createGZipFile = false;
-    /**
-     * URL to Your site.
-     * Script will use it to send sitemaps to search engines.
-     * @var string
-     * @access private
-     */
-    private $baseURL;
-    /**
-     * Base path. Relative to script location.
-     * Use this if Your sitemap and robots files should be stored in other
-     * directory then script.
-     * @var string
-     * @access private
-     */
-    private $basePath;
-    /**
-     * Version of this class
-     * @var string
-     * @access private
-     */
-    private $classVersion = "1.0.0";
-    /**
-     * Search engines URLs
-     * @var array of strings
-     * @access private
-     */
-    private $searchEngines = array(
-        array(
-            "http://search.yahooapis.com/SiteExplorerService/V1/updateNotification?appid=USERID&url=",
-            "http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap="
-        ),
-        "http://www.google.com/webmasters/tools/ping?sitemap=",
-        "http://submissions.ask.com/ping?sitemap=",
-        "http://www.bing.com/webmaster/ping.aspx?siteMap="
-    );
-    /**
-     * Array with urls
-     * @var \SplFixedArray of strings
-     * @access private
-     */
-    private $urls;
-    /**
-     * Array with sitemap
-     * @var array of strings
-     * @access private
-     */
-    private $sitemaps;
-    /**
-     * Array with sitemap index
-     * @var array of strings
-     * @access private
-     */
-    private $sitemapIndex;
-    /**
-     * Current sitemap full URL
-     * @var string
-     * @access private
-     */
-    private $sitemapFullURL;
+    public $createGzipFile = true;
 
     /**
-     * @var \DOMDocument
+     * If true, additional generator information will be included into
+     * the resulting XML code.
+     *
+     * @var bool
      */
-    private $document;
+    public $includeGeneratorInfo = true;
+
+    /**
+     * Default name for a sitemap index file.
+     *
+     * @var string
+     */
+    public $indexFilename = 'sitemap-index.xml';
+
+    /**
+     * Default name for a sitemap file.
+     *
+     * @var string
+     */
+    public $sitemapFilename = 'sitemap.xml';
+
+    /**
+     * Site URL.
+     *
+     * @var string
+     */
+    protected $baseURL;
+
+    /**
+     * Base path, relative to script location.
+     *
+     * Use this if your sitemap files should be stored in other directory
+     * than this script.
+     *
+     * @var string
+     */
+    protected $basePath = '';
+
+    /**
+     * Version of this class.
+     *
+     * @var string
+     */
+    protected $classVersion = '1.1';
+
+    /**
+     * Array with sitemap indexes.
+     *
+     * Each array elements contains the XML code of the sitemap index
+     *
+     * @var \SimpleXMLElement[]
+     */
+    protected $indexes = [];
+
+    /**
+     * Array with sitemaps.
+     *
+     * Each array element contains the XML code of a sitemap under the 'xml'
+     * key (with a maximum of MAX_URLS_PER_SITEMAP URLs and MAX_SITEMAP_SIZE
+     * bytes length) and the filename under the 'filename' key.
+     *
+     * @var array[]
+     */
+    protected $sitemaps = [];
+
+    /**
+     * Array with URLs.
+     *
+     * @var \SplFixedArray of strings
+     */
+    protected $urls;
 
     /**
      * Constructor.
-     * @param string $baseURL You site URL, with / at the end.
-     * @param string|null $basePath Relative path where sitemap and robots should be stored.
+     *
+     * @param string $baseURL Site URL, with / at the end if needed.
+     * @param string $basePath Relative path where sitemaps should be stored.
      */
-    public function
-    __construct($baseURL, $basePath = "")
+    public function __construct($baseURL, $basePath = '')
     {
         $this->urls = new \SplFixedArray();
         $this->baseURL = $baseURL;
         $this->basePath = $basePath;
-        $this->document = new \DOMDocument("1.0");
-        $this->document->preserveWhiteSpace = false;
-        $this->document->formatOutput = true;
+        $this::$generatorInfo = '<!-- generator="TheIggs/SitemapGenerator" -->'
+            . '<!-- generator-version="' . $this->classVersion . '" -->'
+            . '<!-- generated-on="' . date('c') . '" -->';
     }
 
     /**
-     * Use this to add many URL at one time.
+     * Adds multiple URLs to the sitemap.
+     *
      * Each inside array can have 1 to 4 fields.
-     * @param $urlsArray
+     *
+     * @param array[] $urlsArray
+     * @return void
      * @throws \InvalidArgumentException
      */
     public function addUrls($urlsArray)
     {
         if (!is_array($urlsArray)) {
-            throw new \InvalidArgumentException("Array as argument should be given.");
+            throw new \InvalidArgumentException(
+                'Array as argument should be given.'
+            );
         }
         foreach ($urlsArray as $url) {
             $this->addUrl(
@@ -162,363 +186,366 @@ class SitemapGenerator
     }
 
     /**
-     * Use this to add single URL to sitemap.
+     * Adds a single URL to the sitemap.
+     *
      * @param string $url URL
-     * @param string $lastModified When it was modified, use ISO 8601
+     * @param string $lastModified When it was last modified, use ISO 8601
      * @param string $changeFrequency How often search engines should revisit this URL
-     * @param string $priority Priority of URL on You site
+     * @param string $priority Priority of URL on your site
+     * @return void
      * @see http://en.wikipedia.org/wiki/ISO_8601
      * @see http://php.net/manual/en/function.date.php
      * @throws \InvalidArgumentException
+     * @throws \LengthException
      */
-    public function addUrl($url, $lastModified = null, $changeFrequency = null, $priority = null)
-    {
-        if ($url == null) {
-            throw new \InvalidArgumentException("URL is mandatory. At least one argument should be given.");
-        }
-        $urlLength = extension_loaded('mbstring') ? mb_strlen($url) : strlen($url);
-        if ($urlLength > 2048) {
+    public function addUrl($url, $lastModified = null, $changeFrequency = null,
+        $priority = null
+    ) {
+        if (is_null($url)) {
             throw new \InvalidArgumentException(
-                "URL length can't be bigger than 2048 characters.
-                Note, that precise url length check is guaranteed only using mb_string extension.
-                Make sure Your server allow to use mbstring extension."
+                'URL is mandatory. At least one argument should be given.'
             );
         }
-        $tmp = new \SplFixedArray(1);
-
-        $tmp[self::URL_PARAM_LOC] = $url;
-
-        if (isset($lastModified)) {
-            $tmp->setSize(2);
-            $tmp[self::URL_PARAM_LASTMOD] = $lastModified;
+        if (strlen($url) > 2048) {
+            throw new \LengthException(
+                "URL length must not be bigger than 2048 characters."
+            );
         }
-
-        if (isset($changeFrequency)) {
-            $tmp->setSize(3);
-            $tmp[self::URL_PARAM_CHANGEFREQ] = $changeFrequency;
-        }
-
+        $element = new \SplFixedArray(1);
+        $element[static::URL_PARAM_LOC] = $url;
         if (isset($priority)) {
-            $tmp->setSize(4);
-            $tmp[self::URL_PARAM_PRIORITY] = $priority;
+            $element->setSize(4);
+            $element[static::URL_PARAM_LASTMOD] = $lastModified;
+            $element[static::URL_PARAM_CHANGEFREQ] = $changeFrequency;
+            $element[static::URL_PARAM_PRIORITY] = $priority;
+        } elseif (isset($changeFrequency)) {
+            $element->setSize(3);
+            $element[static::URL_PARAM_LASTMOD] = $lastModified;
+            $element[static::URL_PARAM_CHANGEFREQ] = $changeFrequency;
+        } elseif (isset($lastModified)) {
+            $element->setSize(2);
+            $element[static::URL_PARAM_LASTMOD] = $lastModified;
         }
-
-        if ($this->urls->getSize() === 0) {
-            $this->urls->setSize(1);
-        } else {
-            if ($this->urls->getSize() === $this->urls->key()) {
-                $this->urls->setSize($this->urls->getSize() * 2);
-            }
-        }
-
-        $this->urls[$this->urls->key()] = $tmp;
+        $this->urls->setSize($this->urls->getSize() + 1);
+        $this->urls[$this->urls->key()] = $element;
         $this->urls->next();
     }
 
     /**
-     * Returns array of URLs
+     * Creates the sitemap.
      *
-     * Converts internal SplFixedArray to array
-     * @return array
+     * Creates XML code for all added URLs. XML code is split into several
+     * chunks if needed. Sitemap index is created automatically if there are
+     * more than two chunks. Filenames are assigned for all sitemap chunks and
+     * indexes.
+     *
+     * @return void
+     * @throws \BadMethodCallException
      */
-    public function getUrls()
+    public function createSitemap()
     {
-        $urls = $this->urls->toArray();
-
-        /**
-         * @var int $key
-         * @var \SplFixedArray $urlSplArr
-         */
-        foreach ($urls as $key => $urlSplArr) {
-            if (!is_null($urlSplArr)) {
-                $urlArr = $urlSplArr->toArray();
-                $url = [];
-                foreach ($urlArr as $paramIndex => $paramValue) {
-                    switch ($paramIndex) {
-                        case static::URL_PARAM_LOC:
-                            $url['loc'] = $paramValue;
-                            break;
-                        case static::URL_PARAM_CHANGEFREQ:
-                            $url['changefreq'] = $paramValue;
-                            break;
-                        case static::URL_PARAM_LASTMOD:
-                            $url['lastmod'] = $paramValue;
-                            break;
-                        case static::URL_PARAM_PRIORITY:
-                            $url['priority'] = $paramValue;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                $urls[$key] = $url;
-            }
+        if (count($this->urls) < 1) {
+            throw new \BadMethodCallException(
+                'To create a sitemap, first add URLs with the addUrl()'
+                . ' or addUrls() functions.'
+            );
         }
+        foreach ($this->urls as $url) {
+            $this->pushUrl($url);
+        }
+        $postfix = $this->createGzipFile ? '.gz' : '';
+        if (count($this->sitemaps) > 1) {
+            $sitemapCounter = 1;
+            foreach ($this->sitemaps as &$sitemap) {
+                $filename = str_replace(
+                    '.xml',
+                    $sitemapCounter++ . '.xml',
+                    $this->sitemapFilename
+                );
+                $sitemap['filename'] = $filename . $postfix;
+            }
+            unset($sitemap);
+            $this->createIndex();
+        } else {
+            $this->sitemaps[0]['filename'] = $this->sitemapFilename . $postfix;
+        }
+    }
 
+    /**
+     * Returns sitemap URLs in a format suitable to put in the robots.txt.
+     *
+     * If there is only one sitemap file (and hence no index has been created),
+     * returns its filename. If there is one or more index files, returns
+     * index filenames.
+     *
+     * @return string[]
+     */
+    public function getSitemapUrls()
+    {
+        if (!$this->sitemaps) {
+            throw new \BadMethodCallException(
+                'To get sitemap URLs, first create a sitemap with'
+                . ' the createSitemap() function.'
+            );
+        }
+        if (count($this->sitemaps) < 2) {
+            return [$this->baseURL . $this->sitemaps[0]['filename']];
+        }
+        $urls = array_column($this->indexes, 'filename');
+        foreach ($urls as &$url) {
+            $url = $this->baseURL . $url;
+        }
+        unset($url);
         return $urls;
     }
 
     /**
-     * @throws \BadMethodCallException
-     * @throws \InvalidArgumentException
-     * @throws \LengthException
-     */
-    public function createSitemap()
-    {
-        if (!isset($this->urls)) {
-            throw new \BadMethodCallException("To create sitemap, call addUrl or addUrls function first.");
-        }
-        if ($this->maxURLsPerSitemap > self::MAX_URLS_PER_SITEMAP) {
-            throw new \InvalidArgumentException(
-                "More than " . self::MAX_URLS_PER_SITEMAP . " URLs per single sitemap is not allowed."
-            );
-        }
-        $generatorInfo = '<!-- generator="icamys/SitemapGenerator/' . $this->classVersion . '" -->
-                          <!-- sitemap-generator-version="' . $this->classVersion . '" -->
-                          <!-- generated-on="' . date('c') . '" -->';
-
-
-        $sitemapHeader = '<?xml version="1.0" encoding="UTF-8"?>'.$generatorInfo.'
-                            <urlset
-                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' . "\r\n" .'
-                                xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9' . "\n" .'
-                                http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"' . "\n" .'
-                                xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-                         </urlset>';
-
-        $sitemapIndexHeader = '<?xml version="1.0" encoding="UTF-8"?>'.$generatorInfo.'
-                                <sitemapindex
-                                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                    xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-                                    http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"
-                                    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-                              </sitemapindex>';
-
-
-        $nullUrls = 0;
-        foreach ($this->urls as $url) {
-            if (is_null($url)) {
-                $nullUrls++;
-            }
-        }
-
-        $nonEmptyUrls = $this->urls->getSize() - $nullUrls;
-
-        $chunks = ceil($nonEmptyUrls / $this->maxURLsPerSitemap);
-
-        for ($chunkCounter = 0; $chunkCounter < $chunks; $chunkCounter++) {
-            $xml = new \SimpleXMLElement($sitemapHeader);
-            for ($urlCounter = $chunkCounter * $this->maxURLsPerSitemap;
-                $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $nonEmptyUrls;
-                $urlCounter++
-            ) {
-                $row = $xml->addChild('url');
-
-                $row->addChild(
-                    'loc',
-                    htmlspecialchars($this->urls[$urlCounter][self::URL_PARAM_LOC], ENT_QUOTES, 'UTF-8')
-                );
-
-                $urlSize = $this->urls[$urlCounter]->getSize();
-                if ($urlSize > 1 && isset($this->urls[$urlCounter][self::URL_PARAM_LASTMOD])) {
-                    $row->addChild('lastmod', $this->urls[$urlCounter][self::URL_PARAM_LASTMOD]);
-                }
-                if ($urlSize > 2  && isset($this->urls[$urlCounter][self::URL_PARAM_CHANGEFREQ])) {
-                    $row->addChild('changefreq', $this->urls[$urlCounter][self::URL_PARAM_CHANGEFREQ]);
-                }
-                if ($urlSize > 3 && isset($this->urls[$urlCounter][self::URL_PARAM_PRIORITY])) {
-                    $row->addChild('priority', $this->urls[$urlCounter][self::URL_PARAM_PRIORITY]);
-                }
-            }
-            if (strlen($xml->asXML()) > self::MAX_FILE_SIZE) {
-                throw new \LengthException(
-                    "Sitemap size equals to " . strlen($xml->asXML())
-                    . " bytes is more than 10MB (" . self::MAX_FILE_SIZE . " bytes),
-                    please decrease maxURLsPerSitemap variable."
-                );
-            }
-            $this->sitemaps[] = $xml->asXML();
-        }
-        if (sizeof($this->sitemaps) > $this->maxSitemaps) {
-            throw new \LengthException(
-                "Sitemap index can contain {$this->maxSitemaps} sitemaps.
-                Perhaps You trying to submit too many maps."
-            );
-        }
-        if (sizeof($this->sitemaps) > 1) {
-            for ($i = 0; $i < sizeof($this->sitemaps); $i++) {
-                $this->sitemaps[$i] = array(
-                    str_replace(".xml", ($i + 1) . ".xml.gz", $this->sitemapFileName),
-                    $this->sitemaps[$i]
-                );
-            }
-            $xml = new \SimpleXMLElement($sitemapIndexHeader);
-            foreach ($this->sitemaps as $sitemap) {
-                $row = $xml->addChild('sitemap');
-                $row->addChild('loc', $this->baseURL . htmlentities($sitemap[0]));
-                $row->addChild('lastmod', date('c'));
-            }
-            $this->sitemapFullURL = $this->baseURL . $this->sitemapIndexFileName;
-            $this->sitemapIndex = array(
-                $this->sitemapIndexFileName,
-                $xml->asXML()
-            );
-        } else {
-            if ($this->createGZipFile) {
-                $this->sitemapFullURL = $this->baseURL . $this->sitemapFileName . ".gz";
-            } else {
-                $this->sitemapFullURL = $this->baseURL . $this->sitemapFileName;
-            }
-            $this->sitemaps[0] = array(
-                $this->sitemapFileName,
-                $this->sitemaps[0]
-            );
-        }
-    }
-
-    /**
-     * Returns created sitemaps as array of strings.
-     * Use it You want to work with sitemap without saving it as files.
-     * @return array of strings
-     * @access public
-     */
-    public function toArray()
-    {
-        if (isset($this->sitemapIndex)) {
-            return array_merge(array($this->sitemapIndex), $this->sitemaps);
-        } else {
-            return $this->sitemaps;
-        }
-    }
-
-    /**
-     * Will write sitemaps as files.
-     * @access public
+     * Writes created sitemap to files.
+     *
+     * @return void
      * @throws \BadMethodCallException
      */
     public function writeSitemap()
     {
-        if (!isset($this->sitemaps)) {
-            throw new \BadMethodCallException("To write sitemap, call createSitemap function first.");
-        }
-        if (isset($this->sitemapIndex)) {
-            $this->document->loadXML($this->sitemapIndex[1]);
-            $this->writeFile($this->document->saveXML(), $this->basePath, $this->sitemapIndex[0]);
-            foreach ($this->sitemaps as $sitemap) {
-                $this->writeGZipFile($sitemap[1], $this->basePath, $sitemap[0]);
-            }
-        } else {
-            $this->document->loadXML($this->sitemaps[0][1]);
-            $this->writeFile($this->document->saveXML(), $this->basePath, $this->sitemaps[0][0]);
-            if ($this->createGZipFile) {
-                $this->writeGZipFile($this->sitemaps[0][1], $this->basePath, $this->sitemaps[0][0] . ".gz");
-            }
-        }
-    }
-
-    /**
-     * Save file.
-     * @param string $content
-     * @param string $filePath
-     * @param string $fileName
-     * @return bool
-     * @access private
-     */
-    private function writeFile($content, $filePath, $fileName)
-    {
-        $file = fopen($filePath . $fileName, 'w');
-        fwrite($file, $content);
-        return fclose($file);
-    }
-
-    /**
-     * Save GZipped file.
-     * @param string $content
-     * @param string $filePath
-     * @param string $fileName
-     * @return bool
-     * @access private
-     */
-    private function writeGZipFile($content, $filePath, $fileName)
-    {
-        $file = gzopen($filePath . $fileName, 'w');
-        gzwrite($file, $content);
-        return gzclose($file);
-    }
-
-    /**
-     * If robots.txt file exist, will update information about newly created sitemaps.
-     * If there is no robots.txt will, create one and put into it information about sitemaps.
-     * @access public
-     * @throws \BadMethodCallException
-     */
-    public function updateRobots()
-    {
-        if (!isset($this->sitemaps)) {
-            throw new \BadMethodCallException("To update robots.txt, call createSitemap function first.");
-        }
-        $sampleRobotsFile = "User-agent: *\nAllow: /";
-        if (file_exists($this->basePath . $this->robotsFileName)) {
-            $robotsFile = explode("\n", file_get_contents($this->basePath . $this->robotsFileName));
-            $robotsFileContent = "";
-            foreach ($robotsFile as $key => $value) {
-                if (substr($value, 0, 8) == 'Sitemap:') {
-                    unset($robotsFile[$key]);
-                } else {
-                    $robotsFileContent .= $value . "\n";
-                }
-            }
-            $robotsFileContent .= "Sitemap: $this->sitemapFullURL";
-            if ($this->createGZipFile && !isset($this->sitemapIndex)) {
-                $robotsFileContent .= "\nSitemap: " . $this->sitemapFullURL . ".gz";
-            }
-            file_put_contents($this->basePath . $this->robotsFileName, $robotsFileContent);
-        } else {
-            $sampleRobotsFile = $sampleRobotsFile . "\n\nSitemap: " . $this->sitemapFullURL;
-            if ($this->createGZipFile && !isset($this->sitemapIndex)) {
-                $sampleRobotsFile .= "\nSitemap: " . $this->sitemapFullURL . ".gz";
-            }
-            file_put_contents($this->basePath . $this->robotsFileName, $sampleRobotsFile);
-        }
-    }
-
-    /**
-     * Will inform search engines about newly created sitemaps.
-     * Google, Ask, Bing and Yahoo will be noticed.
-     * If You don't pass yahooAppId, Yahoo still will be informed,
-     * but this method can be used once per day. If You will do this often,
-     * message that limit was exceeded  will be returned from Yahoo.
-     * @param string $yahooAppId Your site Yahoo appid.
-     * @return array of messages and http codes from each search engine
-     * @access public
-     * @throws \BadMethodCallException
-     */
-    public function submitSitemap($yahooAppId = null)
-    {
-        if (!isset($this->sitemaps)) {
-            throw new \BadMethodCallException("To submit sitemap, call createSitemap function first.");
-        }
-        if (!extension_loaded('curl')) {
-            throw new \BadMethodCallException("cURL library is needed to do submission.");
-        }
-        $searchEngines = $this->searchEngines;
-        $searchEngines[0] = isset($yahooAppId) ?
-            str_replace("USERID", $yahooAppId, $searchEngines[0][0]) :
-            $searchEngines[0][1];
-        $result = array();
-        for ($i = 0; $i < sizeof($searchEngines); $i++) {
-            $submitSite = curl_init($searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES, 'UTF-8'));
-            curl_setopt($submitSite, CURLOPT_RETURNTRANSFER, true);
-            $responseContent = curl_exec($submitSite);
-            $response = curl_getinfo($submitSite);
-            $submitSiteShort = array_reverse(explode(".", parse_url($searchEngines[$i], PHP_URL_HOST)));
-            $result[] = array(
-                "site" => $submitSiteShort[1] . "." . $submitSiteShort[0],
-                "fullsite" => $searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES, 'UTF-8'),
-                "http_code" => $response['http_code'],
-                "message" => str_replace("\n", " ", strip_tags($responseContent))
+        if (!$this->sitemaps) {
+            throw new \BadMethodCallException(
+                'To write a sitemap, first create it with the createSitemap()'
+                . ' function.'
             );
         }
-        return $result;
+        foreach ($this->sitemaps as $sitemap) {
+            if ($this->createGzipFile) {
+                $this->writeGzipFile($sitemap['xml'], $sitemap['filename']);
+            } else {
+                $this->writeXmlFile($sitemap['xml'], $sitemap['filename']);
+            }
+        }
+        foreach ($this->indexes as $index) {
+            $this->writeXmlFile($index['xml'], $index['filename']);
+        }
+    }
+
+    /**
+     * Adds an element to the array of sitemap indexes.
+     *
+     * @return void
+     */
+    protected function addIndex()
+    {
+        $sitemapIndexHeader = '<?xml version="1.0" encoding="UTF-8"?>'
+            . ($this->includeGeneratorInfo ? $this::$generatorInfo : '')
+            . '<sitemapindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            . ' xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9'
+            . ' http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"'
+            . ' xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            . '</sitemapindex>';
+        $this->indexes[] = [
+            'xml'      => new \SimpleXMLElement($sitemapIndexHeader),
+            'filename' => '',
+        ];
+    }
+
+    /**
+     * Adds an element to the array of sitemaps.
+     *
+     * @return void
+     */
+    protected function addSitemap()
+    {
+        $sitemapHeader = '<?xml version="1.0" encoding="UTF-8"?>'
+            . ($this->includeGeneratorInfo ? $this::$generatorInfo : '')
+            . '<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            . ' xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9'
+            . ' http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"'
+            . ' xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>';
+        $this->sitemaps[] = [
+            'xml'      => new \SimpleXMLElement($sitemapHeader),
+            'filename' => '',
+        ];
+    }
+
+    /**
+     * Gets XML for the actual chunk of the sitemap index.
+     *
+     * @return \SimpleXMLElement
+     */
+    protected function getIndex()
+    {
+        if (!$this->indexes) {
+            $this->addIndex();
+        }
+        $index = end($this->indexes);
+        return $index['xml'];
+    }
+
+    /**
+     * Gets XML for the actual chunk of the sitemap.
+     *
+     * @return \SimpleXMLElement
+     */
+    protected function getSitemap()
+    {
+        if (!$this->sitemaps) {
+            $this->addSitemap();
+        }
+        $sitemap = end($this->sitemaps);
+        return $sitemap['xml'];
+    }
+
+    /**
+     * Pushes a sitemap to the actual sitemap index chunk.
+     *
+     * @param array $sitemap Sitemap.
+     * @return void
+     */
+    protected function pushSitemap(array $sitemap)
+    {
+        $index = $this->getIndex();
+        while (!$this->pushSitemapToIndex($index, $sitemap)) {
+            $this->addIndex();
+            $index = $this->getIndex();
+        }
+    }
+
+    /**
+     * Pushes a sitemap to sitemap index.
+     *
+     * @param \SimpleXMLElement $index Sitemap index XML.
+     * @param array $sitemap Sitemap element.
+     * @return bool
+     */
+    protected function pushSitemapToIndex(\SimpleXMLElement $index, array $sitemap)
+    {
+        if ($index->count() >= static::MAX_SITEMAPS_PER_INDEX) {
+            return false;
+        }
+        $row = $index->addChild('sitemap');
+        $row->addChild('loc', $this->baseURL . htmlentities($sitemap['filename']));
+        $row->addChild('lastmod', date('c'));
+        if (strlen($index->asXML()) > static::MAX_INDEX_SIZE) {
+            unset($index->sitemap[$index->count() - 1]);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Pushes an URL to the actual sitemap chunk.
+     *
+     * @param \SplFixedArray $url
+     * @return void
+     */
+    protected function pushUrl(\SplFixedArray $url)
+    {
+        $sitemap = $this->getSitemap();
+        while (!$this->pushUrlToSitemap($sitemap, $url)) {
+            $this->addSitemap();
+            $sitemap = $this->getSitemap();
+        }
+    }
+
+    /**
+     * Pushes an URL to the sitemap.
+     *
+     * @param \SimpleXMLElement $sitemap Sitemap XML.
+     * @param \SplFixedArray $url URL data.
+     * @return bool
+     */
+    protected function pushUrlToSitemap(\SimpleXMLElement $sitemap,
+        \SplFixedArray $url
+    ) {
+        if ($sitemap->count() >= static::MAX_URLS_PER_SITEMAP) {
+            return false;
+        }
+        $row = $sitemap->addChild('url');
+        $row->addChild(
+            'loc',
+            htmlspecialchars(
+                $url[static::URL_PARAM_LOC],
+                ENT_QUOTES,
+                'UTF-8'
+            )
+        );
+        if (
+            isset($url[static::URL_PARAM_LASTMOD])
+            && !is_null($url[static::URL_PARAM_LASTMOD])
+        ) {
+            $row->addChild('lastmod', $url[static::URL_PARAM_LASTMOD]);
+        }
+        if (
+            isset($url[static::URL_PARAM_CHANGEFREQ])
+            && !is_null($url[static::URL_PARAM_CHANGEFREQ])
+        ) {
+            $row->addChild('changefreq', $url[static::URL_PARAM_CHANGEFREQ]);
+        }
+        if (
+            isset($url[static::URL_PARAM_PRIORITY])
+            && !is_null($url[static::URL_PARAM_PRIORITY])
+        ) {
+            $row->addChild('priority', $url[static::URL_PARAM_PRIORITY]);
+        }
+//        if (strlen($sitemap->asXML()) > static::MAX_SITEMAP_SIZE) {
+//            unset($sitemap->url[$sitemap->count() - 1]);
+//            return false;
+//        }
+        return true;
+    }
+
+    /**
+     * Creates sitemap index.
+     *
+     * @return bool
+     */
+    protected function createIndex()
+    {
+        if (count($this->sitemaps) < 2) {
+            return false;
+        }
+        foreach ($this->sitemaps as $sitemap) {
+            $this->pushSitemap($sitemap);
+        }
+        if (count($this->indexes) > 1) {
+            $indexCounter = 1;
+            foreach ($this->indexes as &$index) {
+                $index['filename'] = str_replace(
+                    '.xml',
+                    $indexCounter++ . '.xml',
+                    $this->indexFilename
+                );
+            }
+            unset($index);
+        } else {
+            $this->indexes[0]['filename'] = $this->indexFilename;
+        }
+        return true;
+    }
+
+    /**
+     * Saves an XML file.
+     *
+     * @param \SimpleXMLElement $xml The XML to write.
+     * @param string $filename The filename.
+     * @return bool
+     */
+    protected function writeXmlFile($xml, $filename)
+    {
+        return $xml->asXML($this->basePath . $filename);
+    }
+
+    /**
+     * Saves a gzipped XML file.
+     *
+     * @param \SimpleXMLElement $xml The XML to write.
+     * @param string $filename The filename.
+     * @return bool
+     */
+    protected function writeGzipFile($xml, $filename)
+    {
+        $file = gzopen($this->basePath . $filename, 'w');
+        if (!$file) {
+            return false;
+        }
+        gzwrite($file, $xml->asXML());
+        return gzclose($file);
     }
 }
