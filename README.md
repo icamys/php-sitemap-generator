@@ -7,7 +7,9 @@ Internally uses SplFixedArrays, thus is faster and uses less memory.
 
 Usage example:
 
-```
+```php
+<?php
+
 include "src/SitemapGenerator.php";
 
 $generator = new \Icamys\SitemapGenerator\SitemapGenerator('example.com');
@@ -26,7 +28,7 @@ $generator->sitemapFileName = "sitemap.xml";
 $generator->sitemapIndexFileName = "sitemap-index.xml";
 
 // adding url `loc`, `lastmodified`, `changefreq`, `priority`
-$generator->addUrl('http://example.com/url/path/', date('c'), 'always', '0.5');
+$generator->addUrl('http://example.com/url/path/', new DateTime(), 'always', '0.5');
 
 // generating internally a sitemap
 $generator->createSitemap();
