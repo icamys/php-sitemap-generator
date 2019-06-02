@@ -94,7 +94,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "1.0.0";
+    private $classVersion = "1.1.0";
 
     /**
      * Search engines URLs
@@ -244,30 +244,38 @@ class SitemapGenerator
         if (!isset($this->urls)) {
             throw new BadMethodCallException("To create sitemap, call addUrl or addUrls function first.");
         }
+
         if ($this->maxURLsPerSitemap > self::MAX_URLS_PER_SITEMAP) {
             throw new InvalidArgumentException(
                 "More than " . self::MAX_URLS_PER_SITEMAP . " URLs per single sitemap is not allowed."
             );
         }
-        $generatorInfo = '<!-- generated-on="' . date('c') . '" -->';
 
+        $generatorInfo = implode(PHP_EOL, [
+            sprintf('<!-- generator-class="%s" -->', get_class($this)),
+            sprintf('<!-- generator-version="%s" -->', $this->classVersion),
+            sprintf('<!-- generated-on="%s" -->', date('c')),
+        ]);
 
-        $sitemapHeader = '<?xml version="1.0" encoding="UTF-8"?>' . $generatorInfo . '
-                            <urlset
-                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' . "\r\n" . '
-                                xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9' . "\n" . '
-                                http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"' . "\n" . '
-                                xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-                         </urlset>';
+        $sitemapHeader = implode(PHP_EOL, [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            $generatorInfo,
+            '<urlset',
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+            'xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"',
+            'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+            '</urlset>'
+        ]);
 
-        $sitemapIndexHeader = '<?xml version="1.0" encoding="UTF-8"?>' . $generatorInfo . '
-                                <sitemapindex
-                                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                    xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-                                    http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"
-                                    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-                              </sitemapindex>';
-
+        $sitemapIndexHeader = implode(PHP_EOL, [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            $generatorInfo,
+            '<sitemapindex',
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+            'xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"',
+            'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+            '</sitemapindex>'
+        ]);
 
         $nullUrls = 0;
         foreach ($this->urls as $url) {
