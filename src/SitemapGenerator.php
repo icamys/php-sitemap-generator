@@ -183,7 +183,7 @@ class SitemapGenerator
     /**
      * Use this to add single URL to sitemap.
      * @param string $url URL
-     * @param DateTime $lastModified When it was modified, use ISO 8601
+     * @param DateTime $lastModified When it was modified, use ISO8601-compatible format
      * @param string $changeFrequency How often search engines should revisit this URL
      * @param string $priority Priority of URL on You site
      * @see http://en.wikipedia.org/wiki/ISO_8601
@@ -209,7 +209,7 @@ class SitemapGenerator
 
         if (isset($lastModified)) {
             $tmp->setSize(2);
-            $tmp[self::URL_PARAM_LASTMOD] = $lastModified->format(DateTime::ISO8601);
+            $tmp[self::URL_PARAM_LASTMOD] = $lastModified->format(DateTime::ATOM);
         }
 
         if (isset($changeFrequency)) {
