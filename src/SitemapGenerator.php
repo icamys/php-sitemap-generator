@@ -19,6 +19,7 @@ class SitemapGenerator
     const URL_PARAM_LASTMOD = 1;
     const URL_PARAM_CHANGEFREQ = 2;
     const URL_PARAM_PRIORITY = 3;
+    const URL_PARAM_ALTERNATES = 4;
 
     /**
      * Name of sitemap file
@@ -175,22 +176,30 @@ class SitemapGenerator
                 isset($url[0]) ? $url[0] : null,
                 isset($url[1]) ? $url[1] : null,
                 isset($url[2]) ? $url[2] : null,
-                isset($url[3]) ? $url[3] : null
+                isset($url[3]) ? $url[3] : null,
+                isset($url[4]) ? $url[4] : null
             );
         }
     }
 
     /**
      * Use this to add single URL to sitemap.
-     * @param string $url URL
-     * @param DateTime $lastModified When it was modified, use ISO8601-compatible format
-     * @param string $changeFrequency How often search engines should revisit this URL
-     * @param string $priority Priority of URL on You site
-     * @see http://en.wikipedia.org/wiki/ISO_8601
-     * @see http://php.net/manual/en/function.date.php
+     * @param $url
+     * @param DateTime|null $lastModified
+     * @param null $changeFrequency
+     * @param null $priority
+     * @param array|null $alternates
      * @throws InvalidArgumentException
+     * @see http://php.net/manual/en/function.date.php
+     * @see http://en.wikipedia.org/wiki/ISO_8601
      */
-    public function addUrl($url, DateTime $lastModified = null, $changeFrequency = null, $priority = null)
+    public function addUrl(
+        $url,
+        DateTime $lastModified = null,
+        $changeFrequency = null,
+        $priority = null,
+        array $alternates = null
+    )
     {
         if ($url == null) {
             throw new InvalidArgumentException("URL is mandatory. At least one argument should be given.");
@@ -220,6 +229,11 @@ class SitemapGenerator
         if (isset($priority)) {
             $tmp->setSize(4);
             $tmp[self::URL_PARAM_PRIORITY] = $priority;
+        }
+
+        if (isset($alternates)) {
+            $tmp->setSize(5);
+            $tmp[self::URL_PARAM_ALTERNATES] = $alternates;
         }
 
         if ($this->urls->getSize() === 0) {
@@ -309,6 +323,16 @@ class SitemapGenerator
                 }
                 if ($this->urls[$urlCounter]->getSize() > 3) {
                     $row->addChild('priority', $this->urls[$urlCounter][self::URL_PARAM_PRIORITY]);
+                }
+                if ($this->urls[$urlCounter]->getSize() > 4) {
+                    foreach ($this->urls[$urlCounter][self::URL_PARAM_ALTERNATES] as $alternate) {
+                        if (isset($alternate['hreflang']) && isset($alternate['href'])) {
+                            $tag = $row->addChild('link', null, 'xhtml');
+                            $tag->addAttribute('rel', 'alternate');
+                            $tag->addAttribute('hreflang', $alternate['hreflang']);
+                            $tag->addAttribute('href', $alternate['href']);
+                        }
+                    }
                 }
             }
             if (strlen($xml->asXML()) > self::MAX_FILE_SIZE) {

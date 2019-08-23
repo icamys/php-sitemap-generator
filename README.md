@@ -5,6 +5,10 @@ This class can be used to generate sitemaps.
 
 Internally uses SplFixedArrays, thus is faster and uses less memory.
 
+Features:
+* Follows [sitemaps.org](https://sitemaps.org/) protocol
+* Supports alternative links for multi-language pages (see [google docs](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
+
 Usage example:
 
 ```php
@@ -27,8 +31,14 @@ $generator->sitemapFileName = "sitemap.xml";
 // sitemap index file name
 $generator->sitemapIndexFileName = "sitemap-index.xml";
 
-// adding url `loc`, `lastmodified`, `changefreq`, `priority`
-$generator->addUrl('http://example.com/url/path/', new DateTime(), 'always', '0.5');
+// alternate languages
+$alternates = [
+    ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
+    ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
+];
+
+// adding url `loc`, `lastmodified`, `changefreq`, `priority`, `alternates`
+$generator->addUrl('http://example.com/url/path/', new DateTime(), 'always', '0.5', $alternates);
 
 // generating internally a sitemap
 $generator->createSitemap();
