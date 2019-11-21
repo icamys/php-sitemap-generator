@@ -124,7 +124,7 @@ class SitemapGenerator
      * @var array of strings
      * @access private
      */
-    private $sitemaps;
+    private $sitemaps = [];
 
     /**
      * Array with sitemap index
