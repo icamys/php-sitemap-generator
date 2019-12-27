@@ -51,6 +51,9 @@ $generator->createSitemap();
 
 // writing early generated sitemap to file
 $generator->writeSitemap();
+
+// update robots.txt file in output directory or create a new one
+$generator->updateRobots();
 ```
 
 Inspired by @pawelantczak.
