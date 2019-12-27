@@ -154,10 +154,15 @@ class SitemapGenerator
     {
         $this->urls = new SplFixedArray();
         $this->baseURL = $baseURL;
-        $this->basePath = $basePath;
         $this->document = new DOMDocument("1.0");
         $this->document->preserveWhiteSpace = false;
         $this->document->formatOutput = true;
+
+        if (strlen($basePath) > 0 && substr($basePath, -1) != DIRECTORY_SEPARATOR) {
+            $basePath  = $basePath . DIRECTORY_SEPARATOR;
+        }
+        $this->basePath = $basePath;
+
     }
 
     /**
