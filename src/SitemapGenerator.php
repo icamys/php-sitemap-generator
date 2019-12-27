@@ -463,8 +463,10 @@ class SitemapGenerator
     }
 
     /**
-     * If robots.txt file exist, will update information about newly created sitemaps.
-     * If there is no robots.txt will, create one and put into it information about sitemaps.
+     * If robots.txt file exists in base path,
+     *      the function will update information about newly created sitemaps in it.
+     * If robots.txt does not exist in base path,
+     *      the function will create new robots.txt file in base path.
      * @access public
      * @throws BadMethodCallException
      */
@@ -474,8 +476,9 @@ class SitemapGenerator
             throw new BadMethodCallException("To update robots.txt, call createSitemap function first.");
         }
         $sampleRobotsFile = "User-agent: *\nAllow: /";
-        if (file_exists($this->basePath . $this->robotsFileName)) {
-            $robotsFile = explode("\n", file_get_contents($this->basePath . $this->robotsFileName));
+        $robotsFilePath = $this->basePath . $this->robotsFileName;
+        if (file_exists($robotsFilePath)) {
+            $robotsFile = explode("\n", file_get_contents($robotsFilePath));
             $robotsFileContent = "";
             foreach ($robotsFile as $key => $value) {
                 if (substr($value, 0, 8) == 'Sitemap:') {
@@ -488,13 +491,13 @@ class SitemapGenerator
             if (!isset($this->sitemapIndex)) {
                 $robotsFileContent .= "\nSitemap: " . $this->getSitemapFileName($this->sitemapFullURL);
             }
-            file_put_contents($this->basePath . $this->robotsFileName, $robotsFileContent);
+            file_put_contents($robotsFilePath, $robotsFileContent);
         } else {
             $sampleRobotsFile = $sampleRobotsFile . "\n\nSitemap: " . $this->sitemapFullURL;
             if (!isset($this->sitemapIndex)) {
                 $sampleRobotsFile .= "\nSitemap: " . $this->getSitemapFileName($this->sitemapFullURL);
             }
-            file_put_contents($this->basePath . $this->robotsFileName, $sampleRobotsFile);
+            file_put_contents($robotsFilePath, $sampleRobotsFile);
         }
     }
 
