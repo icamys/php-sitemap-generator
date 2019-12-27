@@ -16,7 +16,13 @@ Usage example:
 
 include "src/SitemapGenerator.php";
 
-$generator = new \Icamys\SitemapGenerator\SitemapGenerator('example.com');
+// Setting the current working directory to be output directory// 
+// for generated sitemaps (and, if needed, robots.txt)
+// The output directory setting is optional and provided for demonstration purpose.
+// By default output is written to current directory. 
+$outputDir = getcwd();
+
+$generator = new \Icamys\SitemapGenerator\SitemapGenerator('example.com', $outputDir);
 
 // will create also compressed (gzipped) sitemap
 $generator->createGZipFile = true;
