@@ -505,7 +505,7 @@ class SitemapGenerator
     public function writeSitemap(): SitemapGenerator
     {
         if (!isset($this->sitemaps)) {
-            throw new BadMethodCallException("To write sitemap, call createSitemap function first."); // todo: change message
+            throw new BadMethodCallException("the sitemap should be created first");
         }
 
         if (isset($this->sitemapIndex)) {
