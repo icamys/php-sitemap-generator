@@ -56,4 +56,11 @@ $generator->writeSitemap();
 $generator->updateRobots();
 ```
 
-Inspired by @pawelantczak.
+
+### Testing
+
+Run tests with command:
+
+```bash
+$ phpunit
+```
