@@ -36,11 +36,16 @@ class SitemapGenerator
      */
     const MAX_SITEMAPS_PER_INDEX = 50000;
 
-    const URL_PARAM_LOC = 0;
-    const URL_PARAM_LASTMOD = 1;
-    const URL_PARAM_CHANGEFREQ = 2;
-    const URL_PARAM_PRIORITY = 3;
-    const URL_PARAM_ALTERNATES = 4;
+    const ATTR_KEY_LOC = 0;
+    const ATTR_KEY_LASTMOD = 1;
+    const ATTR_KEY_CHANGEFREQ = 2;
+    const ATTR_KEY_PRIORITY = 3;
+    const ATTR_KEY_ALTERNATES = 4;
+
+    const ATTR_NAME_LOC = 'loc';
+    const ATTR_NAME_LASTMOD = 'lastmod';
+    const ATTR_NAME_CHANGEFREQ = 'changefreq';
+    const ATTR_NAME_PRIORITY = 'priority';
 
     /**
      * Robots file name
@@ -232,21 +237,20 @@ class SitemapGenerator
     }
 
     /**
-     * Use this to add many URLs at one time.
-     * Each inside array can have 1 to 4 fields.
-     * @param $urlsArray
+     * Add multiple URLs at once.
+     * @param array $urls
      * @return SitemapGenerator
      * @throws InvalidArgumentException
      */
-    public function addUrls(array $urlsArray): SitemapGenerator
+    public function addURLs(array $urls): SitemapGenerator
     {
-        foreach ($urlsArray as $url) {
-            $this->addUrl(
-                isset($url[0]) ? $url[0] : null,
-                isset($url[1]) ? $url[1] : null,
-                isset($url[2]) ? $url[2] : null,
-                isset($url[3]) ? $url[3] : null,
-                isset($url[4]) ? $url[4] : null
+        foreach ($urls as $url) {
+            $this->addURL(
+                $url[self::ATTR_KEY_LOC] ?? null,
+                $url[self::ATTR_KEY_LASTMOD] ?? null,
+                $url[self::ATTR_KEY_CHANGEFREQ] ?? null,
+                $url[self::ATTR_KEY_PRIORITY] ?? null,
+                $url[self::ATTR_KEY_ALTERNATES] ?? null
             );
         }
         return $this;
@@ -254,7 +258,7 @@ class SitemapGenerator
 
     /**
      * Use this to add single URL to sitemap.
-     * @param $url
+     * @param string $loc
      * @param DateTime|null $lastModified
      * @param string|null $changeFrequency ex. 'always'
      * @param float|null $priority ex. '0.5'
@@ -264,18 +268,18 @@ class SitemapGenerator
      * @see http://php.net/manual/en/function.date.php
      * @see http://en.wikipedia.org/wiki/ISO_8601
      */
-    public function addUrl(
-        string $url,
+    public function addURL(
+        string $loc,
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
         array $alternates = null
     ): SitemapGenerator
     {
-        if ($url == null) {
+        if ($loc == null) {
             throw new InvalidArgumentException("URL is mandatory. At least one argument should be given.");
         }
-        $urlLength = extension_loaded('mbstring') ? mb_strlen($url) : strlen($url);
+        $urlLength = extension_loaded('mbstring') ? mb_strlen($loc) : strlen($loc);
         if ($urlLength > 2048) {
             throw new InvalidArgumentException(
                 "URL length can't be bigger than 2048 characters.
@@ -285,26 +289,26 @@ class SitemapGenerator
         }
         $tmp = new SplFixedArray(1);
 
-        $tmp[self::URL_PARAM_LOC] = $url;
+        $tmp[self::ATTR_KEY_LOC] = $loc;
 
         if (isset($lastModified)) {
             $tmp->setSize(2);
-            $tmp[self::URL_PARAM_LASTMOD] = $lastModified->format(DateTime::ATOM);
+            $tmp[self::ATTR_KEY_LASTMOD] = $lastModified->format(DateTime::ATOM);
         }
 
         if (isset($changeFrequency)) {
             $tmp->setSize(3);
-            $tmp[self::URL_PARAM_CHANGEFREQ] = $changeFrequency;
+            $tmp[self::ATTR_KEY_CHANGEFREQ] = $changeFrequency;
         }
 
         if (isset($priority)) {
             $tmp->setSize(4);
-            $tmp[self::URL_PARAM_PRIORITY] = $priority;
+            $tmp[self::ATTR_KEY_PRIORITY] = $priority;
         }
 
         if (isset($alternates)) {
             $tmp->setSize(5);
-            $tmp[self::URL_PARAM_ALTERNATES] = $alternates;
+            $tmp[self::ATTR_KEY_ALTERNATES] = $alternates;
         }
 
         if ($this->urls->getSize() === 0) {
@@ -378,21 +382,21 @@ class SitemapGenerator
                 $row = $sitemapXml->addChild('url');
 
                 $row->addChild(
-                    'loc',
-                    htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::URL_PARAM_LOC], ENT_QUOTES, 'UTF-8')
+                    self::ATTR_NAME_LOC,
+                    htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::ATTR_KEY_LOC], ENT_QUOTES, 'UTF-8')
                 );
 
                 if ($this->urls[$urlCounter]->getSize() > 1) {
-                    $row->addChild('lastmod', $this->urls[$urlCounter][self::URL_PARAM_LASTMOD]);
+                    $row->addChild(self::ATTR_NAME_LASTMOD, $this->urls[$urlCounter][self::ATTR_KEY_LASTMOD]);
                 }
                 if ($this->urls[$urlCounter]->getSize() > 2) {
-                    $row->addChild('changefreq', $this->urls[$urlCounter][self::URL_PARAM_CHANGEFREQ]);
+                    $row->addChild(self::ATTR_NAME_CHANGEFREQ, $this->urls[$urlCounter][self::ATTR_KEY_CHANGEFREQ]);
                 }
                 if ($this->urls[$urlCounter]->getSize() > 3) {
-                    $row->addChild('priority', $this->urls[$urlCounter][self::URL_PARAM_PRIORITY]);
+                    $row->addChild(self::ATTR_NAME_PRIORITY, $this->urls[$urlCounter][self::ATTR_KEY_PRIORITY]);
                 }
                 if ($this->urls[$urlCounter]->getSize() > 4) {
-                    foreach ($this->urls[$urlCounter][self::URL_PARAM_ALTERNATES] as $alternate) {
+                    foreach ($this->urls[$urlCounter][self::ATTR_KEY_ALTERNATES] as $alternate) {
                         if (isset($alternate['hreflang']) && isset($alternate['href'])) {
                             $tag = $row->addChild('link', null, 'xhtml');
                             $tag->addAttribute('rel', 'alternate');
@@ -432,8 +436,8 @@ class SitemapGenerator
             $sitemapXml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
                 $row = $sitemapXml->addChild('sitemap');
-                $row->addChild('loc', $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap[0])));
-                $row->addChild('lastmod', date('c'));
+                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap[0])));
+                $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
             }
             $this->sitemapFullURL = $this->baseURL . "/" . $this->sitemapIndexFileName;
             $this->sitemapIndex = [
@@ -606,17 +610,17 @@ class SitemapGenerator
                 $url = [];
                 foreach ($urlArr as $paramIndex => $paramValue) {
                     switch ($paramIndex) {
-                        case static::URL_PARAM_LOC:
-                            $url['loc'] = $paramValue;
+                        case static::ATTR_KEY_LOC:
+                            $url[self::ATTR_NAME_LOC] = $paramValue;
                             break;
-                        case static::URL_PARAM_CHANGEFREQ:
-                            $url['changefreq'] = $paramValue;
+                        case static::ATTR_KEY_CHANGEFREQ:
+                            $url[self::ATTR_NAME_CHANGEFREQ] = $paramValue;
                             break;
-                        case static::URL_PARAM_LASTMOD:
-                            $url['lastmod'] = $paramValue;
+                        case static::ATTR_KEY_LASTMOD:
+                            $url[self::ATTR_NAME_LASTMOD] = $paramValue;
                             break;
-                        case static::URL_PARAM_PRIORITY:
-                            $url['priority'] = $paramValue;
+                        case static::ATTR_KEY_PRIORITY:
+                            $url[self::ATTR_NAME_PRIORITY] = $paramValue;
                             break;
                         default:
                             break;
