@@ -13,7 +13,6 @@ use SplFixedArray;
 
 /**
  * Class SitemapGenerator
- * todo: add strict typing
  * @package Icamys\SitemapGenerator
  */
 class SitemapGenerator
@@ -154,7 +153,7 @@ class SitemapGenerator
      * @param string $baseURL You site URL, with / at the end.
      * @param string|null $basePath Relative path where sitemap and robots should be stored.
      */
-    public function __construct($baseURL, $basePath = "")
+    public function __construct(string $baseURL, string $basePath = "")
     {
         $this->urls = new SplFixedArray();
         $this->baseURL = $baseURL;
@@ -168,19 +167,20 @@ class SitemapGenerator
         $this->basePath = $basePath;
     }
 
-    public function setSitemapFilename(string $filename = '')
+    public function setSitemapFilename(string $filename = ''): SitemapGenerator
     {
         if (strlen($filename) === 0) {
             throw new InvalidArgumentException('filename should not be empty');
         }
         $this->sitemapFileName = $filename;
+        return $this;
     }
 
     /**
      * @param string $filename
      * @return $this
      */
-    public function setSitemapIndexFilename(string $filename = '')
+    public function setSitemapIndexFilename(string $filename = ''): SitemapGenerator
     {
         if (strlen($filename) === 0) {
             throw new InvalidArgumentException('filename should not be empty');
@@ -193,7 +193,7 @@ class SitemapGenerator
      * @param string $filename
      * @return $this
      */
-    public function setRobotsFileName(string $filename)
+    public function setRobotsFileName(string $filename): SitemapGenerator
     {
         if (strlen($filename) === 0) {
             throw new InvalidArgumentException('filename should not be empty');
@@ -206,7 +206,7 @@ class SitemapGenerator
      * @param int $value
      * @return $this
      */
-    public function setMaxURLsPerSitemap(int $value)
+    public function setMaxURLsPerSitemap(int $value): SitemapGenerator
     {
         if ($value <= 0) {
             throw new InvalidArgumentException('max urls per sitemap value should be a positive integer value');
@@ -215,10 +215,13 @@ class SitemapGenerator
         return $this;
     }
 
-    public function toggleGZipFileCreation(): bool
+    /**
+     * @return SitemapGenerator
+     */
+    public function toggleGZipFileCreation(): SitemapGenerator
     {
         $this->createGZipFile = !$this->createGZipFile;
-        return $this->createGZipFile;
+        return $this;
     }
 
     /**
@@ -227,7 +230,7 @@ class SitemapGenerator
      * @param $urlsArray
      * @throws InvalidArgumentException
      */
-    public function addUrls($urlsArray)
+    public function addUrls(array $urlsArray): SitemapGenerator
     {
         if (!is_array($urlsArray)) {
             throw new InvalidArgumentException("Array as argument should be given.");
@@ -241,26 +244,27 @@ class SitemapGenerator
                 isset($url[4]) ? $url[4] : null
             );
         }
+        return $this;
     }
 
     /**
      * Use this to add single URL to sitemap.
      * @param $url
      * @param DateTime|null $lastModified
-     * @param null $changeFrequency
-     * @param null $priority
+     * @param string|null $changeFrequency ex. 'always'
+     * @param float|null $priority ex. '0.5'
      * @param array|null $alternates
      * @throws InvalidArgumentException
      * @see http://php.net/manual/en/function.date.php
      * @see http://en.wikipedia.org/wiki/ISO_8601
      */
     public function addUrl(
-        $url,
+        string $url,
         DateTime $lastModified = null,
-        $changeFrequency = null,
-        $priority = null,
+        string $changeFrequency = null,
+        float $priority = null,
         array $alternates = null
-    )
+    ): SitemapGenerator
     {
         if ($url == null) {
             throw new InvalidArgumentException("URL is mandatory. At least one argument should be given.");
@@ -307,14 +311,16 @@ class SitemapGenerator
 
         $this->urls[$this->urls->key()] = $tmp;
         $this->urls->next();
+        return $this;
     }
 
     /**
+     * Creates sitemap and stores it in memory.
      * @throws BadMethodCallException
      * @throws InvalidArgumentException
      * @throws LengthException
      */
-    public function createSitemap()
+    public function createSitemap(): SitemapGenerator
     {
         if (!isset($this->urls)) {
             throw new BadMethodCallException("To create sitemap, call addUrl or addUrls function first.");
@@ -322,7 +328,7 @@ class SitemapGenerator
 
         if ($this->maxURLsPerSitemap > self::MAX_URLS_PER_SITEMAP) {
             throw new InvalidArgumentException(
-                "More than " . self::MAX_URLS_PER_SITEMAP . " URLs per single sitemap is not allowed."
+                "More than " . self::MAX_URLS_PER_SITEMAP . " URLs per single sitemap is not allowed." // todo: change the message
             );
         }
 
@@ -441,14 +447,16 @@ class SitemapGenerator
                 $this->sitemaps[0],
             ];
         }
+
+        return $this;
     }
 
-    private function getDiffInPercents(int $total, int $part)
+    private function getDiffInPercents(int $total, int $part): float
     {
         return $part * 100 / $total - 100;
     }
 
-    private function appendGzPostfixIfEnabled($str)
+    private function appendGzPostfixIfEnabled(string $str): string
     {
         if ($this->createGZipFile) {
             return $str . ".gz";
@@ -456,7 +464,7 @@ class SitemapGenerator
         return $str;
     }
 
-    private function getSitemapFileName($name = null)
+    private function getSitemapFileName(string $name = null): string
     {
         if ($name === null) {
             $name = $this->sitemapFileName;
@@ -466,11 +474,11 @@ class SitemapGenerator
 
     /**
      * Returns created sitemaps as array of strings.
-     * Use it You want to work with sitemap without saving it as files.
+     * Useful in case if you want to work with sitemap without saving it as files.
      * @return array of strings
      * @access public
      */
-    public function toArray()
+    public function toArray(): array
     {
         if (isset($this->sitemapIndex)) {
             return array_merge([$this->sitemapIndex], $this->sitemaps);
@@ -484,7 +492,7 @@ class SitemapGenerator
      * @access public
      * @throws BadMethodCallException
      */
-    public function writeSitemap()
+    public function writeSitemap(): SitemapGenerator
     {
         if (!isset($this->sitemaps)) {
             throw new BadMethodCallException("To write sitemap, call createSitemap function first.");
@@ -500,10 +508,11 @@ class SitemapGenerator
             $this->writeFile($this->document->saveXML(), $this->basePath, $this->sitemaps[0][0], true);
             $this->writeFile($this->sitemaps[0][1], $this->basePath, $this->sitemaps[0][0]);
         }
+        return $this;
     }
 
     /**
-     * Save file.
+     * Write file to path
      * @param string $content
      * @param string $filePath
      * @param string $fileName
@@ -511,7 +520,7 @@ class SitemapGenerator
      * @return bool
      * @access private
      */
-    private function writeFile($content, $filePath, $fileName, $noGzip = false)
+    private function writeFile($content, $filePath, $fileName, $noGzip = false) // todo: remove boolean flag
     {
         if (!$noGzip && $this->createGZipFile) {
             return $this->writeGZipFile($content, $filePath, $fileName);
@@ -535,69 +544,6 @@ class SitemapGenerator
         $file = gzopen($filePath . $fileName, 'w');
         gzwrite($file, $content);
         return gzclose($file);
-    }
-
-    /**
-     * Adds sitemap url to robots.txt file located in basePath.
-     * If robots.txt file exists,
-     *      the function will append sitemap url to file.
-     * If robots.txt does not exist,
-     *      the function will create new robots.txt file with sample content and sitemap url.
-     * @access public
-     * @throws BadMethodCallException
-     * @throws RuntimeException
-     */
-    public function updateRobots()
-    {
-        if (!isset($this->sitemaps)) {
-            throw new BadMethodCallException("To update robots.txt, call createSitemap function first.");
-        }
-
-        $robotsFilePath = $this->basePath . $this->robotsFileName;
-
-        $robotsFileContent = $this->createNewRobotsContentFromFile($robotsFilePath);
-
-        if (false === file_put_contents($robotsFilePath, $robotsFileContent)) {
-            throw new RuntimeException(
-                "Failed to write new contents of robots.txt to file $robotsFilePath. "
-                . "Please check file permissions and free space presence."
-            );
-        }
-    }
-
-    /**
-     * @param $filepath
-     * @return string
-     * @access private
-     */
-    private function createNewRobotsContentFromFile($filepath)
-    {
-        if (file_exists($filepath)) {
-            $robotsFileContent = "";
-            $robotsFile = explode(PHP_EOL, file_get_contents($filepath));
-            foreach ($robotsFile as $key => $value) {
-                if (substr($value, 0, 8) == 'Sitemap:') {
-                    unset($robotsFile[$key]);
-                } else {
-                    $robotsFileContent .= $value . PHP_EOL;
-                }
-            }
-        } else {
-            $robotsFileContent = $this->getSampleRobotsContent();
-        }
-
-        $robotsFileContent .= "Sitemap: $this->sitemapFullURL";
-
-        return $robotsFileContent;
-    }
-
-    /**
-     * @return string
-     * @access private
-     */
-    private function getSampleRobotsContent()
-    {
-        return implode(PHP_EOL, $this->sampleRobotsLines) . PHP_EOL;
     }
 
     /**
@@ -645,7 +591,7 @@ class SitemapGenerator
      * Converts internal SplFixedArray to array
      * @return array
      */
-    public function getUrls()
+    public function getURLsArray(): array
     {
         $urls = $this->urls->toArray();
 
@@ -682,8 +628,73 @@ class SitemapGenerator
         return $urls;
     }
 
-    public function countUrls()
+    public function getURLsCount(): int
     {
         return $this->urls->getSize();
+    }
+
+    /**
+     * Adds sitemap url to robots.txt file located in basePath.
+     * If robots.txt file exists,
+     *      the function will append sitemap url to file.
+     * If robots.txt does not exist,
+     *      the function will create new robots.txt file with sample content and sitemap url.
+     * @access public
+     * @throws BadMethodCallException
+     * @throws RuntimeException
+     */
+    public function updateRobots(): SitemapGenerator
+    {
+        if (!isset($this->sitemaps)) {
+            throw new BadMethodCallException("To update robots.txt, call createSitemap function first.");
+        }
+
+        $robotsFilePath = $this->basePath . $this->robotsFileName;
+
+        $robotsFileContent = $this->createNewRobotsContentFromFile($robotsFilePath);
+
+        if (false === file_put_contents($robotsFilePath, $robotsFileContent)) {
+            throw new RuntimeException(
+                "Failed to write new contents of robots.txt to file $robotsFilePath. "
+                . "Please check file permissions and free space presence."
+            );
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param $filepath
+     * @return string
+     * @access private
+     */
+    private function createNewRobotsContentFromFile($filepath): string
+    {
+        if (file_exists($filepath)) {
+            $robotsFileContent = "";
+            $robotsFile = explode(PHP_EOL, file_get_contents($filepath));
+            foreach ($robotsFile as $key => $value) {
+                if (substr($value, 0, 8) == 'Sitemap:') {
+                    unset($robotsFile[$key]);
+                } else {
+                    $robotsFileContent .= $value . PHP_EOL;
+                }
+            }
+        } else {
+            $robotsFileContent = $this->getSampleRobotsContent();
+        }
+
+        $robotsFileContent .= "Sitemap: $this->sitemapFullURL";
+
+        return $robotsFileContent;
+    }
+
+    /**
+     * @return string
+     * @access private
+     */
+    private function getSampleRobotsContent(): string
+    {
+        return implode(PHP_EOL, $this->sampleRobotsLines) . PHP_EOL;
     }
 }
