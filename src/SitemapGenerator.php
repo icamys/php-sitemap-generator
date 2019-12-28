@@ -167,6 +167,10 @@ class SitemapGenerator
         $this->basePath = $basePath;
     }
 
+    /**
+     * @param string $filename
+     * @return SitemapGenerator
+     */
     public function setSitemapFilename(string $filename = ''): SitemapGenerator
     {
         if (strlen($filename) === 0) {
@@ -228,6 +232,7 @@ class SitemapGenerator
      * Use this to add many URLs at one time.
      * Each inside array can have 1 to 4 fields.
      * @param $urlsArray
+     * @return SitemapGenerator
      * @throws InvalidArgumentException
      */
     public function addUrls(array $urlsArray): SitemapGenerator
@@ -254,6 +259,7 @@ class SitemapGenerator
      * @param string|null $changeFrequency ex. 'always'
      * @param float|null $priority ex. '0.5'
      * @param array|null $alternates
+     * @return SitemapGenerator
      * @throws InvalidArgumentException
      * @see http://php.net/manual/en/function.date.php
      * @see http://en.wikipedia.org/wiki/ISO_8601
@@ -451,11 +457,20 @@ class SitemapGenerator
         return $this;
     }
 
+    /**
+     * @param int $total
+     * @param int $part
+     * @return float
+     */
     private function getDiffInPercents(int $total, int $part): float
     {
         return $part * 100 / $total - 100;
     }
 
+    /**
+     * @param string $str
+     * @return string
+     */
     private function appendGzPostfixIfEnabled(string $str): string
     {
         if ($this->createGZipFile) {
@@ -464,6 +479,10 @@ class SitemapGenerator
         return $str;
     }
 
+    /**
+     * @param string|null $name
+     * @return string
+     */
     private function getSitemapFileName(string $name = null): string
     {
         if ($name === null) {
@@ -589,7 +608,7 @@ class SitemapGenerator
     /**
      * Returns array of URLs
      * Converts internal SplFixedArray to array
-     * @return array
+     * @return array array of URLs
      */
     public function getURLsArray(): array
     {
@@ -628,6 +647,9 @@ class SitemapGenerator
         return $urls;
     }
 
+    /**
+     * @return int number of URLs
+     */
     public function getURLsCount(): int
     {
         return $this->urls->getSize();
