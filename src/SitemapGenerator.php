@@ -244,26 +244,6 @@ class SitemapGenerator
     }
 
     /**
-     * Add multiple URLs at once.
-     * @param array $urls
-     * @return SitemapGenerator
-     * @throws InvalidArgumentException
-     */
-    public function addURLs(array $urls): SitemapGenerator
-    {
-        foreach ($urls as $url) {
-            $this->addURL(
-                $url[self::ATTR_KEY_LOC] ?? null,
-                $url[self::ATTR_KEY_LASTMOD] ?? null,
-                $url[self::ATTR_KEY_CHANGEFREQ] ?? null,
-                $url[self::ATTR_KEY_PRIORITY] ?? null,
-                $url[self::ATTR_KEY_ALTERNATES] ?? null
-            );
-        }
-        return $this;
-    }
-
-    /**
      * Use this to add single URL to sitemap.
      * @param string $loc
      * @param DateTime|null $lastModified
