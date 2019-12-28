@@ -7,6 +7,7 @@ use DateTime;
 use DOMDocument;
 use InvalidArgumentException;
 use LengthException;
+use RuntimeException;
 use SimpleXMLElement;
 use SplFixedArray;
 
@@ -146,6 +147,15 @@ class SitemapGenerator
     private $document;
 
     /**
+     * Lines for robots.txt file that are written if file does not exist
+     * @var array
+     */
+    private $sampleRobotsLines = [
+        "User-agent: *",
+        "Allow: /",
+    ];
+
+    /**
      * Constructor.
      * @param string $baseURL You site URL, with / at the end.
      * @param string|null $basePath Relative path where sitemap and robots should be stored.
@@ -159,10 +169,9 @@ class SitemapGenerator
         $this->document->formatOutput = true;
 
         if (strlen($basePath) > 0 && substr($basePath, -1) != DIRECTORY_SEPARATOR) {
-            $basePath  = $basePath . DIRECTORY_SEPARATOR;
+            $basePath = $basePath . DIRECTORY_SEPARATOR;
         }
         $this->basePath = $basePath;
-
     }
 
     /**
@@ -365,7 +374,7 @@ class SitemapGenerator
             $xml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
                 $row = $xml->addChild('sitemap');
-                $row->addChild('loc', $this->baseURL . "/" . $this->getSitemapFileName(htmlentities($sitemap[0])));
+                $row->addChild('loc', $this->baseURL . "/" . $this->appendGzPrefixIfEnabled(htmlentities($sitemap[0])));
                 $row->addChild('lastmod', date('c'));
             }
             $this->sitemapFullURL = $this->baseURL . "/" . $this->sitemapIndexFileName;
@@ -375,7 +384,6 @@ class SitemapGenerator
             );
         } else {
             $this->sitemapFullURL = $this->baseURL . "/" . $this->getSitemapFileName();
-
             $this->sitemaps[0] = array(
                 $this->sitemapFileName,
                 $this->sitemaps[0]
@@ -423,13 +431,18 @@ class SitemapGenerator
 
     private function getSitemapFileName($name = null)
     {
-        if (!$name) {
+        if ($name === null) {
             $name = $this->sitemapFileName;
         }
+        return $this->appendGzPrefixIfEnabled($name);
+    }
+
+    private function appendGzPrefixIfEnabled($str)
+    {
         if ($this->createGZipFile) {
-            $name .= ".gz";
+            return $str . ".gz";
         }
-        return $name;
+        return $str;
     }
 
     /**
@@ -468,42 +481,67 @@ class SitemapGenerator
     }
 
     /**
-     * If robots.txt file exists in base path,
-     *      the function will update information about newly created sitemaps in it.
-     * If robots.txt does not exist in base path,
-     *      the function will create new robots.txt file in base path.
+     * Adds sitemap url to robots.txt file located in basePath.
+     *
+     * If robots.txt file exists,
+     *      the function will append sitemap url to file.
+     * If robots.txt does not exist,
+     *      the function will create new robots.txt file with sample content and sitemap url.
      * @access public
      * @throws BadMethodCallException
+     * @throws RuntimeException
      */
     public function updateRobots()
     {
         if (!isset($this->sitemaps)) {
             throw new BadMethodCallException("To update robots.txt, call createSitemap function first.");
         }
-        $sampleRobotsFile = "User-agent: *\nAllow: /";
+
         $robotsFilePath = $this->basePath . $this->robotsFileName;
-        if (file_exists($robotsFilePath)) {
-            $robotsFile = explode("\n", file_get_contents($robotsFilePath));
+
+        $robotsFileContent = $this->createNewRobotsContentFromFile($robotsFilePath);
+
+        if (false === file_put_contents($robotsFilePath, $robotsFileContent)) {
+            throw new RuntimeException(
+                "Failed to write new contents of robots.txt to file $robotsFilePath. "
+                . "Please check file permissions and free space presence."
+            );
+        }
+    }
+
+    /**
+     * @return string
+     * @access private
+     */
+    private function getSampleRobotsContent()
+    {
+        return implode(PHP_EOL, $this->sampleRobotsLines) . PHP_EOL;
+    }
+
+    /**
+     * @param $filepath
+     * @return string
+     * @access private
+     */
+    private function createNewRobotsContentFromFile($filepath)
+    {
+        if (file_exists($filepath)) {
             $robotsFileContent = "";
+            $robotsFile = explode(PHP_EOL, file_get_contents($filepath));
             foreach ($robotsFile as $key => $value) {
                 if (substr($value, 0, 8) == 'Sitemap:') {
                     unset($robotsFile[$key]);
                 } else {
-                    $robotsFileContent .= $value . "\n";
+                    $robotsFileContent .= $value . PHP_EOL;
                 }
             }
-            $robotsFileContent .= "Sitemap: $this->sitemapFullURL";
-            if (!isset($this->sitemapIndex)) {
-                $robotsFileContent .= "\nSitemap: " . $this->getSitemapFileName($this->sitemapFullURL);
-            }
-            file_put_contents($robotsFilePath, $robotsFileContent);
         } else {
-            $sampleRobotsFile = $sampleRobotsFile . "\n\nSitemap: " . $this->sitemapFullURL;
-            if (!isset($this->sitemapIndex)) {
-                $sampleRobotsFile .= "\nSitemap: " . $this->getSitemapFileName($this->sitemapFullURL);
-            }
-            file_put_contents($robotsFilePath, $sampleRobotsFile);
+            $robotsFileContent = $this->getSampleRobotsContent();
         }
+
+        $robotsFileContent .= "Sitemap: $this->sitemapFullURL";
+
+        return $robotsFileContent;
     }
 
     /**
