@@ -25,17 +25,17 @@ $outputDir = getcwd();
 $generator = new \Icamys\SitemapGenerator\SitemapGenerator('example.com', $outputDir);
 
 // will create also compressed (gzipped) sitemap
-$generator->createGZipFile = true;
+$generator->toggleGZipFileCreation();
 
 // determine how many urls should be put into one file
 // according to standard protocol 50000 is maximum value (see http://www.sitemaps.org/protocol.html)
-$generator->maxURLsPerSitemap = 50000;
+$generator->setMaxURLsPerSitemap(50000);
 
 // sitemap file name
-$generator->sitemapFileName = "sitemap.xml";
+$generator->setSitemapFileName("sitemap.xml");
 
 // sitemap index file name
-$generator->sitemapIndexFileName = "sitemap-index.xml";
+$generator->setSitemapIndexFileName("sitemap-index.xml");
 
 // alternate languages
 $alternates = [
@@ -44,7 +44,7 @@ $alternates = [
 ];
 
 // adding url `loc`, `lastmodified`, `changefreq`, `priority`, `alternates`
-$generator->addUrl('http://example.com/url/path/', new DateTime(), 'always', '0.5', $alternates);
+$generator->addUrl('http://example.com/url/path/', new DateTime(), 'always', 0.5, $alternates);
 
 // generating internally a sitemap
 $generator->createSitemap();
@@ -56,7 +56,6 @@ $generator->writeSitemap();
 $generator->updateRobots();
 ```
 
-
 ### Testing
 
 Run tests with command:
@@ -64,3 +63,12 @@ Run tests with command:
 ```bash
 $ phpunit
 ```
+
+### Changelog
+
+New in 2.0.0:
+* Major code rework
+* No more public properties in generator, using only methods
+* Fixed bug with robots.txt update
+* Unit tests added for quality assurance
+* Updated limits according to [sitemaps spec](https://www.sitemaps.org/protocol.html)
