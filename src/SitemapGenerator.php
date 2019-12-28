@@ -18,7 +18,11 @@ use SplFixedArray;
  */
 class SitemapGenerator
 {
-    const MAX_FILE_SIZE = 10485760; // todo: increase this value up to 50mb according to spec
+    /**
+     * Max size of a sitemap according to spec.
+     * @see https://www.sitemaps.org/protocol.html
+     */
+    const MAX_FILE_SIZE = 52428800;
 
     /**
      * Max number of urls per sitemap according to spec.
@@ -360,12 +364,12 @@ class SitemapGenerator
         $chunks = ceil($nonEmptyUrls / $this->maxURLsPerSitemap);
 
         for ($chunkCounter = 0; $chunkCounter < $chunks; $chunkCounter++) {
-            $xml = new SimpleXMLElement($sitemapHeader);
+            $sitemapXml = new SimpleXMLElement($sitemapHeader);
             for ($urlCounter = $chunkCounter * $this->maxURLsPerSitemap;
                  $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $nonEmptyUrls;
                  $urlCounter++
             ) {
-                $row = $xml->addChild('url');
+                $row = $sitemapXml->addChild('url');
 
                 $row->addChild(
                     'loc',
@@ -392,37 +396,43 @@ class SitemapGenerator
                     }
                 }
             }
-            if (strlen($xml->asXML()) > self::MAX_FILE_SIZE) {
+
+            $sitemapStr = $sitemapXml->asXML();
+            $sitemapStrLen = strlen($sitemapStr);
+
+            if ($sitemapStrLen > self::MAX_FILE_SIZE) {
+                $diff = number_format($this->getDiffInPercents(self::MAX_FILE_SIZE, $sitemapStrLen), 2);
                 throw new LengthException(
-                    "Sitemap size equals to " . strlen($xml->asXML())
-                    . " bytes is more than 10MB (" . self::MAX_FILE_SIZE . " bytes),
-                    please decrease maxURLsPerSitemap variable."
+                    "Sitemap size limit reached " .
+                    sprintf("(current limit = %d bytes, file size = %d bytes, diff = %s%%), ", $sitemapStrLen, self::MAX_FILE_SIZE, $diff)
+                    . "please decrease max urls per sitemap setting in generator instance"
                 );
             }
-            $this->sitemaps[] = $xml->asXML();
+            $this->sitemaps[] = $sitemapStr;
         }
-        if (count($this->sitemaps) > self::MAX_SITEMAPS_PER_INDEX) {
-            throw new LengthException(
-                sprintf("Number of sitemaps per index has reached its limit (%s)", self::MAX_SITEMAPS_PER_INDEX)
-            );
-        }
-        if (count($this->sitemaps) > 1) {
-            for ($i = 0; $i < count($this->sitemaps); $i++) {
+        $sitemapsCount = count($this->sitemaps);
+        if ($sitemapsCount > 1) {
+            if ($sitemapsCount > self::MAX_SITEMAPS_PER_INDEX) {
+                throw new LengthException(
+                    sprintf("Number of sitemaps per index has reached its limit (%s)", self::MAX_SITEMAPS_PER_INDEX)
+                );
+            }
+            for ($i = 0; $i < $sitemapsCount; $i++) {
                 $this->sitemaps[$i] = [
                     str_replace(".xml", ($i + 1) . ".xml", $this->sitemapFileName),
                     $this->sitemaps[$i],
                 ];
             }
-            $xml = new SimpleXMLElement($sitemapIndexHeader);
+            $sitemapXml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
-                $row = $xml->addChild('sitemap');
+                $row = $sitemapXml->addChild('sitemap');
                 $row->addChild('loc', $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap[0])));
                 $row->addChild('lastmod', date('c'));
             }
             $this->sitemapFullURL = $this->baseURL . "/" . $this->sitemapIndexFileName;
             $this->sitemapIndex = [
                 $this->sitemapIndexFileName,
-                $xml->asXML(),
+                $sitemapXml->asXML(),
             ];
         } else {
             $this->sitemapFullURL = $this->baseURL . "/" . $this->getSitemapFileName();
@@ -431,6 +441,11 @@ class SitemapGenerator
                 $this->sitemaps[0],
             ];
         }
+    }
+
+    private function getDiffInPercents(int $total, int $part)
+    {
+        return $part * 100 / $total - 100;
     }
 
     private function appendGzPostfixIfEnabled($str)
