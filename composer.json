@@ -15,7 +15,7 @@
     }
   ],
   "require": {
-    "php": ">=5.5.0",
+    "php": ">=7.0.0",
     "ext-SPL": "*",
     "ext-dom": "*",
     "ext-simplexml": "*",
