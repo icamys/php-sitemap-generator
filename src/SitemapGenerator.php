@@ -7,6 +7,7 @@ use DateTime;
 use DOMDocument;
 use InvalidArgumentException;
 use LengthException;
+use OutOfRangeException;
 use RuntimeException;
 use SimpleXMLElement;
 use SplFixedArray;
@@ -212,8 +213,10 @@ class SitemapGenerator
      */
     public function setMaxURLsPerSitemap(int $value): SitemapGenerator
     {
-        if ($value <= 0) {
-            throw new InvalidArgumentException('max urls per sitemap value should be a positive integer value');
+        if ($value < 1 || self::MAX_URLS_PER_SITEMAP < $value) {
+            throw new OutOfRangeException(
+                sprintf('trying to set out of range value (allowed 1-%d)', self::MAX_URLS_PER_SITEMAP)
+            );
         }
         $this->maxURLsPerSitemap = $value;
         return $this;
@@ -330,12 +333,6 @@ class SitemapGenerator
     {
         if (!isset($this->urls)) {
             throw new BadMethodCallException("To create sitemap, call addUrl or addUrls function first.");
-        }
-
-        if ($this->maxURLsPerSitemap > self::MAX_URLS_PER_SITEMAP) {
-            throw new InvalidArgumentException(
-                "More than " . self::MAX_URLS_PER_SITEMAP . " URLs per single sitemap is not allowed." // todo: change the message
-            );
         }
 
         $generatorInfo = implode(PHP_EOL, [

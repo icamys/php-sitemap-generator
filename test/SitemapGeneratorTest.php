@@ -2,12 +2,21 @@
 
 namespace Icamys\SitemapGenerator;
 
+use InvalidArgumentException;
+use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 
 class SitemapGeneratorTest extends TestCase
 {
+    private $testDomain = 'example.com';
+
+    /**
+     * @var SitemapGenerator
+     */
+    private $g;
+
     public function getSizeDiffInPercentsProvider()
     {
         return [
@@ -23,8 +32,7 @@ class SitemapGeneratorTest extends TestCase
      */
     public function testGetSizeDiffInPercents($args, $expected)
     {
-        $g = new SitemapGenerator('example.com');
-        $actual = $this->invokeMethod($g, 'getDiffInPercents', $args);
+        $actual = $this->invokeMethod($this->g, 'getDiffInPercents', $args);
         $this->assertEquals($expected, $actual);
     }
 
@@ -43,5 +51,45 @@ class SitemapGeneratorTest extends TestCase
         $method->setAccessible(true);
 
         return $method->invokeArgs($object, $parameters);
+    }
+
+    public function testSetSitemapFilenameException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->setSitemapFilename('');
+    }
+
+    public function testSetSitemapIndexFilenameException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->setSitemapIndexFilename('');
+    }
+
+    public function testSetRobotsFileNameException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->setRobotsFileName('');
+    }
+
+    public function testSetMaxURLsPerSitemapLeftOutOfRangeException()
+    {
+        $this->expectException(OutOfRangeException::class);
+        $this->g->setMaxURLsPerSitemap(0);
+    }
+
+    public function testSetMaxURLsPerSitemapRightOutOfRangeException()
+    {
+        $this->expectException(OutOfRangeException::class);
+        $this->g->setMaxURLsPerSitemap(50001);
+    }
+
+    protected function setUp(): void
+    {
+        $this->g = new SitemapGenerator($this->testDomain);
+    }
+
+    protected function tearDown(): void
+    {
+        unset($this->g);
     }
 }
