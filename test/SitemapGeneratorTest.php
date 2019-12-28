@@ -83,6 +83,46 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(50001);
     }
 
+    public function testAddURL()
+    {
+        $now = new \DateTime();
+        $nowStr = $now->format('Y-m-d\TH:i:sP');
+        for ($i = 0; $i < 2; $i++) {
+            $this->g->addURL('/product-'.$i . '/', $now, 'always', '0.8' );
+        }
+        $urlArray = $this->g->getURLsArray();
+
+        $this->assertCount(2, $urlArray);
+        $this->assertEquals('/product-0/', $urlArray[0][$this->g::ATTR_NAME_LOC]);
+        $this->assertEquals($nowStr, $urlArray[0][$this->g::ATTR_NAME_LASTMOD]);
+        $this->assertEquals('always', $urlArray[0][$this->g::ATTR_NAME_CHANGEFREQ]);
+        $this->assertEquals('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
+        $this->assertEquals('/product-1/', $urlArray[1][$this->g::ATTR_NAME_LOC]);
+    }
+
+    public function testAddURLWithAlternates()
+    {
+        $alternates = [
+            ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
+            ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
+        ];
+        $now = new \DateTime();
+        $nowStr = $now->format('Y-m-d\TH:i:sP');
+        $this->g->addURL('/product-0/', $now, 'always', '0.8' , $alternates);
+        $urlArray = $this->g->getURLsArray();
+        $this->assertCount(1, $urlArray);
+        $this->assertEquals('/product-0/', $urlArray[0][$this->g::ATTR_NAME_LOC]);
+        $this->assertEquals($nowStr, $urlArray[0][$this->g::ATTR_NAME_LASTMOD]);
+        $this->assertEquals('always', $urlArray[0][$this->g::ATTR_NAME_CHANGEFREQ]);
+        $this->assertEquals('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
+        $this->assertCount(2, $urlArray[0][$this->g::ATTR_NAME_ALTERNATES]);
+        $this->assertCount(2, $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][0]);
+        $this->assertEquals('de', $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][0]['hreflang']);
+        $this->assertEquals('http://www.example.com/de', $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][0]['href']);
+        $this->assertEquals('fr', $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][1]['hreflang']);
+        $this->assertEquals('http://www.example.com/fr', $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][1]['href']);
+    }
+
     protected function setUp(): void
     {
         $this->g = new SitemapGenerator($this->testDomain);
