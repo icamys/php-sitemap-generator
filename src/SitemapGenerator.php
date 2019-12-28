@@ -240,9 +240,6 @@ class SitemapGenerator
      */
     public function addUrls(array $urlsArray): SitemapGenerator
     {
-        if (!is_array($urlsArray)) {
-            throw new InvalidArgumentException("Array as argument should be given.");
-        }
         foreach ($urlsArray as $url) {
             $this->addUrl(
                 isset($url[0]) ? $url[0] : null,
