@@ -44,7 +44,7 @@ $alternates = [
 ];
 
 // adding url `loc`, `lastmodified`, `changefreq`, `priority`, `alternates`
-$generator->addUrl('http://example.com/url/path/', new DateTime(), 'always', 0.5, $alternates);
+$generator->addURL('http://example.com/url/path/', new DateTime(), 'always', 0.5, $alternates);
 
 // generating internally a sitemap
 $generator->createSitemap();
@@ -76,5 +76,6 @@ New in 2.0.0:
 * Major code rework
 * No more public properties in generator, using only methods
 * Fixed bug with robots.txt update
+* Fixed bug in addURL method (empty loc)
 * Unit tests added for quality assurance
 * Updated limits according to [sitemaps spec](https://www.sitemaps.org/protocol.html)
