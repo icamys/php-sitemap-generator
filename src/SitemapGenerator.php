@@ -447,7 +447,7 @@ class SitemapGenerator
                 $sitemapXml->asXML(),
             ];
         } else {
-            $this->sitemapFullURL = $this->baseURL . "/" . $this->getSitemapFileName();
+            $this->sitemapFullURL = $this->baseURL . "/" . $this->appendGzPostfixIfEnabled($this->sitemapFileName);
             $this->sitemaps[0] = [
                 $this->sitemapFileName,
                 $this->sitemaps[0],
@@ -477,18 +477,6 @@ class SitemapGenerator
             return $str . ".gz";
         }
         return $str;
-    }
-
-    /**
-     * @param string|null $name
-     * @return string
-     */
-    private function getSitemapFileName(string $name = null): string
-    {
-        if ($name === null) {
-            $name = $this->sitemapFileName;
-        }
-        return $this->appendGzPostfixIfEnabled($name);
     }
 
     /**
