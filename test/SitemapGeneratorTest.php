@@ -123,6 +123,19 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('http://www.example.com/fr', $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][1]['href']);
     }
 
+    public function testAddURLInvalidLocException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->addURL('', new \DateTime(), 'always', '0.8' );
+    }
+
+    public function testAddURLTooLongException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $url = str_repeat("s", 5000);
+        $this->g->addURL($url, new \DateTime(), 'always', '0.8' );
+    }
+
     protected function setUp(): void
     {
         $this->g = new SitemapGenerator($this->testDomain);

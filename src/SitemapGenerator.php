@@ -36,6 +36,12 @@ class SitemapGenerator
      */
     const MAX_SITEMAPS_PER_INDEX = 50000;
 
+    /**
+     * Max url length according to spec.
+     * @see https://www.sitemaps.org/protocol.html#xmlTagDefinitions
+     */
+    const MAX_URL_LEN = 2048;
+
     const ATTR_KEY_LOC = 0;
     const ATTR_KEY_LASTMOD = 1;
     const ATTR_KEY_CHANGEFREQ = 2;
@@ -270,22 +276,19 @@ class SitemapGenerator
      * @see http://en.wikipedia.org/wiki/ISO_8601
      */
     public function addURL(
-        string $loc,
+        string $loc = '',
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
         array $alternates = null
     ): SitemapGenerator
     {
-        if ($loc == null) {
-            throw new InvalidArgumentException("URL is mandatory. At least one argument should be given.");
+        if (strlen($loc) === 0) {
+            throw new InvalidArgumentException("loc parameter is required");
         }
-        $urlLength = extension_loaded('mbstring') ? mb_strlen($loc) : strlen($loc);
-        if ($urlLength > 2048) {
+        if (mb_strlen($loc) > self::MAX_URL_LEN) {
             throw new InvalidArgumentException(
-                "URL length can't be bigger than 2048 characters.
-                Note, that precise url length check is guaranteed only using mb_string extension.
-                Make sure Your server allow to use mbstring extension."
+                sprintf("the url length must be less than %d characters", self::MAX_URL_LEN)
             );
         }
         $tmp = new SplFixedArray(1);
