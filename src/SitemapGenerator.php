@@ -21,10 +21,16 @@ class SitemapGenerator
     const MAX_FILE_SIZE = 10485760; // todo: increase this value up to 50mb according to spec
 
     /**
-     * According to specification max value is 50 000
-     * @see https://www.sitemaps.org/protocol.html#index
+     * Max number of urls per sitemap according to spec.
+     * @see https://www.sitemaps.org/protocol.html
      */
     const MAX_URLS_PER_SITEMAP = 50000;
+
+    /**
+     * Max number of sitemaps per index file according to spec.
+     * @see http://www.sitemaps.org/protocol.html
+     */
+    const MAX_SITEMAPS_PER_INDEX = 50000;
 
     const URL_PARAM_LOC = 0;
     const URL_PARAM_LASTMOD = 1;
@@ -37,17 +43,7 @@ class SitemapGenerator
      * @var string
      * @access public
      */
-    public $robotsFileName = "robots.txt";
-    /**
-     * Quantity of sitemaps per index file.
-     * According to specification max value is 50.000
-     * If Your index file is very long, index file can be bigger than 10MB,
-     * in this case use smaller value.
-     * @see http://www.sitemaps.org/protocol.html
-     * @var int
-     * @access public
-     */
-    public $maxSitemaps = 50000; // todo: make it private
+    private $robotsFileName = "robots.txt";
     /**
      * Name of sitemap file
      * @var string
@@ -405,10 +401,9 @@ class SitemapGenerator
             }
             $this->sitemaps[] = $xml->asXML();
         }
-        if (count($this->sitemaps) > $this->maxSitemaps) {
+        if (count($this->sitemaps) > self::MAX_SITEMAPS_PER_INDEX) {
             throw new LengthException(
-                "Sitemap index can contain {$this->maxSitemaps} sitemaps.
-                Perhaps You trying to submit too many maps."
+                sprintf("Number of sitemaps per index has reached its limit (%s)", self::MAX_SITEMAPS_PER_INDEX)
             );
         }
         if (count($this->sitemaps) > 1) {
