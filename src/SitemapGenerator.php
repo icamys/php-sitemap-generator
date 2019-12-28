@@ -374,7 +374,7 @@ class SitemapGenerator
             $xml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
                 $row = $xml->addChild('sitemap');
-                $row->addChild('loc', $this->baseURL . "/" . $this->appendGzPrefixIfEnabled(htmlentities($sitemap[0])));
+                $row->addChild('loc', $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap[0])));
                 $row->addChild('lastmod', date('c'));
             }
             $this->sitemapFullURL = $this->baseURL . "/" . $this->sitemapIndexFileName;
@@ -434,10 +434,10 @@ class SitemapGenerator
         if ($name === null) {
             $name = $this->sitemapFileName;
         }
-        return $this->appendGzPrefixIfEnabled($name);
+        return $this->appendGzPostfixIfEnabled($name);
     }
 
-    private function appendGzPrefixIfEnabled($str)
+    private function appendGzPostfixIfEnabled($str)
     {
         if ($this->createGZipFile) {
             return $str . ".gz";
