@@ -5,6 +5,12 @@
          backupGlobals="false"
          colors="true"
 >
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+
     <testsuites>
         <testsuite name="Basic tests">
             <directory>test</directory>

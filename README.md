@@ -61,7 +61,13 @@ $generator->updateRobots();
 Run tests with command:
 
 ```bash
-$ phpunit
+$ ./vendor/bin/phpunit
+```
+
+Run code coverage:
+
+```bash
+$ ./vendor/bin/phpunit --coverage-html ./coverage
 ```
 
 ### Changelog
