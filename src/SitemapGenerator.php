@@ -272,6 +272,7 @@ class SitemapGenerator
      * @param array|null $alternates
      * @return SitemapGenerator
      * @throws InvalidArgumentException
+     * @todo add check of changefreq values
      * @see http://php.net/manual/en/function.date.php
      * @see http://en.wikipedia.org/wiki/ISO_8601
      */
@@ -504,18 +505,26 @@ class SitemapGenerator
     public function writeSitemap(): SitemapGenerator
     {
         if (!isset($this->sitemaps)) {
-            throw new BadMethodCallException("To write sitemap, call createSitemap function first.");
+            throw new BadMethodCallException("To write sitemap, call createSitemap function first."); // todo: change message
         }
+
         if (isset($this->sitemapIndex)) {
             $this->document->loadXML($this->sitemapIndex[1]);
-            $this->writeFile($this->document->saveXML(), $this->basePath, $this->sitemapIndex[0], true);
+            $docStr = $this->document->saveXML();
+            $filepath = $this->basePath . $this->sitemapIndex[0];
+            $this->writeFile($docStr, $filepath);
+            $this->writeGZipFile($docStr, $filepath . '.gz');
             foreach ($this->sitemaps as $sitemap) {
-                $this->writeFile($sitemap[1], $this->basePath, $sitemap[0]);
+                $filepath = $this->basePath . $sitemap[0];
+                $this->writeFile($sitemap[1], $filepath);
             }
         } else {
             $this->document->loadXML($this->sitemaps[0][1]);
-            $this->writeFile($this->document->saveXML(), $this->basePath, $this->sitemaps[0][0], true);
-            $this->writeFile($this->sitemaps[0][1], $this->basePath, $this->sitemaps[0][0]);
+            $docStr = $this->document->saveXML();
+            $filepath = $this->basePath . $this->sitemaps[0][0];
+            $this->writeFile($docStr, $filepath);
+            $this->writeGZipFile($docStr, $filepath . '.gz');
+            $this->writeFile($this->sitemaps[0][1], $filepath);
         }
         return $this;
     }
@@ -523,36 +532,46 @@ class SitemapGenerator
     /**
      * Write file to path
      * @param string $content
-     * @param string $filePath
-     * @param string $fileName
-     * @param bool $noGzip
-     * @return bool
+     * @param string $filepath
+     * @return SitemapGenerator
      * @access private
      */
-    private function writeFile($content, $filePath, $fileName, $noGzip = false) // todo: remove boolean flag
+    private function writeFile(string $content, string $filepath): SitemapGenerator
     {
-        if (!$noGzip && $this->createGZipFile) {
-            return $this->writeGZipFile($content, $filePath, $fileName);
+        if (file_put_contents($filepath, $content) === false) {
+            throw new RuntimeException('failed to write content to file ' . $filepath);
         }
-        $file = fopen($filePath . $fileName, 'w');
-        fwrite($file, $content);
-        return fclose($file);
+
+        return $this;
     }
 
     /**
      * Save GZipped file.
      * @param string $content
-     * @param string $filePath
-     * @param string $fileName
-     * @return bool
+     * @param string $filepath
+     * @return SitemapGenerator
      * @access private
      */
-    private function writeGZipFile($content, $filePath, $fileName)
+    private function writeGZipFile(string $content, string $filepath): SitemapGenerator
     {
-        $fileName .= '.gz';
-        $file = gzopen($filePath . $fileName, 'w');
-        gzwrite($file, $content);
-        return gzclose($file);
+        $file = gzopen($filepath, 'w');
+        if ($file === false) {
+            throw new RuntimeException(sprintf('failed to open file %s for writing', $filepath));
+        }
+
+        $contentLen = strlen($content);
+
+        if ($contentLen > 0) {
+            print_r($contentLen);
+            if (gzwrite($file, $content) === 0) {
+                throw new RuntimeException('failed to write content to file ' . $filepath);
+            }
+        }
+
+        if (gzclose($file) === false) {
+            throw new RuntimeException('failed to close file ' . $filepath);
+        }
+        return $this;
     }
 
     /**
