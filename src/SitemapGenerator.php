@@ -46,6 +46,7 @@ class SitemapGenerator
     const ATTR_NAME_LASTMOD = 'lastmod';
     const ATTR_NAME_CHANGEFREQ = 'changefreq';
     const ATTR_NAME_PRIORITY = 'priority';
+    const ATTR_NAME_ALTERNATES = 'alternates';
 
     /**
      * Robots file name
@@ -621,6 +622,9 @@ class SitemapGenerator
                             break;
                         case static::ATTR_KEY_PRIORITY:
                             $url[self::ATTR_NAME_PRIORITY] = $paramValue;
+                            break;
+                        case static::ATTR_KEY_ALTERNATES:
+                            $url[self::ATTR_NAME_ALTERNATES] = $paramValue;
                             break;
                         default:
                             break;
