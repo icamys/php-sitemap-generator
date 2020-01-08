@@ -141,7 +141,7 @@ class SitemapGenerator
      * @var array of strings
      * @access private
      */
-    private $sitemapIndex;
+    private $sitemapIndex = [];
     /**
      * Current sitemap full URL
      * @var string
@@ -414,26 +414,26 @@ class SitemapGenerator
             }
             for ($i = 0; $i < $sitemapsCount; $i++) {
                 $this->sitemaps[$i] = [
-                    str_replace(".xml", ($i + 1) . ".xml", $this->sitemapFileName),
-                    $this->sitemaps[$i],
+                    'filename' => str_replace(".xml", ($i + 1) . ".xml", $this->sitemapFileName),
+                    'source' => $this->sitemaps[$i],
                 ];
             }
             $sitemapXml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
                 $row = $sitemapXml->addChild('sitemap');
-                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap[0])));
+                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap['source'])));
                 $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
             }
             $this->sitemapFullURL = $this->baseURL . "/" . $this->sitemapIndexFileName;
             $this->sitemapIndex = [
-                $this->sitemapIndexFileName,
-                $sitemapXml->asXML(),
+                'filename' => $this->sitemapIndexFileName,
+                'source' => $sitemapXml->asXML(),
             ];
         } else {
             $this->sitemapFullURL = $this->baseURL . "/" . $this->appendGzPostfixIfEnabled($this->sitemapFileName);
             $this->sitemaps[0] = [
-                $this->sitemapFileName,
-                $this->sitemaps[0],
+                'filename' => $this->sitemapFileName,
+                'source' => $this->sitemaps[0],
             ];
         }
 
@@ -484,27 +484,27 @@ class SitemapGenerator
      */
     public function writeSitemap(): SitemapGenerator
     {
-        if (!isset($this->sitemaps)) {
-            throw new BadMethodCallException("the sitemap should be created first");
+        if (count($this->sitemaps) === 0) { // todo: replace all '!isset($this->sitemaps)' occurances with this line
+            throw new BadMethodCallException("there are no sitemaps to write");
         }
 
-        if (isset($this->sitemapIndex)) {
-            $this->document->loadXML($this->sitemapIndex[1]);
+        if (count($this->sitemapIndex) > 0) {
+            $this->document->loadXML($this->sitemapIndex['source']);
             $docStr = $this->document->saveXML();
-            $filepath = $this->basePath . $this->sitemapIndex[0];
+            $filepath = $this->basePath . $this->sitemapIndex['filename'];
             $this->writeFile($docStr, $filepath);
             $this->writeGZipFile($docStr, $filepath . '.gz');
             foreach ($this->sitemaps as $sitemap) {
-                $filepath = $this->basePath . $sitemap[0];
-                $this->writeFile($sitemap[1], $filepath);
+                $filepath = $this->basePath . $sitemap['filename'];
+                $this->writeFile($sitemap['source'], $filepath);
             }
         } else {
-            $this->document->loadXML($this->sitemaps[0][1]);
+            $sitemap = $this->sitemaps[0];
+            $this->document->loadXML($sitemap['source']);
             $docStr = $this->document->saveXML();
-            $filepath = $this->basePath . $this->sitemaps[0][0];
+            $filepath = $this->basePath . $sitemap['filename'];
             $this->writeFile($docStr, $filepath);
             $this->writeGZipFile($docStr, $filepath . '.gz');
-            $this->writeFile($this->sitemaps[0][1], $filepath);
         }
         return $this;
     }
@@ -542,7 +542,6 @@ class SitemapGenerator
         $contentLen = strlen($content);
 
         if ($contentLen > 0) {
-            print_r($contentLen);
             if (gzwrite($file, $content) === 0) {
                 throw new RuntimeException('failed to write content to file ' . $filepath);
             }

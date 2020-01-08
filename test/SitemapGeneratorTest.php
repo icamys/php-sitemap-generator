@@ -2,20 +2,46 @@
 
 namespace Icamys\SitemapGenerator;
 
+use BadMethodCallException;
+use DateTime;
 use InvalidArgumentException;
 use OutOfRangeException;
+use phpmock\phpunit\PHPMock;
+use phpmock\spy\Spy;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 
 class SitemapGeneratorTest extends TestCase
 {
+    use PHPMock;
+
     private $testDomain = 'example.com';
 
     /**
      * @var SitemapGenerator
      */
     private $g;
+
+    /**
+     * @var Spy for file_put_contents function
+     */
+    private $filePutContentsSpy;
+
+    /**
+     * @var Spy for gzopen function
+     */
+    private $gzopenSpy;
+
+    /**
+     * @var Spy for gzwrite function
+     */
+    private $gzwriteSpy;
+
+    /**
+     * @var Spy for gzclose function
+     */
+    private $gzcloseSpy;
 
     public function getSizeDiffInPercentsProvider()
     {
@@ -136,13 +162,70 @@ class SitemapGeneratorTest extends TestCase
         $this->g->addURL($url, new \DateTime(), 'always', '0.8' );
     }
 
+    public function testWriteSitemapBadMethodCallException()
+    {
+        $this->expectException(BadMethodCallException::class);
+        $this->g->writeSitemap();
+    }
+
+    public function testWriteSitemapWithManySitemaps()
+    {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8' );
+        $this->g->addURL('/product-2/', new DateTime(), 'always', '0.8' );
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+
+        $this->assertCount(3, $this->filePutContentsSpy->getInvocations());
+        $this->assertEquals('sitemap-index.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
+        $this->assertEquals('sitemap1.xml', $this->filePutContentsSpy->getInvocations()[1]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[1]->getArguments()[1]);
+        $this->assertEquals('sitemap2.xml', $this->filePutContentsSpy->getInvocations()[2]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[2]->getArguments()[1]);
+        $this->assertCount(1, $this->gzopenSpy->getInvocations());
+        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
+        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
+    }
+
+    public function testWriteSitemapWithSingleSitemap()
+    {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8' );
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+
+        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
+        $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
+        $this->assertCount(1, $this->gzopenSpy->getInvocations());
+        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
+        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
+    }
+
     protected function setUp(): void
     {
         $this->g = new SitemapGenerator($this->testDomain);
+        $this->filePutContentsSpy = new Spy(__NAMESPACE__, "file_put_contents", function (){});
+        $this->filePutContentsSpy->enable();
+        $this->gzopenSpy = new Spy(__NAMESPACE__, "gzopen", function (){});
+        $this->gzopenSpy->enable();
+        $this->gzwriteSpy = new Spy(__NAMESPACE__, "gzwrite", function (){});
+        $this->gzwriteSpy->enable();
+        $this->gzcloseSpy = new Spy(__NAMESPACE__, "gzclose", function (){});
+        $this->gzcloseSpy->enable();
     }
 
     protected function tearDown(): void
     {
         unset($this->g);
+        $this->filePutContentsSpy->disable();
+        $this->gzopenSpy->disable();
+        $this->gzwriteSpy->disable();
+        $this->gzcloseSpy->disable();
     }
 }
