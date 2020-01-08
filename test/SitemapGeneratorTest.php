@@ -228,6 +228,12 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(1, $this->gzcloseSpy->getInvocations());
     }
 
+    public function testAddTooLargeUrl()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->addURL(str_repeat('c', 5000), new DateTime(), 'always', '0.8');
+    }
+
     public function testCreateSitemapExceptionWhenNoUrlsAdded() {
         $this->expectException(BadMethodCallException::class);
         $this->g->createSitemap();

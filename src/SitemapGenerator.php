@@ -269,7 +269,7 @@ class SitemapGenerator
         }
         if (mb_strlen($loc) > self::MAX_URL_LEN) {
             throw new InvalidArgumentException(
-                sprintf("the url length must be less than %d characters", self::MAX_URL_LEN)
+                sprintf("url is too large (%d of %d)", mb_strlen($loc), self::MAX_URL_LEN)
             );
         }
         $tmp = new SplFixedArray(1);
