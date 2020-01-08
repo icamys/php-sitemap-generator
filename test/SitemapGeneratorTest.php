@@ -5,6 +5,7 @@ namespace Icamys\SitemapGenerator;
 use BadMethodCallException;
 use DateTime;
 use InvalidArgumentException;
+use LengthException;
 use OutOfRangeException;
 use phpmock\phpunit\PHPMock;
 use phpmock\spy\Spy;
@@ -226,6 +227,18 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(1, $this->gzopenSpy->getInvocations());
         $this->assertCount(1, $this->gzwriteSpy->getInvocations());
         $this->assertCount(1, $this->gzcloseSpy->getInvocations());
+    }
+
+    public function testWriteTooLargeSitemap()
+    {
+        $this->expectException(LengthException::class);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        for ($i = 0; $i < 25000; $i++) {
+            $this->g->addURL(str_repeat('c', 2040) . $i, new DateTime(), 'always', '0.8');
+        }
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
     }
 
     public function testAddTooLargeUrl()

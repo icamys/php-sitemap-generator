@@ -350,14 +350,23 @@ class SitemapGenerator
             '</sitemapindex>',
         ]);
 
-        $urlsCount = $this->urls->getSize();
+        // Counting null urls as we cannot use count() method directly
+        // as it returns array capacity, not real size
+        $nullUrls = 0;
+        foreach ($this->urls as $url) {
+            if (is_null($url)) {
+                $nullUrls++;
+            }
+        }
+        $urlsCount = $this->urls->count() - $nullUrls;
 
-        $chunksCount = ceil($urlsCount / $this->maxURLsPerSitemap);
+        $chunkSize = $this->maxURLsPerSitemap;
+        $chunksCount = ceil($urlsCount / $chunkSize);
 
         for ($chunkCounter = 0; $chunkCounter < $chunksCount; $chunkCounter++) {
             $sitemapXml = new SimpleXMLElement($sitemapHeader);
-            for ($urlCounter = $chunkCounter * $this->maxURLsPerSitemap;
-                 $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $urlsCount; $urlCounter++
+            for ($urlCounter = $chunkCounter * $chunkSize;
+                 $urlCounter < ($chunkCounter + 1) * $chunkSize && $urlCounter < $urlsCount; $urlCounter++
             ) {
                 $row = $sitemapXml->addChild('url');
 
