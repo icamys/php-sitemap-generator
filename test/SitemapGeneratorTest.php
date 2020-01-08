@@ -325,6 +325,20 @@ class SitemapGeneratorTest extends TestCase
         $this->g->createSitemap();
     }
 
+    public function testCreateGeneratorWithBasepathWithoutTrailingSlash() {
+        $this->g = new SitemapGenerator($this->testDomain, 'path');
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+
+        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
+        $this->assertEquals('path/sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
+    }
+
     /**
      * @throws \phpmock\MockEnabledException
      */
