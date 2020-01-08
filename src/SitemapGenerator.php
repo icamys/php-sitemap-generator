@@ -636,8 +636,6 @@ class SitemapGenerator
                         case static::ATTR_KEY_ALTERNATES:
                             $url[self::ATTR_NAME_ALTERNATES] = $paramValue;
                             break;
-                        default:
-                            break;
                     }
                 }
                 $urls[$key] = $url;
