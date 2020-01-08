@@ -257,6 +257,8 @@ class SitemapGenerator
      * @return SitemapGenerator
      * @throws InvalidArgumentException
      * @todo add check of changefreq values
+     * @todo add scheme and domain check
+     * @todo check that port of url is the same as base url port
      * @see http://php.net/manual/en/function.date.php
      * @see http://en.wikipedia.org/wiki/ISO_8601
      */
@@ -420,10 +422,10 @@ class SitemapGenerator
             $sitemapXml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
                 $row = $sitemapXml->addChild('sitemap');
-                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap['source'])));
+                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap['filename'])));
                 $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
             }
-            $this->sitemapFullURL = $this->baseURL . "/" . $this->sitemapIndexFileName;
+            $this->sitemapFullURL = $this->baseURL . "/" . $this->appendGzPostfixIfEnabled($this->sitemapIndexFileName);
             $this->sitemapIndex = [
                 'filename' => $this->sitemapIndexFileName,
                 'source' => $sitemapXml->asXML(),
@@ -489,13 +491,19 @@ class SitemapGenerator
 
         if (count($this->sitemapIndex) > 0) {
             $this->document->loadXML($this->sitemapIndex['source']);
-            $docStr = $this->document->saveXML();
-            $filepath = $this->basePath . $this->sitemapIndex['filename'];
-            $this->writeFile($docStr, $filepath);
-            $this->writeGZipFile($docStr, $filepath . '.gz');
+            $indexStr = $this->document->saveXML();
+            $indexFilepath = $this->basePath . $this->sitemapIndex['filename'];
+            $this->writeFile($indexStr, $indexFilepath);
+            if ($this->createGZipFile) {
+                $this->writeGZipFile($indexStr, $indexFilepath . '.gz');
+            }
             foreach ($this->sitemaps as $sitemap) {
                 $filepath = $this->basePath . $sitemap['filename'];
-                $this->writeFile($sitemap['source'], $filepath);
+                if ($this->createGZipFile) {
+                    $this->writeGZipFile($sitemap['source'], $filepath . '.gz');
+                } else {
+                    $this->writeFile($sitemap['source'], $filepath);
+                }
             }
         } else {
             $sitemap = $this->sitemaps[0];
@@ -503,7 +511,9 @@ class SitemapGenerator
             $docStr = $this->document->saveXML();
             $filepath = $this->basePath . $sitemap['filename'];
             $this->writeFile($docStr, $filepath);
-            $this->writeGZipFile($docStr, $filepath . '.gz');
+            if ($this->createGZipFile) {
+                $this->writeGZipFile($docStr, $filepath . '.gz');
+            }
         }
         return $this;
     }

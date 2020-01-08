@@ -123,10 +123,9 @@ class SitemapGeneratorTest extends TestCase
 
     public function testAddURL()
     {
-        $now = new \DateTime();
-        $nowStr = $now->format('Y-m-d\TH:i:sP');
+        $nowStr = $this->now->format('Y-m-d\TH:i:sP');
         for ($i = 0; $i < 2; $i++) {
-            $this->g->addURL('/product-'.$i . '/', $now, 'always', '0.8' );
+            $this->g->addURL('/product-'.$i . '/', $this->now, 'always', '0.8' );
         }
         $urlArray = $this->g->getURLsArray();
 
@@ -144,9 +143,8 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
-        $now = new \DateTime();
-        $nowStr = $now->format('Y-m-d\TH:i:sP');
-        $this->g->addURL('/product-0/', $now, 'always', '0.8' , $alternates);
+        $nowStr = $this->now->format('Y-m-d\TH:i:sP');
+        $this->g->addURL('/product-0/', $this->now, 'always', '0.8' , $alternates);
         $urlArray = $this->g->getURLsArray();
         $this->assertCount(1, $urlArray);
         $this->assertEquals('/product-0/', $urlArray[0][$this->g::ATTR_NAME_LOC]);
@@ -164,14 +162,14 @@ class SitemapGeneratorTest extends TestCase
     public function testAddURLInvalidLocException()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->g->addURL('', new \DateTime(), 'always', '0.8' );
+        $this->g->addURL('', $this->now, 'always', '0.8' );
     }
 
     public function testAddURLTooLongException()
     {
         $this->expectException(InvalidArgumentException::class);
         $url = str_repeat("s", 5000);
-        $this->g->addURL($url, new \DateTime(), 'always', '0.8' );
+        $this->g->addURL($url, $this->now, 'always', '0.8' );
     }
 
     public function testWriteSitemapBadMethodCallException()
@@ -197,9 +195,37 @@ class SitemapGeneratorTest extends TestCase
         $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[1]->getArguments()[1]);
         $this->assertEquals('sitemap2.xml', $this->filePutContentsSpy->getInvocations()[2]->getArguments()[0]);
         $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[2]->getArguments()[1]);
-        $this->assertCount(1, $this->gzopenSpy->getInvocations());
-        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
-        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
+    }
+
+    public function testWriteSitemapWithManySitemapsAndGzipEnabled()
+    {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->toggleGZipFileCreation();
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8');
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+
+        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
+        $this->assertEquals('sitemap-index.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
+
+        $this->assertCount(3, $this->gzopenSpy->getInvocations());
+        $this->assertEquals('sitemap-index.xml.gz', $this->gzopenSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('w', $this->gzopenSpy->getInvocations()[0]->getArguments()[1]);
+        $this->assertEquals('sitemap1.xml.gz', $this->gzopenSpy->getInvocations()[1]->getArguments()[0]);
+        $this->assertStringStartsWith('w', $this->gzopenSpy->getInvocations()[1]->getArguments()[1]);
+        $this->assertEquals('sitemap2.xml.gz', $this->gzopenSpy->getInvocations()[2]->getArguments()[0]);
+        $this->assertStringStartsWith('w', $this->gzopenSpy->getInvocations()[2]->getArguments()[1]);
+
+        $this->assertCount(3, $this->gzwriteSpy->getInvocations());
+        $this->assertStringStartsWith('<?xml ', $this->gzwriteSpy->getInvocations()[0]->getArguments()[1]);
+        $this->assertStringStartsWith('<?xml ', $this->gzwriteSpy->getInvocations()[1]->getArguments()[1]);
+        $this->assertStringStartsWith('<?xml ', $this->gzwriteSpy->getInvocations()[2]->getArguments()[1]);
+
+        $this->assertCount(3, $this->gzcloseSpy->getInvocations());
     }
 
     public function testWriteSitemapWithSingleSitemap()
@@ -207,6 +233,21 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+
+        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
+        $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
+    }
+
+    public function testWriteSitemapWithSingleSitemapAndGzipEnabled()
+    {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->toggleGZipFileCreation();
         $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
         $this->g->createSitemap();
         $this->g->writeSitemap();
@@ -235,9 +276,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
         $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
         $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
-        $this->assertCount(1, $this->gzopenSpy->getInvocations());
-        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
-        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
     }
 
     public function testCreateTooLargeSitemap()
@@ -287,6 +325,9 @@ class SitemapGeneratorTest extends TestCase
         $this->g->createSitemap();
     }
 
+    /**
+     * @throws \phpmock\MockEnabledException
+     */
     protected function setUp(): void
     {
         $this->g = new SitemapGenerator($this->testDomain);
