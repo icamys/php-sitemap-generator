@@ -103,6 +103,12 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setRobotsFileName('');
     }
 
+    public function testSetRobotsFileName()
+    {
+        $return = $this->g->setRobotsFileName('robots.txt');
+        $this->assertEquals($this->g, $return);
+    }
+
     public function testSetMaxURLsPerSitemapLeftOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
