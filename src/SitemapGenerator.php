@@ -483,8 +483,8 @@ class SitemapGenerator
      */
     public function writeSitemap(): SitemapGenerator
     {
-        if (count($this->sitemaps) === 0) { // todo: replace all '!isset($this->sitemaps)' occurances with this line
-            throw new BadMethodCallException("there are no sitemaps to write");
+        if (count($this->sitemaps) === 0) {
+            throw new BadMethodCallException("To write sitemap, call createSitemap function first.");
         }
 
         if (count($this->sitemapIndex) > 0) {
@@ -565,7 +565,7 @@ class SitemapGenerator
      */
     public function submitSitemap($yahooAppId = null)
     {
-        if (!isset($this->sitemaps)) {
+        if (count($this->sitemaps) === 0) {
             throw new BadMethodCallException("To submit sitemap, call createSitemap function first.");
         }
         if (!extension_loaded('curl')) {
@@ -657,7 +657,7 @@ class SitemapGenerator
      */
     public function updateRobots(): SitemapGenerator
     {
-        if (!isset($this->sitemaps)) {
+        if (count($this->sitemaps) === 0) {
             throw new BadMethodCallException("To update robots.txt, call createSitemap function first.");
         }
 
