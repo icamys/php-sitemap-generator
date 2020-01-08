@@ -231,7 +231,7 @@ class SitemapGenerator
     {
         if ($value < 1 || self::MAX_URLS_PER_SITEMAP < $value) {
             throw new OutOfRangeException(
-                sprintf('trying to set out of range value (allowed 1-%d)', self::MAX_URLS_PER_SITEMAP)
+                sprintf('value %d is out of range 1-%d', $value, self::MAX_URLS_PER_SITEMAP)
             );
         }
         $this->maxURLsPerSitemap = $value;
