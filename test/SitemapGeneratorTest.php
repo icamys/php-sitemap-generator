@@ -229,16 +229,40 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(1, $this->gzcloseSpy->getInvocations());
     }
 
-    public function testWriteTooLargeSitemap()
+    public function testCreateTooLargeSitemap()
     {
         $this->expectException(LengthException::class);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $longLine = str_repeat('c', 2040);
         for ($i = 0; $i < 25000; $i++) {
-            $this->g->addURL(str_repeat('c', 2040) . $i, new DateTime(), 'always', '0.8');
+            $this->g->addURL($longLine . $i, new DateTime(), 'always', '0.8');
         }
         $this->g->createSitemap();
-        $this->g->writeSitemap();
+    }
+
+    public function testCreateExactMaxSitemaps()
+    {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        for ($i = 0; $i < 50000; $i++) {
+            $this->g->addURL( $i, new DateTime(), 'always', '0.8'); // todo: create datetime once
+        }
+        $this->g->createSitemap();
+        $this->assertTrue(true);
+    }
+
+    public function testCreateTooManySitemaps()
+    {
+        $this->expectException(LengthException::class);
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        for ($i = 0; $i < 50001; $i++) {
+            $this->g->addURL( $i, new DateTime(), 'always', '0.8');
+        }
+        $this->g->createSitemap();
     }
 
     public function testAddTooLargeUrl()
