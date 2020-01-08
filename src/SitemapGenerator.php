@@ -350,22 +350,14 @@ class SitemapGenerator
             '</sitemapindex>',
         ]);
 
-        $nullUrls = 0;
-        foreach ($this->urls as $url) {
-            if (is_null($url)) {
-                $nullUrls++;
-            }
-        }
+        $urlsCount = $this->urls->getSize();
 
-        $nonEmptyUrls = $this->urls->getSize() - $nullUrls;
+        $chunksCount = ceil($urlsCount / $this->maxURLsPerSitemap);
 
-        $chunks = ceil($nonEmptyUrls / $this->maxURLsPerSitemap);
-
-        for ($chunkCounter = 0; $chunkCounter < $chunks; $chunkCounter++) {
+        for ($chunkCounter = 0; $chunkCounter < $chunksCount; $chunkCounter++) {
             $sitemapXml = new SimpleXMLElement($sitemapHeader);
             for ($urlCounter = $chunkCounter * $this->maxURLsPerSitemap;
-                 $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $nonEmptyUrls;
-                 $urlCounter++
+                 $urlCounter < ($chunkCounter + 1) * $this->maxURLsPerSitemap && $urlCounter < $urlsCount; $urlCounter++
             ) {
                 $row = $sitemapXml->addChild('url');
 
