@@ -207,6 +207,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(1, $this->gzcloseSpy->getInvocations());
     }
 
+    public function testCreateSitemapExceptionWhenNoUrlsAdded() {
+        $this->expectException(BadMethodCallException::class);
+        $this->g->createSitemap();
+    }
+
     protected function setUp(): void
     {
         $this->g = new SitemapGenerator($this->testDomain);

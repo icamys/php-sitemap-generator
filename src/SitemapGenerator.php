@@ -317,8 +317,11 @@ class SitemapGenerator
      */
     public function createSitemap(): SitemapGenerator
     {
-        if (!isset($this->urls)) {
-            throw new BadMethodCallException("To create sitemap, call addUrl or addUrls function first.");
+        if ($this->urls->getSize() === 0) {
+            throw new BadMethodCallException(
+                "No urls added to generator. " .
+                "Please add urls by calling \"addUrl\" function."
+            );
         }
 
         $generatorInfo = implode(PHP_EOL, [
