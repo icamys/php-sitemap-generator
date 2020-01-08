@@ -16,7 +16,7 @@ class SitemapGeneratorTest extends TestCase
 {
     use PHPMock;
 
-    private $testDomain = 'example.com';
+    private $testDomain = 'http://example.com';
 
     /**
      * @var SitemapGenerator
@@ -196,6 +196,27 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8' );
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+
+        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
+        $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
+        $this->assertCount(1, $this->gzopenSpy->getInvocations());
+        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
+        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
+    }
+
+    public function testWriteSitemapWithSingleSitemapWithAlternates()
+    {
+        $alternates = [
+            ['hreflang' => 'de', 'href' => $this->testDomain . "/de"],
+            ['hreflang' => 'fr', 'href' => $this->testDomain . "/fr"],
+        ];
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8', $alternates);
         $this->g->createSitemap();
         $this->g->writeSitemap();
 

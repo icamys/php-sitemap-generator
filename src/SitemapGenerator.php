@@ -378,7 +378,7 @@ class SitemapGenerator
                 if ($this->urls[$urlCounter]->getSize() > 4) {
                     foreach ($this->urls[$urlCounter][self::ATTR_KEY_ALTERNATES] as $alternate) {
                         if (isset($alternate['hreflang']) && isset($alternate['href'])) {
-                            $tag = $row->addChild('link', null, 'xhtml');
+                            $tag = $row->addChild('link', null, null);
                             $tag->addAttribute('rel', 'alternate');
                             $tag->addAttribute('hreflang', $alternate['hreflang']);
                             $tag->addAttribute('href', $alternate['href']);
