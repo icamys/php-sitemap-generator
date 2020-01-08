@@ -339,6 +339,13 @@ class SitemapGeneratorTest extends TestCase
         $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
     }
 
+    public function testGetUrlsCount() {
+        $this->g->setMaxURLsPerSitemap(10);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->assertEquals(2, $this->g->getURLsCount());
+    }
+
     /**
      * @throws \phpmock\MockEnabledException
      */
