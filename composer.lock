@@ -1529,7 +1529,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.5.0",
+        "php": ">=7.1.0",
         "ext-spl": "*",
         "ext-dom": "*",
         "ext-simplexml": "*",
