@@ -44,6 +44,11 @@ class SitemapGeneratorTest extends TestCase
      */
     private $gzcloseSpy;
 
+    /**
+     * @var DateTime current datetime
+     */
+    private $now;
+
     public function getSizeDiffInPercentsProvider()
     {
         return [
@@ -174,8 +179,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8' );
-        $this->g->addURL('/product-2/', new DateTime(), 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
         $this->g->createSitemap();
         $this->g->writeSitemap();
 
@@ -196,7 +201,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
         $this->g->createSitemap();
         $this->g->writeSitemap();
 
@@ -217,7 +222,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', new DateTime(), 'always', '0.8', $alternates);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8', $alternates);
         $this->g->createSitemap();
         $this->g->writeSitemap();
 
@@ -236,7 +241,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $longLine = str_repeat('c', 2040);
         for ($i = 0; $i < 25000; $i++) {
-            $this->g->addURL($longLine . $i, new DateTime(), 'always', '0.8');
+            $this->g->addURL($longLine . $i, $this->now, 'always', '0.8');
         }
         $this->g->createSitemap();
     }
@@ -247,7 +252,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         for ($i = 0; $i < 50000; $i++) {
-            $this->g->addURL( $i, new DateTime(), 'always', '0.8'); // todo: create datetime once
+            $this->g->addURL($i, $this->now, 'always', '0.8');
         }
         $this->g->createSitemap();
         $this->assertTrue(true);
@@ -260,7 +265,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         for ($i = 0; $i < 50001; $i++) {
-            $this->g->addURL( $i, new DateTime(), 'always', '0.8');
+            $this->g->addURL($i, $this->now, 'always', '0.8');
         }
         $this->g->createSitemap();
     }
@@ -268,7 +273,7 @@ class SitemapGeneratorTest extends TestCase
     public function testAddTooLargeUrl()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->g->addURL(str_repeat('c', 5000), new DateTime(), 'always', '0.8');
+        $this->g->addURL(str_repeat('c', 5000), $this->now, 'always', '0.8');
     }
 
     public function testCreateSitemapExceptionWhenNoUrlsAdded() {
@@ -287,6 +292,7 @@ class SitemapGeneratorTest extends TestCase
         $this->gzwriteSpy->enable();
         $this->gzcloseSpy = new Spy(__NAMESPACE__, "gzclose", function (){});
         $this->gzcloseSpy->enable();
+        $this->now = new DateTime();
     }
 
     protected function tearDown(): void
