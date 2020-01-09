@@ -27,8 +27,10 @@ $generator = new \Icamys\SitemapGenerator\SitemapGenerator('example.com', $outpu
 // will create also compressed (gzipped) sitemap
 $generator->toggleGZipFileCreation();
 
-// determine how many urls should be put into one file
-// according to standard protocol 50000 is maximum value (see http://www.sitemaps.org/protocol.html)
+// determine how many urls should be put into one file;
+// this feature is useful in case if you have too large urls
+// and your sitemap is out of allowed size (50Mb)
+// according to the standard protocol 50000 is maximum value (see http://www.sitemaps.org/protocol.html)
 $generator->setMaxURLsPerSitemap(50000);
 
 // sitemap file name
@@ -46,14 +48,17 @@ $alternates = [
 // adding url `loc`, `lastmodified`, `changefreq`, `priority`, `alternates`
 $generator->addURL('http://example.com/url/path/', new DateTime(), 'always', 0.5, $alternates);
 
-// generating internally a sitemap
+// generate internally a sitemap
 $generator->createSitemap();
 
-// writing early generated sitemap to file
+// write early generated sitemap to file(s)
 $generator->writeSitemap();
 
 // update robots.txt file in output directory or create a new one
 $generator->updateRobots();
+
+// submit your sitemaps to Google, Yahoo, Bing and Ask.com
+$generator->submitSitemap();
 ```
 
 ### Testing
@@ -75,9 +80,10 @@ $ ./vendor/bin/phpunit --coverage-html ./coverage
 New in 2.0.0:
 * Major code rework
 * No more public properties in generator, using only methods
-* Removed addUrls method in favor to one addUrl method
+* Removed `addUrls` method in favor of `addUrl`
 * Fixed bug with robots.txt update
 * Fixed bug in addURL method (empty loc)
 * Unit tests added for quality assurance
 * Updated limits according to [sitemaps spec](https://www.sitemaps.org/protocol.html)
 * Updated search engines urls
+* Added change frequency validation
