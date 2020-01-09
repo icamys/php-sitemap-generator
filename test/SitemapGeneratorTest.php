@@ -25,6 +25,11 @@ class SitemapGeneratorTest extends TestCase
     private $g;
 
     /**
+     * @var FileSystem
+     */
+    private $fs;
+
+    /**
      * @var Spy for file_put_contents function
      */
     private $filePutContentsSpy;
@@ -180,25 +185,59 @@ class SitemapGeneratorTest extends TestCase
 
     public function testWriteSitemapWithManySitemaps()
     {
+        $this->fs->expects($this->exactly(3))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap-index.xml'), $this->stringStartsWith('<?xml ')],
+                [$this->equalTo('sitemap1.xml'), $this->stringStartsWith('<?xml ')],
+                [$this->equalTo('sitemap2.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8');
         $this->g->createSitemap();
         $this->g->writeSitemap();
-
-        $this->assertCount(3, $this->filePutContentsSpy->getInvocations());
-        $this->assertEquals('sitemap-index.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
-        $this->assertEquals('sitemap1.xml', $this->filePutContentsSpy->getInvocations()[1]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[1]->getArguments()[1]);
-        $this->assertEquals('sitemap2.xml', $this->filePutContentsSpy->getInvocations()[2]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[2]->getArguments()[1]);
     }
 
     public function testWriteSitemapWithManySitemapsAndGzipEnabled()
     {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap-index.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
+        $fileDescriptorMock = true;
+
+        $this->fs->expects($this->exactly(3))
+            ->method('gzopen')
+            ->withConsecutive(
+                [$this->equalTo('sitemap-index.xml.gz'), $this->equalTo('w')],
+                [$this->equalTo('sitemap1.xml.gz'), $this->stringStartsWith('w')],
+                [$this->equalTo('sitemap2.xml.gz'), $this->stringStartsWith('w')]
+            )
+            ->willReturn($fileDescriptorMock)
+        ;
+
+        $this->fs->expects($this->exactly(3))
+            ->method('gzwrite')
+            ->withConsecutive(
+                [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')],
+                [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')],
+                [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')]
+            );
+
+        $this->fs->expects($this->exactly(3))
+            ->method('gzclose')
+            ->withConsecutive(
+                [$this->equalTo($fileDescriptorMock)],
+                [$this->equalTo($fileDescriptorMock)],
+                [$this->equalTo($fileDescriptorMock)]
+            );
+
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
@@ -207,43 +246,36 @@ class SitemapGeneratorTest extends TestCase
         $this->g->addURL('/product-2/', $this->now, 'always', '0.8');
         $this->g->createSitemap();
         $this->g->writeSitemap();
-
-        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
-        $this->assertEquals('sitemap-index.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
-
-        $this->assertCount(3, $this->gzopenSpy->getInvocations());
-        $this->assertEquals('sitemap-index.xml.gz', $this->gzopenSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('w', $this->gzopenSpy->getInvocations()[0]->getArguments()[1]);
-        $this->assertEquals('sitemap1.xml.gz', $this->gzopenSpy->getInvocations()[1]->getArguments()[0]);
-        $this->assertStringStartsWith('w', $this->gzopenSpy->getInvocations()[1]->getArguments()[1]);
-        $this->assertEquals('sitemap2.xml.gz', $this->gzopenSpy->getInvocations()[2]->getArguments()[0]);
-        $this->assertStringStartsWith('w', $this->gzopenSpy->getInvocations()[2]->getArguments()[1]);
-
-        $this->assertCount(3, $this->gzwriteSpy->getInvocations());
-        $this->assertStringStartsWith('<?xml ', $this->gzwriteSpy->getInvocations()[0]->getArguments()[1]);
-        $this->assertStringStartsWith('<?xml ', $this->gzwriteSpy->getInvocations()[1]->getArguments()[1]);
-        $this->assertStringStartsWith('<?xml ', $this->gzwriteSpy->getInvocations()[2]->getArguments()[1]);
-
-        $this->assertCount(3, $this->gzcloseSpy->getInvocations());
     }
 
     public function testWriteSitemapWithSingleSitemap()
     {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
         $this->g->createSitemap();
         $this->g->writeSitemap();
-
-        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
-        $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
     }
 
     public function testWriteSitemapWithSingleSitemapAndGzipEnabled()
     {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
+        $this->fs->expects($this->exactly(1))->method('gzopen');
+        $this->fs->expects($this->exactly(1))->method('gzwrite');
+        $this->fs->expects($this->exactly(1))->method('gzclose');
+
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
@@ -251,17 +283,16 @@ class SitemapGeneratorTest extends TestCase
         $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
         $this->g->createSitemap();
         $this->g->writeSitemap();
-
-        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
-        $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
-        $this->assertCount(1, $this->gzopenSpy->getInvocations());
-        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
-        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
     }
 
     public function testWriteSitemapWithSingleSitemapWithAlternates()
     {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
         $alternates = [
             ['hreflang' => 'de', 'href' => $this->testDomain . "/de"],
             ['hreflang' => 'fr', 'href' => $this->testDomain . "/fr"],
@@ -272,10 +303,6 @@ class SitemapGeneratorTest extends TestCase
         $this->g->addURL('/product-1/', $this->now, 'always', '0.8', $alternates);
         $this->g->createSitemap();
         $this->g->writeSitemap();
-
-        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
-        $this->assertEquals('sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
     }
 
     public function testCreateTooLargeSitemap()
@@ -326,17 +353,19 @@ class SitemapGeneratorTest extends TestCase
     }
 
     public function testCreateGeneratorWithBasepathWithoutTrailingSlash() {
-        $this->g = new SitemapGenerator($this->testDomain, 'path');
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('path/sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
+        $this->g = new SitemapGenerator($this->testDomain, 'path', $this->fs);
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
         $this->g->createSitemap();
         $this->g->writeSitemap();
-
-        $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
-        $this->assertEquals('path/sitemap.xml', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertStringStartsWith('<?xml ', $this->filePutContentsSpy->getInvocations()[0]->getArguments()[1]);
     }
 
     public function testGetUrlsCount() {
@@ -351,7 +380,8 @@ class SitemapGeneratorTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->g = new SitemapGenerator($this->testDomain);
+        $this->fs = $this->createMock(FileSystem::class);
+        $this->g = new SitemapGenerator($this->testDomain, '', $this->fs);
         $this->filePutContentsSpy = new Spy(__NAMESPACE__, "file_put_contents", function (){});
         $this->filePutContentsSpy->enable();
         $this->gzopenSpy = new Spy(__NAMESPACE__, "gzopen", function (){});

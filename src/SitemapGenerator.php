@@ -164,19 +164,27 @@ class SitemapGenerator
         "User-agent: *",
         "Allow: /",
     ];
+    private $fs;
 
     /**
      * Constructor.
      * @param string $baseURL You site URL, with / at the end.
      * @param string|null $basePath Relative path where sitemap and robots should be stored.
+     * @param FileSystem|null $fs
      */
-    public function __construct(string $baseURL, string $basePath = "")
+    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null)
     {
         $this->urls = new SplFixedArray();
         $this->baseURL = $baseURL;
         $this->document = new DOMDocument("1.0");
         $this->document->preserveWhiteSpace = false;
         $this->document->formatOutput = true;
+
+        if ($fs === null) {
+            $this->fs = new FileSystem();
+        } else {
+            $this->fs = $fs;
+        }
 
         if (strlen($basePath) > 0 && substr($basePath, -1) != DIRECTORY_SEPARATOR) {
             $basePath = $basePath . DIRECTORY_SEPARATOR;
@@ -527,7 +535,7 @@ class SitemapGenerator
      */
     private function writeFile(string $content, string $filepath): SitemapGenerator
     {
-        if (file_put_contents($filepath, $content) === false) {
+        if ($this->fs->file_put_contents($filepath, $content) === false) {
             throw new RuntimeException('failed to write content to file ' . $filepath);
         }
 
@@ -543,7 +551,7 @@ class SitemapGenerator
      */
     private function writeGZipFile(string $content, string $filepath): SitemapGenerator
     {
-        $file = gzopen($filepath, 'w');
+        $file = $this->fs->gzopen($filepath, 'w');
         if ($file === false) {
             throw new RuntimeException(sprintf('failed to open file %s for writing', $filepath));
         }
@@ -551,12 +559,12 @@ class SitemapGenerator
         $contentLen = strlen($content);
 
         if ($contentLen > 0) {
-            if (gzwrite($file, $content) === 0) {
+            if ($this->fs->gzwrite($file, $content) === 0) {
                 throw new RuntimeException('failed to write content to file ' . $filepath);
             }
         }
 
-        if (gzclose($file) === false) {
+        if ($this->fs->gzclose($file) === false) {
             throw new RuntimeException('failed to close file ' . $filepath);
         }
         return $this;
@@ -673,7 +681,7 @@ class SitemapGenerator
 
         $robotsFileContent = $this->createNewRobotsContentFromFile($robotsFilePath);
 
-        if (false === file_put_contents($robotsFilePath, $robotsFileContent)) {
+        if (false === $this->fs->file_put_contents($robotsFilePath, $robotsFileContent)) {
             throw new RuntimeException(
                 "Failed to write new contents of robots.txt to file $robotsFilePath. "
                 . "Please check file permissions and free space presence."
@@ -692,7 +700,7 @@ class SitemapGenerator
     {
         if (file_exists($filepath)) {
             $robotsFileContent = "";
-            $robotsFile = explode(PHP_EOL, file_get_contents($filepath));
+            $robotsFile = explode(PHP_EOL, $this->fs->file_get_contents($filepath));
             foreach ($robotsFile as $key => $value) {
                 if (substr($value, 0, 8) == 'Sitemap:') {
                     unset($robotsFile[$key]);
@@ -716,5 +724,33 @@ class SitemapGenerator
     private function getSampleRobotsContent(): string
     {
         return implode(PHP_EOL, $this->sampleRobotsLines) . PHP_EOL;
+    }
+}
+
+class FileSystem
+{
+    public function file_get_contents($filepath)
+    {
+        return file_get_contents($filepath);
+    }
+
+    public function file_put_contents($filepath, $content)
+    {
+        return file_put_contents($filepath, $content);
+    }
+
+    public function gzopen($filepath, $mode)
+    {
+        return gzopen($filepath, $mode);
+    }
+
+    public function gzwrite($file, $content)
+    {
+        return gzwrite($file, $content);
+    }
+
+    public function gzclose($file)
+    {
+        return gzclose($file);
     }
 }
