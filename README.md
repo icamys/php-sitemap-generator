@@ -16,7 +16,7 @@ Usage example:
 
 include "src/SitemapGenerator.php";
 
-// Setting the current working directory to be output directory// 
+// Setting the current working directory to be output directory
 // for generated sitemaps (and, if needed, robots.txt)
 // The output directory setting is optional and provided for demonstration purpose.
 // By default output is written to current directory. 
@@ -75,6 +75,7 @@ $ ./vendor/bin/phpunit --coverage-html ./coverage
 New in 2.0.0:
 * Major code rework
 * No more public properties in generator, using only methods
+* Removed addUrls method in favor to one addUrl method
 * Fixed bug with robots.txt update
 * Fixed bug in addURL method (empty loc)
 * Unit tests added for quality assurance
