@@ -1,9 +1,13 @@
-PHP Sitemap Generator
-=====================
+# PHP Sitemap Generator
 
-This class can be used to generate sitemaps.
+[![Build Status](https://travis-ci.org/icamys/php-sitemap-generator.svg?branch=master)](https://travis-ci.org/icamys/php-sitemap-generator)
+[![Coverage Status](https://coveralls.io/repos/github/icamys/php-sitemap-generator/badge.svg)](https://coveralls.io/github/icamys/php-sitemap-generator)
+[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.1-8892BF.svg)](https://php.net/)
+[![Total Downloads](https://poser.pugx.org/icamys/php-sitemap-generator/downloads)](https://packagist.org/packages/icamys/php-sitemap-generator)
 
-Internally uses SplFixedArrays, thus is faster and uses less memory.
+Library for sitemap generation and submission.
+
+Internally uses SplFixedArrays, thus is faster and uses less memory then alternatives.
 
 Features:
 * Follows [sitemaps.org](https://sitemaps.org/) protocol
