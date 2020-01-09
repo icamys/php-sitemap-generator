@@ -80,3 +80,4 @@ New in 2.0.0:
 * Fixed bug in addURL method (empty loc)
 * Unit tests added for quality assurance
 * Updated limits according to [sitemaps spec](https://www.sitemaps.org/protocol.html)
+* Updated search engines urls
