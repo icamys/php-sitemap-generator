@@ -479,7 +479,7 @@ class SitemapGenerator
      */
     public function toArray(): array
     {
-        if (isset($this->sitemapIndex)) {
+        if (count($this->sitemapIndex) > 0) {
             return array_merge([$this->sitemapIndex], $this->sitemaps);
         } else {
             return $this->sitemaps;

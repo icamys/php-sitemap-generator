@@ -479,6 +479,43 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals(2, $this->g->getURLsCount());
     }
 
+    public function testToArrayWithSingleSitemap() {
+        $this->g->setMaxURLsPerSitemap(10);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->assertEquals(2, $this->g->getURLsCount());
+        $this->g->createSitemap();
+        $arr = $this->g->toArray();
+        $this->assertEquals('sitemap.xml', $arr[0]['filename']);
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $arr[0]['source']);
+        $this->assertStringContainsString('<loc>http://example.com/product-1/</loc>', $arr[0]['source']);
+        $this->assertStringContainsString('<loc>http://example.com/product-2/</loc>', $arr[0]['source']);
+    }
+
+    public function testToArrayWithMultipleSitemap() {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->assertEquals(2, $this->g->getURLsCount());
+        $this->g->createSitemap();
+        $arr = $this->g->toArray();
+
+        $this->assertEquals('sitemap-index.xml', $arr[0]['filename']);
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $arr[0]['source']);
+        $this->assertStringContainsString('<loc>http://example.com/sitemap1.xml</loc>', $arr[0]['source']);
+        $this->assertStringContainsString('<loc>http://example.com/sitemap2.xml</loc>', $arr[0]['source']);
+
+        $this->assertEquals('sitemap1.xml', $arr[1]['filename']);
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $arr[1]['source']);
+        $this->assertStringContainsString('<loc>http://example.com/product-1/</loc>', $arr[1]['source']);
+        $this->assertStringNotContainsString('<loc>http://example.com/product-2/</loc>', $arr[1]['source']);
+
+        $this->assertEquals('sitemap2.xml', $arr[2]['filename']);
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8"?>', $arr[2]['source']);
+        $this->assertStringNotContainsString('<loc>http://example.com/product-1/</loc>', $arr[2]['source']);
+        $this->assertStringContainsString('<loc>http://example.com/product-2/</loc>', $arr[2]['source']);
+    }
+
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
