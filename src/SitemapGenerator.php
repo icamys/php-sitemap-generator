@@ -164,15 +164,24 @@ class SitemapGenerator
         "User-agent: *",
         "Allow: /",
     ];
+    /**
+     * @var FileSystem|null
+     */
     private $fs;
+
+    /**
+     * @var Runtime
+     */
+    private $runtime;
 
     /**
      * Constructor.
      * @param string $baseURL You site URL, with / at the end.
      * @param string|null $basePath Relative path where sitemap and robots should be stored.
      * @param FileSystem|null $fs
+     * @param Runtime|null $runtime
      */
-    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null)
+    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null, Runtime $runtime = null)
     {
         $this->urls = new SplFixedArray();
         $this->baseURL = $baseURL;
@@ -184,6 +193,12 @@ class SitemapGenerator
             $this->fs = new FileSystem();
         } else {
             $this->fs = $fs;
+        }
+
+        if ($runtime === null) { // todo: add runtime and fs interfaces
+            $this->runtime = new Runtime();
+        } else {
+            $this->runtime = $runtime;
         }
 
         if (strlen($basePath) > 0 && substr($basePath, -1) != DIRECTORY_SEPARATOR) {
@@ -586,8 +601,8 @@ class SitemapGenerator
         if (count($this->sitemaps) === 0) {
             throw new BadMethodCallException("To submit sitemap, call createSitemap function first.");
         }
-        if (!extension_loaded('curl')) {
-            throw new BadMethodCallException("cURL library is needed to do submission.");
+        if (!$this->runtime->extension_loaded('curl')) {
+            throw new BadMethodCallException("cURL extension is needed to do submission.");
         }
         $searchEngines = $this->searchEngines;
         $searchEngines[0] = isset($yahooAppId) ?
@@ -756,5 +771,12 @@ class FileSystem
     public function file_exists($filepath)
     {
         return file_exists($filepath);
+    }
+}
+
+class Runtime {
+    public function extension_loaded($extname)
+    {
+        return extension_loaded($extname);
     }
 }

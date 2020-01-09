@@ -31,6 +31,11 @@ class SitemapGeneratorTest extends TestCase
     private $fs;
 
     /**
+     * @var Runtime
+     */
+    private $runtime;
+
+    /**
      * @var DateTime current datetime
      */
     private $now;
@@ -405,45 +410,51 @@ class SitemapGeneratorTest extends TestCase
 
     public function testCreateSitemapWithDefaultSitemap()
     {
-        $this->g = new SitemapGenerator($this->testDomain, '', null);
+        $this->g = new SitemapGenerator($this->testDomain, '', null, $this->runtime);
         $this->assertTrue(true);
     }
 
-//    public function testCreateTooLargeSitemap()
-//    {
-//        $this->expectException(LengthException::class);
-//        $this->g->setSitemapFilename("sitemap.xml");
-//        $this->g->setSitemapIndexFilename("sitemap-index.xml");
-//        $longLine = str_repeat('c', 2040);
-//        for ($i = 0; $i < 25000; $i++) {
-//            $this->g->addURL($longLine . $i, $this->now, 'always', '0.8');
-//        }
-//        $this->g->createSitemap();
-//    }
-//
-//    public function testCreateExactMaxSitemaps()
-//    {
-//        $this->g->setMaxURLsPerSitemap(1);
-//        $this->g->setSitemapFilename("sitemap.xml");
-//        $this->g->setSitemapIndexFilename("sitemap-index.xml");
-//        for ($i = 0; $i < 50000; $i++) {
-//            $this->g->addURL($i, $this->now, 'always', '0.8');
-//        }
-//        $this->g->createSitemap();
-//        $this->assertTrue(true);
-//    }
-//
-//    public function testCreateTooManySitemaps()
-//    {
-//        $this->expectException(LengthException::class);
-//        $this->g->setMaxURLsPerSitemap(1);
-//        $this->g->setSitemapFilename("sitemap.xml");
-//        $this->g->setSitemapIndexFilename("sitemap-index.xml");
-//        for ($i = 0; $i < 50001; $i++) {
-//            $this->g->addURL($i, $this->now, 'always', '0.8');
-//        }
-//        $this->g->createSitemap();
-//    }
+    public function testCreateSitemapWithDefaultRuntime()
+    {
+        $this->g = new SitemapGenerator($this->testDomain, '', $this->fs, null);
+        $this->assertTrue(true);
+    }
+
+    public function testCreateTooLargeSitemap()
+    {
+        $this->expectException(LengthException::class);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $longLine = str_repeat('c', 2040);
+        for ($i = 0; $i < 25000; $i++) {
+            $this->g->addURL($longLine . $i, $this->now, 'always', '0.8');
+        }
+        $this->g->createSitemap();
+    }
+
+    public function testCreateExactMaxSitemaps()
+    {
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        for ($i = 0; $i < 50000; $i++) {
+            $this->g->addURL($i, $this->now, 'always', '0.8');
+        }
+        $this->g->createSitemap();
+        $this->assertTrue(true);
+    }
+
+    public function testCreateTooManySitemaps()
+    {
+        $this->expectException(LengthException::class);
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        for ($i = 0; $i < 50001; $i++) {
+            $this->g->addURL($i, $this->now, 'always', '0.8');
+        }
+        $this->g->createSitemap();
+    }
 
     public function testAddTooLargeUrl()
     {
@@ -463,7 +474,7 @@ class SitemapGeneratorTest extends TestCase
                 [$this->equalTo('path/sitemap.xml'), $this->stringStartsWith('<?xml ')]
             );
 
-        $this->g = new SitemapGenerator($this->testDomain, 'path', $this->fs);
+        $this->g = new SitemapGenerator($this->testDomain, 'path', $this->fs, $this->runtime);
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
@@ -611,15 +622,42 @@ class SitemapGeneratorTest extends TestCase
         $this->g->updateRobots();
     }
 
+    public function testSubmitSitemapExceptionOnEmptySitemaps() {
+        $this->expectException(BadMethodCallException::class);
+        $this->g->submitSitemap();
+    }
+
+    public function testSubmitSitemapExceptionOnMissingCurl() {
+        $this->runtime->expects($this->exactly(1))
+            ->method('extension_loaded')
+            ->withConsecutive(
+                [$this->equalTo('curl')]
+            )
+            ->willReturn(false)
+        ;
+
+        $this->expectException(BadMethodCallException::class);
+
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->assertEquals(2, $this->g->getURLsCount());
+        $this->g->createSitemap();
+        $this->g->submitSitemap();
+    }
+
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
-        $this->g = new SitemapGenerator($this->testDomain, '', $this->fs);
+        $this->runtime = $this->createMock(Runtime::class);
+        $this->g = new SitemapGenerator($this->testDomain, '', $this->fs, $this->runtime);
         $this->now = new DateTime();
     }
 
     protected function tearDown(): void
     {
+        unset($this->fs);
+        unset($this->runtime);
         unset($this->g);
     }
 }
