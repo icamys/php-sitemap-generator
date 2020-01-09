@@ -694,11 +694,10 @@ class SitemapGenerator
     /**
      * @param $filepath
      * @return string
-     * @access private
      */
     private function createNewRobotsContentFromFile($filepath): string
     {
-        if (file_exists($filepath)) {
+        if ($this->fs->file_exists($filepath)) {
             $robotsFileContent = "";
             $robotsFile = explode(PHP_EOL, $this->fs->file_get_contents($filepath));
             foreach ($robotsFile as $key => $value) {
@@ -752,5 +751,10 @@ class FileSystem
     public function gzclose($file)
     {
         return gzclose($file);
+    }
+
+    public function file_exists($filepath)
+    {
+        return file_exists($filepath);
     }
 }

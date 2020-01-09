@@ -542,7 +542,65 @@ class SitemapGeneratorTest extends TestCase
         $this->fs->expects($this->exactly(1))
             ->method('file_put_contents')
             ->withConsecutive(
-                [$this->equalTo('robots.txt'), $this->stringContains('Sitemap: ')]
+                [$this->equalTo('robots.txt'), $this->stringContains('Sitemap:')]
+            )
+            ->willReturn(true)
+        ;
+
+        $this->g->setMaxURLsPerSitemap(10);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->createSitemap();
+        $this->g->updateRobots();
+    }
+
+    public function testCreateNewRobotsContentFromExistingFileWithExistingSitemap() {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_exists')
+            ->withConsecutive(
+                [$this->equalTo('robots.txt')]
+            )
+            ->willReturn(true)
+        ;
+        $this->fs->expects($this->exactly(1))
+            ->method('file_get_contents')
+            ->withConsecutive(
+                [$this->equalTo('robots.txt')]
+            )
+            ->willReturn('Sitemap: blah')
+        ;
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('robots.txt'), $this->stringContains('Sitemap: http://example.com/sitemap.xml')]
+            )
+            ->willReturn(true)
+        ;
+
+        $this->g->setMaxURLsPerSitemap(10);
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->createSitemap();
+        $this->g->updateRobots();
+    }
+
+    public function testCreateNewRobotsContentFromExistingFileWithNonExistingSitemap() {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_exists')
+            ->withConsecutive(
+                [$this->equalTo('robots.txt')]
+            )
+            ->willReturn(true)
+        ;
+        $this->fs->expects($this->exactly(1))
+            ->method('file_get_contents')
+            ->withConsecutive(
+                [$this->equalTo('robots.txt')]
+            )
+            ->willReturn('')
+        ;
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('robots.txt'), $this->stringContains('Sitemap: http://example.com/sitemap.xml')]
             )
             ->willReturn(true)
         ;

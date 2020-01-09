@@ -26,6 +26,11 @@ class FileSystemTest extends TestCase
     private $fileGetContentsSpy;
 
     /**
+     * @var Spy for file_exists function
+     */
+    private $fileExistsSpy;
+
+    /**
      * @var Spy for gzopen function
      */
     private $gzopenSpy;
@@ -51,6 +56,12 @@ class FileSystemTest extends TestCase
         $this->fs->file_get_contents('path');
         $this->assertCount(1, $this->fileGetContentsSpy->getInvocations());
         $this->assertEquals('path', $this->fileGetContentsSpy->getInvocations()[0]->getArguments()[0]);
+    }
+
+    public function testFileExistsCall() {
+        $this->fs->file_exists('path');
+        $this->assertCount(1, $this->fileExistsSpy->getInvocations());
+        $this->assertEquals('path', $this->fileExistsSpy->getInvocations()[0]->getArguments()[0]);
     }
 
     public function testGzipFileOpenCall() {
@@ -83,6 +94,8 @@ class FileSystemTest extends TestCase
         $this->filePutContentsSpy->enable();
         $this->fileGetContentsSpy = new Spy(__NAMESPACE__, "file_get_contents", function (){});
         $this->fileGetContentsSpy->enable();
+        $this->fileExistsSpy = new Spy(__NAMESPACE__, "file_exists", function (){});
+        $this->fileExistsSpy->enable();
         $this->gzopenSpy = new Spy(__NAMESPACE__, "gzopen", function (){});
         $this->gzopenSpy->enable();
         $this->gzwriteSpy = new Spy(__NAMESPACE__, "gzwrite", function (){});
@@ -96,6 +109,7 @@ class FileSystemTest extends TestCase
         unset($this->g);
         $this->filePutContentsSpy->disable();
         $this->fileGetContentsSpy->disable();
+        $this->fileExistsSpy->disable();
         $this->gzopenSpy->disable();
         $this->gzwriteSpy->disable();
         $this->gzcloseSpy->disable();
