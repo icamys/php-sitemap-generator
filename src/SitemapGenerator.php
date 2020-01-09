@@ -185,6 +185,18 @@ class SitemapGenerator
         "Allow: /",
     ];
     /**
+     * @var array list of valid changefreq values according to spec
+     */
+    private $validChangefreqValues = [
+        'always',
+        'hourly',
+        'daily',
+        'weekly',
+        'monthly',
+        'yearly',
+        'never',
+    ];
+    /**
      * @var IFileSystem object used to communicate with file system
      */
     private $fs;
@@ -297,7 +309,6 @@ class SitemapGenerator
      * @param array|null $alternates
      * @return SitemapGenerator
      * @throws InvalidArgumentException
-     * @todo add check of changefreq values
      * @todo add scheme and domain check
      * @todo check that port of url is the same as base url port
      * @see http://php.net/manual/en/function.date.php
@@ -329,6 +340,11 @@ class SitemapGenerator
         }
 
         if (isset($changeFrequency)) {
+            if ($this->isValidChangefreqValue($changeFrequency) === false) {
+                throw new InvalidArgumentException(
+                    'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
+                );
+            }
             $tmp->setSize(3);
             $tmp[self::ATTR_KEY_CHANGEFREQ] = $changeFrequency;
         }
@@ -355,6 +371,11 @@ class SitemapGenerator
         $this->urls->next();
         $this->urlsCount++;
         return $this;
+    }
+
+    public function isValidChangefreqValue($value)
+    {
+        return in_array($value, $this->validChangefreqValues);
     }
 
     /**

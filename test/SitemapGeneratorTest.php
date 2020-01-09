@@ -128,6 +128,12 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('/product-1/', $urlArray[1][$this->g::ATTR_NAME_LOC]);
     }
 
+    public function testAddURLWithInvalidChangeFreq()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->addURL('/product/', $this->now, 'INVALID_CHANGEFREQ', '0.8' );
+    }
+
     public function testAddURLWithAlternates()
     {
         $alternates = [
@@ -644,6 +650,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals(2, $this->g->getURLsCount());
         $this->g->createSitemap();
         $this->g->submitSitemap();
+    }
+
+    public function testIsValidChangefreqValue() {
+        $this->assertTrue($this->g->isValidChangefreqValue('always'));
+        $this->assertFalse($this->g->isValidChangefreqValue('blahblah'));
     }
 
     protected function setUp(): void
