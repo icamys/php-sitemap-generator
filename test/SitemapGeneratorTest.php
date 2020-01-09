@@ -12,6 +12,7 @@ use phpmock\spy\Spy;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
+use RuntimeException;
 
 class SitemapGeneratorTest extends TestCase
 {
@@ -28,26 +29,6 @@ class SitemapGeneratorTest extends TestCase
      * @var FileSystem
      */
     private $fs;
-
-    /**
-     * @var Spy for file_put_contents function
-     */
-    private $filePutContentsSpy;
-
-    /**
-     * @var Spy for gzopen function
-     */
-    private $gzopenSpy;
-
-    /**
-     * @var Spy for gzwrite function
-     */
-    private $gzwriteSpy;
-
-    /**
-     * @var Spy for gzclose function
-     */
-    private $gzcloseSpy;
 
     /**
      * @var DateTime current datetime
@@ -264,6 +245,123 @@ class SitemapGeneratorTest extends TestCase
         $this->g->writeSitemap();
     }
 
+    public function testWriteFileException()
+    {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            )
+            ->willReturn(false)
+        ;
+        $this->expectException(RuntimeException::class);
+
+        $this->g->setMaxURLsPerSitemap(1);
+        $this->g->setSitemapFilename("sitemap.xml");
+        $this->g->setSitemapIndexFilename("sitemap-index.xml");
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+    }
+
+    public function testOpenGzipFileException()
+    {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
+        $fileDescriptorMock = false;
+
+        $this->fs->expects($this->exactly(1))
+            ->method('gzopen')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml.gz'), $this->equalTo('w')]
+            )
+            ->willReturn($fileDescriptorMock)
+        ;
+
+        $this->expectException(RuntimeException::class);
+
+        $this->g->toggleGZipFileCreation();
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+    }
+
+    public function testWriteGzipFileException()
+    {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
+        $fileDescriptorMock = true;
+
+        $this->fs->expects($this->exactly(1))
+            ->method('gzopen')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml.gz'), $this->equalTo('w')]
+            )
+            ->willReturn($fileDescriptorMock)
+        ;
+
+        $this->fs->expects($this->exactly(1))
+            ->method('gzwrite')
+            ->withConsecutive(
+                [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')]
+            )
+            ->willReturn(0)
+        ;
+
+        $this->expectException(RuntimeException::class);
+
+        $this->g->toggleGZipFileCreation();
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+    }
+
+    public function testCloseGzipFileException()
+    {
+        $this->fs->expects($this->exactly(1))
+            ->method('file_put_contents')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
+            );
+
+        $fileDescriptorMock = true;
+
+        $this->fs->expects($this->exactly(1))
+            ->method('gzopen')
+            ->withConsecutive(
+                [$this->equalTo('sitemap.xml.gz'), $this->equalTo('w')]
+            )
+            ->willReturn($fileDescriptorMock)
+        ;
+
+        $this->fs->expects($this->exactly(1))
+            ->method('gzwrite')
+            ->withConsecutive(
+                [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')]
+            )
+        ;
+
+        $this->fs->expects($this->exactly(1))
+            ->method('gzclose')
+            ->willReturn(false)
+        ;
+
+        $this->expectException(RuntimeException::class);
+
+        $this->g->toggleGZipFileCreation();
+        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->createSitemap();
+        $this->g->writeSitemap();
+    }
+
     public function testWriteSitemapWithSingleSitemapAndGzipEnabled()
     {
         $this->fs->expects($this->exactly(1))
@@ -303,6 +401,12 @@ class SitemapGeneratorTest extends TestCase
         $this->g->addURL('/product-1/', $this->now, 'always', '0.8', $alternates);
         $this->g->createSitemap();
         $this->g->writeSitemap();
+    }
+
+    public function testCreateSitemapWithDefaultSitemap()
+    {
+        $this->g = new SitemapGenerator($this->testDomain, '', null);
+        $this->assertTrue(true);
     }
 
     public function testCreateTooLargeSitemap()
@@ -375,30 +479,15 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals(2, $this->g->getURLsCount());
     }
 
-    /**
-     * @throws \phpmock\MockEnabledException
-     */
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
         $this->g = new SitemapGenerator($this->testDomain, '', $this->fs);
-        $this->filePutContentsSpy = new Spy(__NAMESPACE__, "file_put_contents", function (){});
-        $this->filePutContentsSpy->enable();
-        $this->gzopenSpy = new Spy(__NAMESPACE__, "gzopen", function (){});
-        $this->gzopenSpy->enable();
-        $this->gzwriteSpy = new Spy(__NAMESPACE__, "gzwrite", function (){});
-        $this->gzwriteSpy->enable();
-        $this->gzcloseSpy = new Spy(__NAMESPACE__, "gzclose", function (){});
-        $this->gzcloseSpy->enable();
         $this->now = new DateTime();
     }
 
     protected function tearDown(): void
     {
         unset($this->g);
-        $this->filePutContentsSpy->disable();
-        $this->gzopenSpy->disable();
-        $this->gzwriteSpy->disable();
-        $this->gzcloseSpy->disable();
     }
 }
