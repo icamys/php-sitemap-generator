@@ -12,6 +12,26 @@ use RuntimeException;
 use SimpleXMLElement;
 use SplFixedArray;
 
+interface IFileSystem
+{
+    public function file_get_contents($filepath);
+
+    public function file_put_contents($filepath, $content);
+
+    public function file_exists($filepath);
+
+    public function gzopen($filepath, $mode);
+
+    public function gzwrite($file, $content);
+
+    public function gzclose($file);
+}
+
+interface IRuntime
+{
+    public function extension_loaded($extname);
+}
+
 /**
  * Class SitemapGenerator
  * @package Icamys\SitemapGenerator
@@ -165,23 +185,21 @@ class SitemapGenerator
         "Allow: /",
     ];
     /**
-     * @var FileSystem|null
+     * @var IFileSystem object used to communicate with file system
      */
     private $fs;
-
     /**
-     * @var Runtime
+     * @var IRuntime object used to communicate with runtime
      */
     private $runtime;
 
     /**
-     * Constructor.
-     * @param string $baseURL You site URL, with / at the end.
-     * @param string|null $basePath Relative path where sitemap and robots should be stored.
-     * @param FileSystem|null $fs
-     * @param Runtime|null $runtime
+     * @param string $baseURL You site URL
+     * @param string $basePath Relative path where sitemap and robots should be stored.
+     * @param IFileSystem $fs
+     * @param IRuntime $runtime
      */
-    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null, Runtime $runtime = null)
+    public function __construct(string $baseURL, string $basePath = "", IFileSystem $fs = null, IRuntime $runtime = null)
     {
         $this->urls = new SplFixedArray();
         $this->baseURL = $baseURL;
@@ -195,7 +213,7 @@ class SitemapGenerator
             $this->fs = $fs;
         }
 
-        if ($runtime === null) { // todo: add runtime and fs interfaces
+        if ($runtime === null) {
             $this->runtime = new Runtime();
         } else {
             $this->runtime = $runtime;
@@ -741,7 +759,7 @@ class SitemapGenerator
     }
 }
 
-class FileSystem
+class FileSystem implements IFileSystem
 {
     public function file_get_contents($filepath)
     {
@@ -774,7 +792,8 @@ class FileSystem
     }
 }
 
-class Runtime {
+class Runtime implements IRuntime
+{
     public function extension_loaded($extname)
     {
         return extension_loaded($extname);
