@@ -435,7 +435,9 @@ class SitemapGenerator
                 );
 
                 if ($this->urls[$urlCounter]->getSize() > 1) {
-                    $row->addChild(self::ATTR_NAME_LASTMOD, $this->urls[$urlCounter][self::ATTR_KEY_LASTMOD]);
+                    if (isset($this->urls[$urlCounter][self::ATTR_KEY_LASTMOD])) {
+                        $row->addChild(self::ATTR_NAME_LASTMOD, $this->urls[$urlCounter][self::ATTR_KEY_LASTMOD]);
+                    }
                 }
                 if ($this->urls[$urlCounter]->getSize() > 2) {
                     $row->addChild(self::ATTR_NAME_CHANGEFREQ, $this->urls[$urlCounter][self::ATTR_KEY_CHANGEFREQ]);
