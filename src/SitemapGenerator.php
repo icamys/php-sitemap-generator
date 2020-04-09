@@ -75,6 +75,12 @@ class SitemapGenerator
     const ATTR_NAME_ALTERNATES = 'alternates';
 
     /**
+     * Sitemap type currently being used
+     * @var string sitemap|sitemapIndex
+     */
+    private $sitemapType;
+
+    /**
      * Robots file name
      * @var string
      * @access public
@@ -322,6 +328,9 @@ class SitemapGenerator
         array $alternates = null
     ): SitemapGenerator
     {
+        if(!empty($this->sitemapType) && $this->sitemapType == 'sitemapIndex'){
+            throw new InvalidArgumentException("sitemap index is being used, not possible to mix with sitemap");
+        }
         if (strlen($loc) === 0) {
             throw new InvalidArgumentException("loc parameter is required");
         }
@@ -357,6 +366,54 @@ class SitemapGenerator
         if (isset($alternates)) {
             $tmp->setSize(5);
             $tmp[self::ATTR_KEY_ALTERNATES] = $alternates;
+        }
+
+        if ($this->urls->getSize() === 0) {
+            $this->urls->setSize(1);
+        } else {
+            if ($this->urls->getSize() === $this->urls->key()) {
+                $this->urls->setSize($this->urls->getSize() * 2);
+            }
+        }
+
+        $this->urls[$this->urls->key()] = $tmp;
+        $this->urls->next();
+        $this->urlsCount++;
+        return $this;
+    }
+
+    /**
+     * Use this to add single URL to sitemap.
+     * @param string $loc
+     * @param DateTime|null $lastModified
+     * @return SitemapGenerator
+     * @throws InvalidArgumentException
+     * @todo marge common blocks of code with addUrl() to separate function
+     * @see http://php.net/manual/en/function.date.php
+     * @see http://en.wikipedia.org/wiki/ISO_8601
+     */
+    public function addSitemap(
+        string $loc = '',
+        DateTime $lastModified = null):SitemapGenerator{
+
+        if(!empty($this->sitemapType) && $this->sitemapType == 'sitemap'){
+            throw new InvalidArgumentException("sitemap being used, not possible to mix with sitemap index");
+        }
+        if (strlen($loc) === 0) {
+            throw new InvalidArgumentException("loc parameter is required");
+        }
+        if (mb_strlen($loc) > self::MAX_URL_LEN) {
+            throw new InvalidArgumentException(
+                sprintf("url is too large (%d of %d)", mb_strlen($loc), self::MAX_URL_LEN)
+            );
+        }
+        $tmp = new SplFixedArray(1);
+
+        $tmp[self::ATTR_KEY_LOC] = $loc;
+
+        if (isset($lastModified)) {
+            $tmp->setSize(2);
+            $tmp[self::ATTR_KEY_LASTMOD] = $lastModified->format(DateTime::ATOM);
         }
 
         if ($this->urls->getSize() === 0) {
@@ -506,6 +563,56 @@ class SitemapGenerator
     }
 
     /**
+     * Creates sitemap index and stores it in memory.
+     * @throws BadMethodCallException
+     * @throws InvalidArgumentException
+     * @throws LengthException
+     */
+    public function createSitemapIndex(): SitemapGenerator
+    {
+        if ($this->urls->getSize() === 0) {
+            throw new BadMethodCallException(
+                "No urls added to generator. " .
+                "Please add urls by calling \"addUrl\" function."
+            );
+        }
+
+        $generatorInfo = implode(PHP_EOL, [
+            sprintf('<!-- generator-class="%s" -->', get_class($this)),
+            sprintf('<!-- generator-version="%s" -->', $this->classVersion),
+            sprintf('<!-- generated-on="%s" -->', date('c')),
+        ]);
+
+        $sitemapIndexHeader = implode(PHP_EOL, [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            $generatorInfo,
+            '<sitemapindex',
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+            'xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd"',
+            'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+            '</sitemapindex>',
+        ]);
+
+        $sitemapXml = new SimpleXMLElement($sitemapIndexHeader);
+        $counter = 0;
+        foreach ($this->urls as $url) {
+
+            $row = $sitemapXml->addChild('sitemap');
+            $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($url[0])));
+            $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
+            $counter++;
+        }
+
+        $this->sitemapFullURL = $this->baseURL . "/" . $this->appendGzPostfixIfEnabled($this->sitemapIndexFileName);
+        $this->sitemapIndex = [
+            'filename' => $this->sitemapIndexFileName,
+            'source' => $sitemapXml->asXML(),
+        ];
+
+        return $this;
+    }
+
+    /**
      * @param int $total
      * @param int $part
      * @return float
@@ -579,6 +686,28 @@ class SitemapGenerator
                 $this->writeGZipFile($docStr, $filepath . '.gz');
             }
         }
+        return $this;
+    }
+
+    /**
+     * Will write sitemap index as files.
+     * @access public
+     * @throws BadMethodCallException
+     */
+    public function writeSitemapIndex(): SitemapGenerator
+    {
+        if (count($this->sitemapIndex) === 0) {
+            throw new BadMethodCallException("To write sitemap index, call createSitemapIndex function first.");
+        }
+
+        $this->document->loadXML($this->sitemapIndex['source']);
+        $indexStr = $this->document->saveXML();
+        $indexFilepath = $this->basePath . $this->sitemapIndex['filename'];
+        $this->writeFile($indexStr, $indexFilepath);
+        if ($this->createGZipFile) {
+            $this->writeGZipFile($indexStr, $indexFilepath . '.gz');
+        }
+
         return $this;
     }
 
