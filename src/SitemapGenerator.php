@@ -597,10 +597,12 @@ class SitemapGenerator
         $counter = 0;
         foreach ($this->urls as $url) {
 
-            $row = $sitemapXml->addChild('sitemap');
-            $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($url[0])));
-            $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
-            $counter++;
+            if(!empty($url)) {
+                $row = $sitemapXml->addChild('sitemap');
+                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($url[0])));
+                $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
+                $counter++;
+            }
         }
 
         $this->sitemapFullURL = $this->baseURL . "/" . $this->appendGzPostfixIfEnabled($this->sitemapIndexFileName);
