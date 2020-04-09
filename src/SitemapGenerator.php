@@ -696,7 +696,7 @@ class SitemapGenerator
      */
     public function writeSitemapIndex(): SitemapGenerator
     {
-        if (count($this->sitemapIndex) === 0) {
+        if (count($this->urls) === 0) {
             throw new BadMethodCallException("To write sitemap index, call createSitemapIndex function first.");
         }
 
