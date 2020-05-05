@@ -14,6 +14,12 @@ Features:
 * Follows [sitemaps.org](https://sitemaps.org/) protocol
 * Supports alternative links for multi-language pages (see [google docs](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
 
+Installation with Composer:
+
+```
+composer require icamys/php-sitemap-generator
+```
+
 Usage example:
 
 ```php
