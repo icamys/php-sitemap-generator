@@ -143,6 +143,7 @@ class SitemapGenerator
         "http://www.google.com/ping?sitemap=",
         "http://submissions.ask.com/ping?sitemap=",
         "http://www.bing.com/ping?sitemap=",
+        "http://www.webmaster.yandex.ru/ping?sitemap="
     ];
     /**
      * Array with urls
