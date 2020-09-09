@@ -88,13 +88,4 @@ $ ./vendor/bin/phpunit --coverage-html ./coverage
 
 ### Changelog
 
-New in 2.0.0:
-* Major code rework
-* No more public properties in generator, using only methods
-* Removed `addUrls` method in favor of `addUrl`
-* Fixed bug with robots.txt update
-* Fixed bug in addURL method (empty loc)
-* Unit tests added for quality assurance
-* Updated limits according to [sitemaps spec](https://www.sitemaps.org/protocol.html)
-* Updated search engines urls
-* Added change frequency validation
+You can find full changelog on the [releases page](https://github.com/icamys/php-sitemap-generator/releases).
