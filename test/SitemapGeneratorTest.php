@@ -115,7 +115,7 @@ class SitemapGeneratorTest extends TestCase
     {
         $nowStr = $this->now->format('Y-m-d\TH:i:sP');
         for ($i = 0; $i < 2; $i++) {
-            $this->g->addURL('/product-'.$i . '/', $this->now, 'always', '0.8' );
+            $this->g->addURL('/product-'.$i . '/', $this->now, 'always', 0.8);
         }
         $urlArray = $this->g->getURLsArray();
 
@@ -123,8 +123,19 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('/product-0/', $urlArray[0][$this->g::ATTR_NAME_LOC]);
         $this->assertEquals($nowStr, $urlArray[0][$this->g::ATTR_NAME_LASTMOD]);
         $this->assertEquals('always', $urlArray[0][$this->g::ATTR_NAME_CHANGEFREQ]);
-        $this->assertEquals('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
+        $this->assertSame('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
         $this->assertEquals('/product-1/', $urlArray[1][$this->g::ATTR_NAME_LOC]);
+    }
+
+    public function testAddURLWithDecimalSeparatorComaInsteadOfPoint()
+    {
+        $currentLocale = setlocale(LC_NUMERIC, 0);
+        setlocale(LC_NUMERIC, 'es_AR.utf-8'); // this locale uses comma instead of point as decimal sep
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $urlArray = $this->g->getURLsArray();
+        $this->assertCount(1, $urlArray);
+        $this->assertSame('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
+        setlocale(LC_NUMERIC, $currentLocale);
     }
 
     public function testAddURLWithInvalidChangeFreq()

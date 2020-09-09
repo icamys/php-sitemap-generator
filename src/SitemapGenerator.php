@@ -372,7 +372,7 @@ class SitemapGenerator
             }
 
             $tmp->setSize(4);
-            $tmp[self::ATTR_KEY_PRIORITY] = $priority;
+            $tmp[self::ATTR_KEY_PRIORITY] = number_format($priority, 1, ".", "");
         }
 
         if (isset($alternates)) {
