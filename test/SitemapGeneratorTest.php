@@ -115,7 +115,7 @@ class SitemapGeneratorTest extends TestCase
     {
         $nowStr = $this->now->format('Y-m-d\TH:i:sP');
         for ($i = 0; $i < 2; $i++) {
-            $this->g->addURL('/product-'.$i . '/', $this->now, 'always', 0.8);
+            $this->g->addURL('/product-' . $i . '/', $this->now, 'always', 0.8);
         }
         $urlArray = $this->g->getURLsArray();
 
@@ -141,13 +141,13 @@ class SitemapGeneratorTest extends TestCase
     public function testAddURLWithInvalidChangeFreq()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->g->addURL('/product/', $this->now, 'INVALID_CHANGEFREQ', '0.8' );
+        $this->g->addURL('/product/', $this->now, 'INVALID_CHANGEFREQ', 0.8);
     }
 
     public function testAddURLWithInvalidPriority()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->g->addURL('/product/', $this->now, 'always', 1.11 );
+        $this->g->addURL('/product/', $this->now, 'always', 1.11);
     }
 
     public function testAddURLWithAlternates()
@@ -157,13 +157,13 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
         $nowStr = $this->now->format('Y-m-d\TH:i:sP');
-        $this->g->addURL('/product-0/', $this->now, 'always', '0.8' , $alternates);
+        $this->g->addURL('/product-0/', $this->now, 'always', 0.8, $alternates);
         $urlArray = $this->g->getURLsArray();
         $this->assertCount(1, $urlArray);
         $this->assertEquals('/product-0/', $urlArray[0][$this->g::ATTR_NAME_LOC]);
         $this->assertEquals($nowStr, $urlArray[0][$this->g::ATTR_NAME_LASTMOD]);
         $this->assertEquals('always', $urlArray[0][$this->g::ATTR_NAME_CHANGEFREQ]);
-        $this->assertEquals('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
+        $this->assertSame('0.8', $urlArray[0][$this->g::ATTR_NAME_PRIORITY]);
         $this->assertCount(2, $urlArray[0][$this->g::ATTR_NAME_ALTERNATES]);
         $this->assertCount(2, $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][0]);
         $this->assertEquals('de', $urlArray[0][$this->g::ATTR_NAME_ALTERNATES][0]['hreflang']);
@@ -175,14 +175,14 @@ class SitemapGeneratorTest extends TestCase
     public function testAddURLInvalidLocException()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->g->addURL('', $this->now, 'always', '0.8' );
+        $this->g->addURL('', $this->now, 'always', 0.8);
     }
 
     public function testAddURLTooLongException()
     {
         $this->expectException(InvalidArgumentException::class);
         $url = str_repeat("s", 5000);
-        $this->g->addURL($url, $this->now, 'always', '0.8' );
+        $this->g->addURL($url, $this->now, 'always', 0.8);
     }
 
     public function testWriteSitemapBadMethodCallException()
@@ -204,8 +204,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -227,8 +227,7 @@ class SitemapGeneratorTest extends TestCase
                 [$this->equalTo('sitemap1.xml.gz'), $this->stringStartsWith('w')],
                 [$this->equalTo('sitemap2.xml.gz'), $this->stringStartsWith('w')]
             )
-            ->willReturn($fileDescriptorMock)
-        ;
+            ->willReturn($fileDescriptorMock);
 
         $this->fs->expects($this->exactly(3))
             ->method('gzwrite')
@@ -250,8 +249,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $this->g->toggleGZipFileCreation();
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -267,7 +266,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -279,14 +278,13 @@ class SitemapGeneratorTest extends TestCase
             ->withConsecutive(
                 [$this->equalTo('sitemap.xml'), $this->stringStartsWith('<?xml ')]
             )
-            ->willReturn(false)
-        ;
+            ->willReturn(false);
         $this->expectException(RuntimeException::class);
 
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -306,13 +304,12 @@ class SitemapGeneratorTest extends TestCase
             ->withConsecutive(
                 [$this->equalTo('sitemap.xml.gz'), $this->equalTo('w')]
             )
-            ->willReturn($fileDescriptorMock)
-        ;
+            ->willReturn($fileDescriptorMock);
 
         $this->expectException(RuntimeException::class);
 
         $this->g->toggleGZipFileCreation();
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -332,21 +329,19 @@ class SitemapGeneratorTest extends TestCase
             ->withConsecutive(
                 [$this->equalTo('sitemap.xml.gz'), $this->equalTo('w')]
             )
-            ->willReturn($fileDescriptorMock)
-        ;
+            ->willReturn($fileDescriptorMock);
 
         $this->fs->expects($this->exactly(1))
             ->method('gzwrite')
             ->withConsecutive(
                 [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')]
             )
-            ->willReturn(0)
-        ;
+            ->willReturn(0);
 
         $this->expectException(RuntimeException::class);
 
         $this->g->toggleGZipFileCreation();
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -366,25 +361,22 @@ class SitemapGeneratorTest extends TestCase
             ->withConsecutive(
                 [$this->equalTo('sitemap.xml.gz'), $this->equalTo('w')]
             )
-            ->willReturn($fileDescriptorMock)
-        ;
+            ->willReturn($fileDescriptorMock);
 
         $this->fs->expects($this->exactly(1))
             ->method('gzwrite')
             ->withConsecutive(
                 [$this->equalTo($fileDescriptorMock), $this->stringStartsWith('<?xml ')]
-            )
-        ;
+            );
 
         $this->fs->expects($this->exactly(1))
             ->method('gzclose')
-            ->willReturn(false)
-        ;
+            ->willReturn(false);
 
         $this->expectException(RuntimeException::class);
 
         $this->g->toggleGZipFileCreation();
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -405,7 +397,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $this->g->toggleGZipFileCreation();
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -425,7 +417,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8', $alternates);
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8, $alternates);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
@@ -449,7 +441,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         $longLine = str_repeat('c', 2040);
         for ($i = 0; $i < 25000; $i++) {
-            $this->g->addURL($longLine . $i, $this->now, 'always', '0.8');
+            $this->g->addURL($longLine . $i, $this->now, 'always', 0.8);
         }
         $this->g->createSitemap();
     }
@@ -460,7 +452,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         for ($i = 0; $i < 50000; $i++) {
-            $this->g->addURL($i, $this->now, 'always', '0.8');
+            $this->g->addURL($i, $this->now, 'always', 0.8);
         }
         $this->g->createSitemap();
         $this->assertTrue(true);
@@ -473,7 +465,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
         for ($i = 0; $i < 50001; $i++) {
-            $this->g->addURL($i, $this->now, 'always', '0.8');
+            $this->g->addURL($i, $this->now, 'always', 0.8);
         }
         $this->g->createSitemap();
     }
@@ -481,15 +473,17 @@ class SitemapGeneratorTest extends TestCase
     public function testAddTooLargeUrl()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->g->addURL(str_repeat('c', 5000), $this->now, 'always', '0.8');
+        $this->g->addURL(str_repeat('c', 5000), $this->now, 'always', 0.8);
     }
 
-    public function testCreateSitemapExceptionWhenNoUrlsAdded() {
+    public function testCreateSitemapExceptionWhenNoUrlsAdded()
+    {
         $this->expectException(BadMethodCallException::class);
         $this->g->createSitemap();
     }
 
-    public function testCreateGeneratorWithBasepathWithoutTrailingSlash() {
+    public function testCreateGeneratorWithBasepathWithoutTrailingSlash()
+    {
         $this->fs->expects($this->exactly(1))
             ->method('file_put_contents')
             ->withConsecutive(
@@ -500,22 +494,24 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
     }
 
-    public function testGetUrlsCount() {
+    public function testGetUrlsCount()
+    {
         $this->g->setMaxURLsPerSitemap(10);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->assertEquals(2, $this->g->getURLsCount());
     }
 
-    public function testToArrayWithSingleSitemap() {
+    public function testToArrayWithSingleSitemap()
+    {
         $this->g->setMaxURLsPerSitemap(10);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->assertEquals(2, $this->g->getURLsCount());
         $this->g->createSitemap();
         $arr = $this->g->toArray();
@@ -525,10 +521,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertStringContainsString('<loc>http://example.com/product-2/</loc>', $arr[0]['source']);
     }
 
-    public function testToArrayWithMultipleSitemap() {
+    public function testToArrayWithMultipleSitemap()
+    {
         $this->g->setMaxURLsPerSitemap(1);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->assertEquals(2, $this->g->getURLsCount());
         $this->g->createSitemap();
         $arr = $this->g->toArray();
@@ -549,131 +546,131 @@ class SitemapGeneratorTest extends TestCase
         $this->assertStringContainsString('<loc>http://example.com/product-2/</loc>', $arr[2]['source']);
     }
 
-    public function testUpdateRobotsNoSitemapsException() {
+    public function testUpdateRobotsNoSitemapsException()
+    {
         $this->expectException(BadMethodCallException::class);
         $this->g->updateRobots();
     }
 
-    public function testUpdateRobotsFileWriteException() {
+    public function testUpdateRobotsFileWriteException()
+    {
         $this->fs->expects($this->exactly(1))
             ->method('file_put_contents')
             ->withConsecutive(
                 [$this->equalTo('robots.txt'), $this->stringContains('Sitemap: ')]
             )
-            ->willReturn(false)
-        ;
+            ->willReturn(false);
 
         $this->expectException(RuntimeException::class);
 
         $this->g->setMaxURLsPerSitemap(10);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->updateRobots();
     }
 
-    public function testUpdateRobotsSuccessfullWrite() {
+    public function testUpdateRobotsSuccessfullWrite()
+    {
         $this->fs->expects($this->exactly(1))
             ->method('file_put_contents')
             ->withConsecutive(
                 [$this->equalTo('robots.txt'), $this->stringContains('Sitemap:')]
             )
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
 
         $this->g->setMaxURLsPerSitemap(10);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->updateRobots();
     }
 
-    public function testCreateNewRobotsContentFromExistingFileWithExistingSitemap() {
+    public function testCreateNewRobotsContentFromExistingFileWithExistingSitemap()
+    {
         $this->fs->expects($this->exactly(1))
             ->method('file_exists')
             ->withConsecutive(
                 [$this->equalTo('robots.txt')]
             )
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
         $this->fs->expects($this->exactly(1))
             ->method('file_get_contents')
             ->withConsecutive(
                 [$this->equalTo('robots.txt')]
             )
-            ->willReturn('Sitemap: blah')
-        ;
+            ->willReturn('Sitemap: blah');
         $this->fs->expects($this->exactly(1))
             ->method('file_put_contents')
             ->withConsecutive(
                 [$this->equalTo('robots.txt'), $this->stringContains('Sitemap: http://example.com/sitemap.xml')]
             )
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
 
         $this->g->setMaxURLsPerSitemap(10);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->updateRobots();
     }
 
-    public function testCreateNewRobotsContentFromExistingFileWithNonExistingSitemap() {
+    public function testCreateNewRobotsContentFromExistingFileWithNonExistingSitemap()
+    {
         $this->fs->expects($this->exactly(1))
             ->method('file_exists')
             ->withConsecutive(
                 [$this->equalTo('robots.txt')]
             )
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
         $this->fs->expects($this->exactly(1))
             ->method('file_get_contents')
             ->withConsecutive(
                 [$this->equalTo('robots.txt')]
             )
-            ->willReturn('')
-        ;
+            ->willReturn('');
         $this->fs->expects($this->exactly(1))
             ->method('file_put_contents')
             ->withConsecutive(
                 [$this->equalTo('robots.txt'), $this->stringContains('Sitemap: http://example.com/sitemap.xml')]
             )
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
 
         $this->g->setMaxURLsPerSitemap(10);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8');
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->updateRobots();
     }
 
-    public function testSubmitSitemapExceptionOnEmptySitemaps() {
+    public function testSubmitSitemapExceptionOnEmptySitemaps()
+    {
         $this->expectException(BadMethodCallException::class);
         $this->g->submitSitemap();
     }
 
-    public function testSubmitSitemapExceptionOnMissingCurl() {
+    public function testSubmitSitemapExceptionOnMissingCurl()
+    {
         $this->runtime->expects($this->exactly(1))
             ->method('extension_loaded')
             ->withConsecutive(
                 [$this->equalTo('curl')]
             )
-            ->willReturn(false)
-        ;
+            ->willReturn(false);
 
         $this->expectException(BadMethodCallException::class);
 
         $this->g->setMaxURLsPerSitemap(1);
-        $this->g->addURL('/product-1/', $this->now, 'always', '0.8' );
-        $this->g->addURL('/product-2/', $this->now, 'always', '0.8' );
+        $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
+        $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->assertEquals(2, $this->g->getURLsCount());
         $this->g->createSitemap();
         $this->g->submitSitemap();
     }
 
-    public function testIsValidChangefreqValue() {
+    public function testIsValidChangefreqValue()
+    {
         $this->assertTrue($this->g->isValidChangefreqValue('always'));
         $this->assertFalse($this->g->isValidChangefreqValue('blahblah'));
     }
 
-    public function testIsValidPriorityValue() {
+    public function testIsValidPriorityValue()
+    {
         $this->assertTrue($this->g->isValidPriorityValue(0.0));
         $this->assertTrue($this->g->isValidPriorityValue(0.1));
         $this->assertTrue($this->g->isValidPriorityValue(0.2));
