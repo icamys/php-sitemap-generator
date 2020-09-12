@@ -27,13 +27,15 @@ Usage example:
 
 include "src/SitemapGenerator.php";
 
+$yourSiteUrl = 'https://example.com';
+
 // Setting the current working directory to be output directory
 // for generated sitemaps (and, if needed, robots.txt)
 // The output directory setting is optional and provided for demonstration purpose.
 // By default output is written to current directory. 
 $outputDir = getcwd();
 
-$generator = new \Icamys\SitemapGenerator\SitemapGenerator('example.com', $outputDir);
+$generator = new \Icamys\SitemapGenerator\SitemapGenerator($yourSiteUrl, $outputDir);
 
 // will create also compressed (gzipped) sitemap
 $generator->toggleGZipFileCreation();
@@ -57,7 +59,7 @@ $alternates = [
 ];
 
 // adding url `loc`, `lastmodified`, `changefreq`, `priority`, `alternates`
-$generator->addURL('http://example.com/url/path/', new DateTime(), 'always', 0.5, $alternates);
+$generator->addURL('/path/to/page/', new DateTime(), 'always', 0.5, $alternates);
 
 // generate internally a sitemap
 $generator->createSitemap();
