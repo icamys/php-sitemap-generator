@@ -25,7 +25,7 @@ Usage example:
 ```php
 <?php
 
-include "src/SitemapGenerator.php";
+include "vendor/autoload.php";
 
 $yourSiteUrl = 'https://example.com';
 

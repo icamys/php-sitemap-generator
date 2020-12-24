@@ -12,26 +12,6 @@ use RuntimeException;
 use SimpleXMLElement;
 use SplFixedArray;
 
-interface IFileSystem
-{
-    public function file_get_contents($filepath);
-
-    public function file_put_contents($filepath, $content);
-
-    public function file_exists($filepath);
-
-    public function gzopen($filepath, $mode);
-
-    public function gzwrite($file, $content);
-
-    public function gzclose($file);
-}
-
-interface IRuntime
-{
-    public function extension_loaded($extname);
-}
-
 /**
  * Class SitemapGenerator
  * @package Icamys\SitemapGenerator
@@ -147,7 +127,7 @@ class SitemapGenerator
     ];
     /**
      * Array with urls
-     * @var SplFixedArray of strings
+     * @var array
      * @access private
      */
     private $urls;
@@ -230,7 +210,7 @@ class SitemapGenerator
      */
     public function __construct(string $baseURL, string $basePath = "", IFileSystem $fs = null, IRuntime $runtime = null)
     {
-        $this->urls = new SplFixedArray();
+        $this->urls = [];
         $this->baseURL = $baseURL;
         $this->document = new DOMDocument("1.0");
         $this->document->preserveWhiteSpace = false;
@@ -380,17 +360,7 @@ class SitemapGenerator
             $tmp[self::ATTR_KEY_ALTERNATES] = $alternates;
         }
 
-        if ($this->urls->getSize() === 0) {
-            $this->urls->setSize(1);
-        } else {
-            if ($this->urls->getSize() === $this->urls->key()) {
-                $this->urls->setSize($this->urls->getSize() * 2);
-            }
-        }
-
-        $this->urls[$this->urls->key()] = $tmp;
-        $this->urls->next();
-        $this->urlsCount++;
+        $this->urls[] = $tmp;
         return $this;
     }
 
@@ -412,7 +382,7 @@ class SitemapGenerator
      */
     public function createSitemap(): SitemapGenerator
     {
-        if ($this->urls->getSize() === 0) {
+        if (count($this->urls) === 0) {
             throw new BadMethodCallException(
                 "No urls added to generator. " .
                 "Please add urls by calling \"addUrl\" function."
@@ -446,12 +416,12 @@ class SitemapGenerator
         ]);
 
         $chunkSize = $this->maxURLsPerSitemap;
-        $chunksCount = ceil($this->urlsCount / $chunkSize);
+        $chunksCount = ceil(count($this->urls) / $chunkSize);
 
         for ($chunkCounter = 0; $chunkCounter < $chunksCount; $chunkCounter++) {
             $sitemapXml = new SimpleXMLElement($sitemapHeader);
             for ($urlCounter = $chunkCounter * $chunkSize;
-                 $urlCounter < ($chunkCounter + 1) * $chunkSize && $urlCounter < $this->urlsCount; $urlCounter++
+                 $urlCounter < ($chunkCounter + 1) * $chunkSize && $urlCounter < count($this->urls); $urlCounter++
             ) {
                 $row = $sitemapXml->addChild('url');
 
@@ -699,13 +669,11 @@ class SitemapGenerator
      */
     public function getURLsArray(): array
     {
-        $urls = $this->urls->toArray();
-
         /**
          * @var int $key
          * @var SplFixedArray $urlSplArr
          */
-        foreach ($urls as $key => $urlSplArr) {
+        foreach ($this->urls as $key => $urlSplArr) {
             if (!is_null($urlSplArr)) {
                 $urlArr = $urlSplArr->toArray();
                 $url = [];
@@ -740,7 +708,7 @@ class SitemapGenerator
      */
     public function getURLsCount(): int
     {
-        return $this->urlsCount;
+        return count($this->urls);
     }
 
     /**
@@ -805,46 +773,5 @@ class SitemapGenerator
     private function getSampleRobotsContent(): string
     {
         return implode(PHP_EOL, $this->sampleRobotsLines) . PHP_EOL;
-    }
-}
-
-class FileSystem implements IFileSystem
-{
-    public function file_get_contents($filepath)
-    {
-        return file_get_contents($filepath);
-    }
-
-    public function file_put_contents($filepath, $content)
-    {
-        return file_put_contents($filepath, $content);
-    }
-
-    public function gzopen($filepath, $mode)
-    {
-        return gzopen($filepath, $mode);
-    }
-
-    public function gzwrite($file, $content)
-    {
-        return gzwrite($file, $content);
-    }
-
-    public function gzclose($file)
-    {
-        return gzclose($file);
-    }
-
-    public function file_exists($filepath)
-    {
-        return file_exists($filepath);
-    }
-}
-
-class Runtime implements IRuntime
-{
-    public function extension_loaded($extname)
-    {
-        return extension_loaded($extname);
     }
 }
