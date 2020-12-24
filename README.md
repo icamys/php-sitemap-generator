@@ -8,8 +8,6 @@
 
 Library for sitemap generation and submission.
 
-Internally uses SplFixedArrays, thus is faster and uses less memory then alternatives.
-
 Features:
 * Follows [sitemaps.org](https://sitemaps.org/) protocol
 * Supports alternative links for multi-language pages (see [google docs](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
