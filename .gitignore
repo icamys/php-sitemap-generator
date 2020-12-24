@@ -2,3 +2,4 @@
 vendor
 coverage
 *.cache
+clover.xml
