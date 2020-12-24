@@ -85,7 +85,7 @@ $ ./vendor/bin/phpunit
 Run code coverage:
 
 ```bash
-$ ./vendor/bin/phpunit --coverage-html ./coverage
+$ XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html ./coverage
 ```
 
 ### Changelog
