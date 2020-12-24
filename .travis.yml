@@ -4,6 +4,7 @@ php:
   - '7.2'
   - '7.3'
   - '7.4'
+  - '8.0'
 
 cache:
   directories:
@@ -17,3 +18,7 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+env:
+  global:
+    - XDEBUG_MODE=coverage
