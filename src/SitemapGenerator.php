@@ -41,12 +41,6 @@ class SitemapGenerator
      */
     const MAX_URL_LEN = 2048;
 
-    const ATTR_KEY_LOC = 0;
-    const ATTR_KEY_LASTMOD = 1;
-    const ATTR_KEY_CHANGEFREQ = 2;
-    const ATTR_KEY_PRIORITY = 3;
-    const ATTR_KEY_ALTERNATES = 4;
-
     const ATTR_NAME_LOC = 'loc';
     const ATTR_NAME_LASTMOD = 'lastmod';
     const ATTR_NAME_CHANGEFREQ = 'changefreq';
@@ -324,10 +318,10 @@ class SitemapGenerator
         }
         $tmp = [];
 
-        $tmp[self::ATTR_KEY_LOC] = $loc;
+        $tmp[self::ATTR_NAME_LOC] = $loc;
 
         if (isset($lastModified)) {
-            $tmp[self::ATTR_KEY_LASTMOD] = $lastModified->format(DateTime::ATOM);
+            $tmp[self::ATTR_NAME_LASTMOD] = $lastModified->format(DateTime::ATOM);
         }
 
         if (isset($changeFrequency)) {
@@ -336,7 +330,7 @@ class SitemapGenerator
                     'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
                 );
             }
-            $tmp[self::ATTR_KEY_CHANGEFREQ] = $changeFrequency;
+            $tmp[self::ATTR_NAME_CHANGEFREQ] = $changeFrequency;
         }
 
         if (isset($priority)) {
@@ -344,11 +338,11 @@ class SitemapGenerator
                 throw new InvalidArgumentException("priority should be a float number in the range [0.0..1.0]");
             }
 
-            $tmp[self::ATTR_KEY_PRIORITY] = number_format($priority, 1, ".", "");
+            $tmp[self::ATTR_NAME_PRIORITY] = number_format($priority, 1, ".", "");
         }
 
         if (isset($alternates)) {
-            $tmp[self::ATTR_KEY_ALTERNATES] = $alternates;
+            $tmp[self::ATTR_NAME_ALTERNATES] = $alternates;
         }
 
         $this->urls[] = $tmp;
@@ -418,24 +412,24 @@ class SitemapGenerator
 
                 $row->addChild(
                     self::ATTR_NAME_LOC,
-                    htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::ATTR_KEY_LOC], ENT_QUOTES)
+                    htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::ATTR_NAME_LOC], ENT_QUOTES)
                 );
 
                 $urlAttrsCount = count($this->urls[$urlCounter]);
 
                 if ($urlAttrsCount > 1) {
-                    if (isset($this->urls[$urlCounter][self::ATTR_KEY_LASTMOD])) {
-                        $row->addChild(self::ATTR_NAME_LASTMOD, $this->urls[$urlCounter][self::ATTR_KEY_LASTMOD]);
+                    if (isset($this->urls[$urlCounter][self::ATTR_NAME_LASTMOD])) {
+                        $row->addChild(self::ATTR_NAME_LASTMOD, $this->urls[$urlCounter][self::ATTR_NAME_LASTMOD]);
                     }
                 }
                 if ($urlAttrsCount > 2) {
-                    $row->addChild(self::ATTR_NAME_CHANGEFREQ, $this->urls[$urlCounter][self::ATTR_KEY_CHANGEFREQ]);
+                    $row->addChild(self::ATTR_NAME_CHANGEFREQ, $this->urls[$urlCounter][self::ATTR_NAME_CHANGEFREQ]);
                 }
                 if ($urlAttrsCount > 3) {
-                    $row->addChild(self::ATTR_NAME_PRIORITY, $this->urls[$urlCounter][self::ATTR_KEY_PRIORITY]);
+                    $row->addChild(self::ATTR_NAME_PRIORITY, $this->urls[$urlCounter][self::ATTR_NAME_PRIORITY]);
                 }
                 if ($urlAttrsCount > 4) {
-                    foreach ($this->urls[$urlCounter][self::ATTR_KEY_ALTERNATES] as $alternate) {
+                    foreach ($this->urls[$urlCounter][self::ATTR_NAME_ALTERNATES] as $alternate) {
                         if (isset($alternate['hreflang']) && isset($alternate['href'])) {
                             $tag = $row->addChild('link');
                             $tag->addAttribute('rel', 'alternate');
