@@ -421,18 +421,20 @@ class SitemapGenerator
                     htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::ATTR_KEY_LOC], ENT_QUOTES)
                 );
 
-                if ($this->urls[$urlCounter]->getSize() > 1) {
+                $urlAttrsCount = count($this->urls[$urlCounter]);
+
+                if ($urlAttrsCount > 1) {
                     if (isset($this->urls[$urlCounter][self::ATTR_KEY_LASTMOD])) {
                         $row->addChild(self::ATTR_NAME_LASTMOD, $this->urls[$urlCounter][self::ATTR_KEY_LASTMOD]);
                     }
                 }
-                if ($this->urls[$urlCounter]->getSize() > 2) {
+                if ($urlAttrsCount > 2) {
                     $row->addChild(self::ATTR_NAME_CHANGEFREQ, $this->urls[$urlCounter][self::ATTR_KEY_CHANGEFREQ]);
                 }
-                if ($this->urls[$urlCounter]->getSize() > 3) {
+                if ($urlAttrsCount > 3) {
                     $row->addChild(self::ATTR_NAME_PRIORITY, $this->urls[$urlCounter][self::ATTR_KEY_PRIORITY]);
                 }
-                if ($this->urls[$urlCounter]->getSize() > 4) {
+                if ($urlAttrsCount > 4) {
                     foreach ($this->urls[$urlCounter][self::ATTR_KEY_ALTERNATES] as $alternate) {
                         if (isset($alternate['hreflang']) && isset($alternate['href'])) {
                             $tag = $row->addChild('link');
