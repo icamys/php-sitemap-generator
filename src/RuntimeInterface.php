@@ -2,7 +2,7 @@
 
 namespace Icamys\SitemapGenerator;
 
-interface IRuntime
+interface RuntimeInterface
 {
     public function extension_loaded($extname);
 }

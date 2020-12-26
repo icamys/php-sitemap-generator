@@ -189,21 +189,21 @@ class SitemapGenerator
         1.0,
     ];
     /**
-     * @var IFileSystem object used to communicate with file system
+     * @var FileSystemInterface object used to communicate with file system
      */
     private $fs;
     /**
-     * @var IRuntime object used to communicate with runtime
+     * @var RuntimeInterface object used to communicate with runtime
      */
     private $runtime;
 
     /**
      * @param string $baseURL You site URL
      * @param string $basePath Relative path where sitemap and robots should be stored.
-     * @param IFileSystem|null $fs
-     * @param IRuntime|null $runtime
+     * @param FileSystemInterface|null $fs
+     * @param RuntimeInterface|null $runtime
      */
-    public function __construct(string $baseURL, string $basePath = "", IFileSystem $fs = null, IRuntime $runtime = null)
+    public function __construct(string $baseURL, string $basePath = "", FileSystemInterface $fs = null, RuntimeInterface $runtime = null)
     {
         $this->urls = [];
         $this->baseURL = $baseURL;

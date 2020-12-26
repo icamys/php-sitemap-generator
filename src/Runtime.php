@@ -2,7 +2,7 @@
 
 namespace Icamys\SitemapGenerator;
 
-class Runtime implements IRuntime
+class Runtime implements RuntimeInterface
 {
     public function extension_loaded($extname)
     {
