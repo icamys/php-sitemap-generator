@@ -10,7 +10,6 @@ use LengthException;
 use OutOfRangeException;
 use RuntimeException;
 use SimpleXMLElement;
-use SplFixedArray;
 
 /**
  * Class SitemapGenerator
@@ -132,10 +131,6 @@ class SitemapGenerator
      */
     private $urls;
     /**
-     * @var integer number of currently added urls
-     */
-    private $urlsCount = 0;
-    /**
      * Array with sitemap
      * @var array of strings
      * @access private
@@ -205,8 +200,8 @@ class SitemapGenerator
     /**
      * @param string $baseURL You site URL
      * @param string $basePath Relative path where sitemap and robots should be stored.
-     * @param IFileSystem $fs
-     * @param IRuntime $runtime
+     * @param IFileSystem|null $fs
+     * @param IRuntime|null $runtime
      */
     public function __construct(string $baseURL, string $basePath = "", IFileSystem $fs = null, IRuntime $runtime = null)
     {
@@ -327,12 +322,11 @@ class SitemapGenerator
                 sprintf("url is too large (%d of %d)", mb_strlen($loc), self::MAX_URL_LEN)
             );
         }
-        $tmp = new SplFixedArray(1);
+        $tmp = [];
 
         $tmp[self::ATTR_KEY_LOC] = $loc;
 
         if (isset($lastModified)) {
-            $tmp->setSize(2);
             $tmp[self::ATTR_KEY_LASTMOD] = $lastModified->format(DateTime::ATOM);
         }
 
@@ -342,7 +336,6 @@ class SitemapGenerator
                     'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
                 );
             }
-            $tmp->setSize(3);
             $tmp[self::ATTR_KEY_CHANGEFREQ] = $changeFrequency;
         }
 
@@ -351,12 +344,10 @@ class SitemapGenerator
                 throw new InvalidArgumentException("priority should be a float number in the range [0.0..1.0]");
             }
 
-            $tmp->setSize(4);
             $tmp[self::ATTR_KEY_PRIORITY] = number_format($priority, 1, ".", "");
         }
 
         if (isset($alternates)) {
-            $tmp->setSize(5);
             $tmp[self::ATTR_KEY_ALTERNATES] = $alternates;
         }
 
@@ -364,7 +355,7 @@ class SitemapGenerator
         return $this;
     }
 
-    public function isValidChangefreqValue($value)
+    public function isValidChangefreqValue($value): bool
     {
         return in_array($value, $this->validChangefreqValues);
     }
@@ -427,7 +418,7 @@ class SitemapGenerator
 
                 $row->addChild(
                     self::ATTR_NAME_LOC,
-                    htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::ATTR_KEY_LOC], ENT_QUOTES, 'UTF-8')
+                    htmlspecialchars($this->baseURL . $this->urls[$urlCounter][self::ATTR_KEY_LOC], ENT_QUOTES)
                 );
 
                 if ($this->urls[$urlCounter]->getSize() > 1) {
@@ -444,7 +435,7 @@ class SitemapGenerator
                 if ($this->urls[$urlCounter]->getSize() > 4) {
                     foreach ($this->urls[$urlCounter][self::ATTR_KEY_ALTERNATES] as $alternate) {
                         if (isset($alternate['hreflang']) && isset($alternate['href'])) {
-                            $tag = $row->addChild('link', null, null);
+                            $tag = $row->addChild('link');
                             $tag->addAttribute('rel', 'alternate');
                             $tag->addAttribute('hreflang', $alternate['hreflang']);
                             $tag->addAttribute('href', $alternate['href']);
@@ -633,7 +624,7 @@ class SitemapGenerator
      * @access public
      * @throws BadMethodCallException
      */
-    public function submitSitemap($yahooAppId = null)
+    public function submitSitemap($yahooAppId = null): array
     {
         if (count($this->sitemaps) === 0) {
             throw new BadMethodCallException("To submit sitemap, call createSitemap function first.");
@@ -647,14 +638,14 @@ class SitemapGenerator
             $searchEngines[0][1];
         $result = [];
         for ($i = 0; $i < count($searchEngines); $i++) {
-            $submitSite = curl_init($searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES, 'UTF-8'));
+            $submitSite = curl_init($searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES));
             curl_setopt($submitSite, CURLOPT_RETURNTRANSFER, true);
             $responseContent = curl_exec($submitSite);
             $response = curl_getinfo($submitSite);
             $submitSiteShort = array_reverse(explode(".", parse_url($searchEngines[$i], PHP_URL_HOST)));
             $result[] = [
                 "site" => $submitSiteShort[1] . "." . $submitSiteShort[0],
-                "fullsite" => $searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES, 'UTF-8'),
+                "fullsite" => $searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES),
                 "http_code" => $response['http_code'],
                 "message" => str_replace("\n", " ", strip_tags($responseContent)),
             ];
@@ -664,43 +655,11 @@ class SitemapGenerator
 
     /**
      * Returns array of URLs
-     * Converts internal SplFixedArray to array
      * @return array array of URLs
      */
     public function getURLsArray(): array
     {
-        /**
-         * @var int $key
-         * @var SplFixedArray $urlSplArr
-         */
-        foreach ($this->urls as $key => $urlSplArr) {
-            if (!is_null($urlSplArr)) {
-                $urlArr = $urlSplArr->toArray();
-                $url = [];
-                foreach ($urlArr as $paramIndex => $paramValue) {
-                    switch ($paramIndex) {
-                        case static::ATTR_KEY_LOC:
-                            $url[self::ATTR_NAME_LOC] = $paramValue;
-                            break;
-                        case static::ATTR_KEY_CHANGEFREQ:
-                            $url[self::ATTR_NAME_CHANGEFREQ] = $paramValue;
-                            break;
-                        case static::ATTR_KEY_LASTMOD:
-                            $url[self::ATTR_NAME_LASTMOD] = $paramValue;
-                            break;
-                        case static::ATTR_KEY_PRIORITY:
-                            $url[self::ATTR_NAME_PRIORITY] = $paramValue;
-                            break;
-                        case static::ATTR_KEY_ALTERNATES:
-                            $url[self::ATTR_NAME_ALTERNATES] = $paramValue;
-                            break;
-                    }
-                }
-                $urls[$key] = $url;
-            }
-        }
-
-        return $urls;
+        return $this->urls;
     }
 
     /**
