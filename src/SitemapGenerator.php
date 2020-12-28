@@ -487,21 +487,27 @@ class SitemapGenerator
 
     /**
      * Move flushed files to their final location. Compress if necessary.
-     * @return array The generated files array
      */
-    public function finalize(): array
+    public function finalize()
     {
-        $generatedFiles = [];
+        $this->generatedFiles = [];
 
         if (count($this->flushedSitemaps) === 1) {
-            $targetSitemapLocation = $this->basePath . $this->sitemapFileName;
+            $targetSitemapFilename = $this->sitemapFileName;
             if ($this->isCompressionEnabled) {
-                $this->fs->copy($this->flushedSitemaps[0], 'compress.zlib://' . $targetSitemapLocation . '.gz');
+                $targetSitemapFilename .= '.gz';
+            }
+
+            $targetSitemapFilepath = $this->basePath . $targetSitemapFilename;
+
+            if ($this->isCompressionEnabled) {
+                $this->fs->copy($this->flushedSitemaps[0], 'compress.zlib://' . $targetSitemapFilepath);
                 $this->fs->unlink($this->flushedSitemaps[0]);
             } else {
-                $this->fs->rename($this->flushedSitemaps[0], $targetSitemapLocation);
+                $this->fs->rename($this->flushedSitemaps[0], $targetSitemapFilepath);
             }
-            $generatedFiles['sitemaps'] = [$targetSitemapLocation];
+            $this->generatedFiles['sitemaps'] = [$targetSitemapFilepath];
+            $this->generatedFiles['sitemap_full_url'] = $this->baseURL . '/' . $targetSitemapFilename;
         } else if (count($this->flushedSitemaps) > 1) {
             $ext = '.' . pathinfo($this->sitemapFileName, PATHINFO_EXTENSION);
             $targetExt = $ext;
@@ -510,35 +516,39 @@ class SitemapGenerator
             }
 
             $sitemapsUrls = [];
-            $targetSitemapsLocations = [];
+            $targetSitemapFilepaths = [];
             foreach ($this->flushedSitemaps as $i => $flushedSitemap) {
                 $targetSitemapFilename = str_replace($ext, ($i + 1) . $targetExt, $this->sitemapFileName);
-                $targetSitemapLocation = $this->basePath . $targetSitemapFilename;
+                $targetSitemapFilepath = $this->basePath . $targetSitemapFilename;
 
                 if ($this->isCompressionEnabled) {
-                    $this->fs->copy($flushedSitemap, 'compress.zlib://' . $targetSitemapLocation);
+                    $this->fs->copy($flushedSitemap, 'compress.zlib://' . $targetSitemapFilepath);
                     $this->fs->unlink($flushedSitemap);
                 } else {
-                    $this->fs->rename($flushedSitemap, $targetSitemapLocation);
+                    $this->fs->rename($flushedSitemap, $targetSitemapFilepath);
                 }
                 $sitemapsUrls[] = htmlspecialchars($this->baseURL . '/' . $targetSitemapFilename, ENT_QUOTES);
-                $targetSitemapsLocations[] = $targetSitemapLocation;
-            }
-            $targetSitemapIndexLocation = $this->basePath . $this->sitemapIndexFileName;
-
-            $this->createSitemapIndex($sitemapsUrls, $targetSitemapIndexLocation);
-
-            if ($this->isCompressionEnabled) {
-                $this->fs->copy($targetSitemapIndexLocation, 'compress.zlib://' . $targetSitemapIndexLocation . '.gz');
+                $targetSitemapFilepaths[] = $targetSitemapFilepath;
             }
 
-            $generatedFiles['sitemaps'] = $targetSitemapsLocations;
-            $generatedFiles['sitemaps_index'] = $targetSitemapIndexLocation;
+            $targetSitemapIndexFilepath = $this->basePath . $this->sitemapIndexFileName;
+            $this->createSitemapIndex($sitemapsUrls, $targetSitemapIndexFilepath);
+            $this->generatedFiles['sitemaps'] = $targetSitemapFilepaths;
+            $this->generatedFiles['sitemaps_index'] = $targetSitemapIndexFilepath;
+            $this->generatedFiles['sitemap_full_url'] = $this->baseURL . '/' . $this->sitemapIndexFileName;
         } else {
             throw new RuntimeException('failed to finalize, please add urls and flush first');
         }
+    }
 
-        return $generatedFiles;
+    private $generatedFiles = [];
+
+    /**
+     * @return array Array of previously generated files
+     */
+    public function getPreviousGeneratedFiles(): array
+    {
+        return $this->generatedFiles;
     }
 
     private function createSitemapIndex($sitemapsUrls, $sitemapIndexFileName)
@@ -601,20 +611,24 @@ class SitemapGenerator
         if (!$this->runtime->extension_loaded('curl')) {
             throw new BadMethodCallException("cURL extension is needed to do submission.");
         }
+        if (isset($this->generatedFiles['sitemap_full_url']) === false) {
+            throw new RuntimeException('please run finalize() method before submitting sitemaps');
+        }
         $searchEngines = $this->searchEngines;
         $searchEngines[0] = isset($yahooAppId) ?
             str_replace("USERID", $yahooAppId, $searchEngines[0][0]) :
             $searchEngines[0][1];
         $result = [];
         for ($i = 0; $i < count($searchEngines); $i++) {
-            $submitSite = curl_init($searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES));
+            $submitUrl = $searchEngines[$i] . htmlspecialchars($this->generatedFiles['sitemap_full_url'], ENT_QUOTES);
+            $submitSite = curl_init($submitUrl);
             curl_setopt($submitSite, CURLOPT_RETURNTRANSFER, true);
             $responseContent = curl_exec($submitSite);
             $response = curl_getinfo($submitSite);
             $submitSiteShort = array_reverse(explode(".", parse_url($searchEngines[$i], PHP_URL_HOST)));
             $result[] = [
                 "site" => $submitSiteShort[1] . "." . $submitSiteShort[0],
-                "fullsite" => $searchEngines[$i] . htmlspecialchars($this->sitemapFullURL, ENT_QUOTES),
+                "fullsite" => $submitUrl,
                 "http_code" => $response['http_code'],
                 "message" => str_replace("\n", " ", strip_tags($responseContent)),
             ];
@@ -634,8 +648,8 @@ class SitemapGenerator
      */
     public function updateRobots(): SitemapGenerator
     {
-        if (count($this->sitemaps) === 0) {
-            throw new BadMethodCallException("To update robots.txt, call createSitemap function first.");
+        if (count($this->generatedFiles) === 0) {
+            throw new BadMethodCallException("To update robots.txt, call finalize() first.");
         }
 
         $robotsFilePath = $this->basePath . $this->robotsFileName;
@@ -672,7 +686,11 @@ class SitemapGenerator
             $robotsFileContent = $this->getSampleRobotsContent();
         }
 
-        $robotsFileContent .= "Sitemap: $this->sitemapFullURL";
+        if (isset($this->generatedFiles['sitemap_full_url']) === false) {
+            throw new RuntimeException('please run finalize() method before generating creating robots.txt');
+        }
+
+        $robotsFileContent .= "Sitemap: {$this->generatedFiles['sitemap_full_url']}";
 
         return $robotsFileContent;
     }
