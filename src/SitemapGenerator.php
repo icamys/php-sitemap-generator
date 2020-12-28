@@ -47,12 +47,6 @@ class SitemapGenerator
      */
     const MAX_URL_LEN = 2048;
 
-    const ATTR_NAME_LOC = 'loc';
-    const ATTR_NAME_LASTMOD = 'lastmod';
-    const ATTR_NAME_CHANGEFREQ = 'changefreq';
-    const ATTR_NAME_PRIORITY = 'priority';
-    const ATTR_NAME_ALTERNATES = 'alternates';
-
     /**
      * Robots file name
      * @var string
@@ -492,8 +486,8 @@ class SitemapGenerator
 
     private function writeSitemapIndexUrl($url) {
         $this->xmlWriter->startElement('sitemap');
-        $this->xmlWriter->writeElement(self::ATTR_NAME_LOC, htmlspecialchars($url, ENT_QUOTES));
-        $this->xmlWriter->writeElement(self::ATTR_NAME_LASTMOD, date('c'));
+        $this->xmlWriter->writeElement('loc', htmlspecialchars($url, ENT_QUOTES));
+        $this->xmlWriter->writeElement('lastmod', date('c'));
         $this->xmlWriter->endElement(); // sitemap
     }
 
@@ -516,18 +510,18 @@ class SitemapGenerator
 
     private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates) {
         $this->xmlWriter->startElement('url');
-        $this->xmlWriter->writeElement(self::ATTR_NAME_LOC, htmlspecialchars($this->baseURL . $loc, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', htmlspecialchars($this->baseURL . $loc, ENT_QUOTES));
 
         if ($lastModified !== null) {
-            $this->xmlWriter->writeElement(self::ATTR_NAME_LASTMOD, $lastModified->format(DateTime::ATOM));
+            $this->xmlWriter->writeElement('lastmod', $lastModified->format(DateTime::ATOM));
         }
 
         if ($changeFrequency !== null) {
-            $this->xmlWriter->writeElement(self::ATTR_NAME_CHANGEFREQ, $changeFrequency);
+            $this->xmlWriter->writeElement('changefreq', $changeFrequency);
         }
 
         if ($priority !== null) {
-            $this->xmlWriter->writeElement(self::ATTR_NAME_PRIORITY, number_format($priority, 1, ".", ""));
+            $this->xmlWriter->writeElement('priority', number_format($priority, 1, ".", ""));
         }
 
         if (is_array($alternates) && count($alternates) > 0) {
