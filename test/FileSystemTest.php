@@ -30,6 +30,21 @@ class FileSystemTest extends TestCase
      */
     private $fileExistsSpy;
 
+    /**
+     * @var Spy for rename function
+     */
+    private $renameSpy;
+
+    /**
+     * @var Spy for copy function
+     */
+    private $copySpy;
+
+    /**
+     * @var Spy for unlink function
+     */
+    private $unlinkSpy;
+
     public function testFilePutContentsCall() {
         $this->fs->file_put_contents('path', 'contents');
         $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
@@ -49,6 +64,26 @@ class FileSystemTest extends TestCase
         $this->assertEquals('path', $this->fileExistsSpy->getInvocations()[0]->getArguments()[0]);
     }
 
+    public function testRenameCall() {
+        $this->fs->rename('source', 'destination');
+        $this->assertCount(1, $this->renameSpy->getInvocations());
+        $this->assertEquals('source', $this->renameSpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertEquals('destination', $this->renameSpy->getInvocations()[0]->getArguments()[1]);
+    }
+
+    public function testCopyCall() {
+        $this->fs->copy('source', 'destination');
+        $this->assertCount(1, $this->copySpy->getInvocations());
+        $this->assertEquals('source', $this->copySpy->getInvocations()[0]->getArguments()[0]);
+        $this->assertEquals('destination', $this->copySpy->getInvocations()[0]->getArguments()[1]);
+    }
+
+    public function testUnlinkCall() {
+        $this->fs->unlink('path');
+        $this->assertCount(1, $this->unlinkSpy->getInvocations());
+        $this->assertEquals('path', $this->unlinkSpy->getInvocations()[0]->getArguments()[0]);
+    }
+
     /**
      * @throws \phpmock\MockEnabledException
      */
@@ -61,6 +96,12 @@ class FileSystemTest extends TestCase
         $this->fileGetContentsSpy->enable();
         $this->fileExistsSpy = new Spy(__NAMESPACE__, "file_exists", function (){});
         $this->fileExistsSpy->enable();
+        $this->renameSpy = new Spy(__NAMESPACE__, "rename", function (){});
+        $this->renameSpy->enable();
+        $this->copySpy = new Spy(__NAMESPACE__, "copy", function (){});
+        $this->copySpy->enable();
+        $this->unlinkSpy = new Spy(__NAMESPACE__, "unlink", function (){});
+        $this->unlinkSpy->enable();
     }
 
     protected function tearDown(): void
@@ -69,5 +110,8 @@ class FileSystemTest extends TestCase
         $this->filePutContentsSpy->disable();
         $this->fileGetContentsSpy->disable();
         $this->fileExistsSpy->disable();
+        $this->renameSpy->disable();
+        $this->copySpy->disable();
+        $this->unlinkSpy->disable();
     }
 }
