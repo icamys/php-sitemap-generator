@@ -22,30 +22,30 @@ class SitemapGenerator
      * Max size of a sitemap according to spec.
      * @see https://www.sitemaps.org/protocol.html
      */
-    const MAX_FILE_SIZE = 52428800;
+    private const MAX_FILE_SIZE = 52428800;
 
     /**
      * Max number of urls per sitemap according to spec.
      * @see https://www.sitemaps.org/protocol.html
      */
-    const MAX_URLS_PER_SITEMAP = 50000;
+    private const MAX_URLS_PER_SITEMAP = 50000;
 
     /**
      * Max number of sitemaps per index file according to spec.
      * @see http://www.sitemaps.org/protocol.html
      */
-    const MAX_SITEMAPS_PER_INDEX = 50000;
+    private const MAX_SITEMAPS_PER_INDEX = 50000;
 
     /**
      * Total max number of URLs.
      */
-    const TOTAL_MAX_URLS = self::MAX_URLS_PER_SITEMAP * self::MAX_SITEMAPS_PER_INDEX;
+    private const TOTAL_MAX_URLS = self::MAX_URLS_PER_SITEMAP * self::MAX_SITEMAPS_PER_INDEX;
 
     /**
      * Max url length according to spec.
      * @see https://www.sitemaps.org/protocol.html#xmlTagDefinitions
      */
-    const MAX_URL_LEN = 2048;
+    private const MAX_URL_LEN = 2048;
 
     /**
      * Robots file name
