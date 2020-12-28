@@ -453,6 +453,7 @@ class SitemapGenerator
 
     private function flushSitemap()
     {
+        $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $flushedXmlString = $this->xmlWriter->outputMemory(true);
         $this->flushedSitemapSize += mb_strlen($flushedXmlString);
 
@@ -460,24 +461,17 @@ class SitemapGenerator
             $this->writeSitemapEnd();
             $this->writeSitemapStart();
         }
-        $this->fs->file_put_contents(
-            sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter),
-            $flushedXmlString,
-            FILE_APPEND
-        );
+        $this->fs->file_put_contents($targetSitemapFilepath, $flushedXmlString, FILE_APPEND);
     }
 
     private function writeSitemapEnd()
     {
+        $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $this->xmlWriter->endElement(); // urlset
         $this->xmlWriter->endDocument();
-        $this->fs->file_put_contents(
-            sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter),
-            $this->xmlWriter->flush(true),
-            FILE_APPEND
-        );
+        $this->fs->file_put_contents($targetSitemapFilepath, $this->xmlWriter->flush(true), FILE_APPEND);
         $this->isSitemapStarted = false;
-        $this->flushedSitemaps[] = sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
+        $this->flushedSitemaps[] = $targetSitemapFilepath;
         $this->flushedSitemapCounter++;
         $this->flushedSitemapSize = 0;
     }
