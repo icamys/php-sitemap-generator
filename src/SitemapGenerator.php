@@ -197,7 +197,6 @@ class SitemapGenerator
      */
     private $runtime;
 
-    private $xmlBuilder;
     private $xmlWriter;
 
     private $flushedSitemapFilenameFormat;
@@ -242,7 +241,6 @@ class SitemapGenerator
         }
         $this->basePath = $basePath;
 
-        $this->xmlBuilder = new SitemapXMLBuilder($this->baseURL, $this->classVersion);
         $this->xmlWriter = $this->createXmlWriter();
         $this->flushedSitemapFilenameFormat = sprintf("sm-%%d-%d.xml", time());
     }
