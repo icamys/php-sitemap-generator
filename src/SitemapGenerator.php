@@ -87,7 +87,7 @@ class SitemapGenerator
      * @var bool
      * @access public
      */
-    private $createGZipFile = false;
+    private $isCompressionEnabled = false;
     /**
      * URL to Your site.
      * Script will use it to send sitemaps to search engines.
@@ -261,7 +261,10 @@ class SitemapGenerator
     public function setSitemapFilename(string $filename = ''): SitemapGenerator
     {
         if (strlen($filename) === 0) {
-            throw new InvalidArgumentException('filename should not be empty');
+            throw new InvalidArgumentException('sitemap filename should not be empty');
+        }
+        if (pathinfo($filename, PATHINFO_EXTENSION) !== 'xml') {
+            throw new InvalidArgumentException('sitemap filename should have *.xml extension');
         }
         $this->sitemapFileName = $filename;
         return $this;
@@ -311,12 +314,35 @@ class SitemapGenerator
     /**
      * @return SitemapGenerator
      */
-    public function toggleGZipFileCreation(): SitemapGenerator
+    public function toggleSitemapCompression(): bool
     {
-        $this->createGZipFile = !$this->createGZipFile;
+        $this->isCompressionEnabled = !$this->isCompressionEnabled;
+        return $this->isCompressionEnabled;
+    }
+
+    public function enableCompression(): SitemapGenerator {
+        $this->isCompressionEnabled = true;
         return $this;
     }
 
+    public function disableCompression(): SitemapGenerator {
+        $this->isCompressionEnabled = false;
+        return $this;
+    }
+
+    /**
+     * Add url components.
+     * Instead of storing all urls in the memory, the generator will flush sets of added urls
+     * to the temporary files created on your disk.
+     * The file format is 'sm-{index}-{timestamp}.xml'
+     *
+     * @param string $loc
+     * @param DateTime|null $lastModified
+     * @param string|null $changeFrequency
+     * @param float|null $priority
+     * @param array|null $alternates
+     * @return $this
+     */
     public function addURL(
         string $loc,
         DateTime $lastModified = null,
@@ -377,34 +403,71 @@ class SitemapGenerator
         );
     }
 
+    /**
+     * Flush all stored urls from memory to the disk and close all necessary tags.
+     */
     public function flush() {
         $this->flushSitemap();
         $this->writeSitemapEnd();
     }
 
-    public function finalize()
+    /**
+     * Move flushed files to their final location. Compress if necessary.
+     * @return array The generated files array
+     */
+    public function finalize(): array
     {
+        $generatedFiles = [];
+
         if (count($this->flushedSitemaps) === 1) {
-            $this->fs->rename($this->flushedSitemaps[0], $this->sitemapFileName);
-        } elseif (count($this->flushedSitemaps) > 1) {
-            $sitemapFilenameExt = pathinfo($this->sitemapFileName, PATHINFO_EXTENSION);
-            $sitemapsUrls = [];
-            foreach ($this->flushedSitemaps as $i => $flushedSitemap) {
-                $targetSitemapLocation = str_replace(
-                    '.' . $sitemapFilenameExt,
-                    ($i+1) . '.' . $sitemapFilenameExt,
-                    $this->sitemapFileName
-                );
-                $this->fs->rename($flushedSitemap, $targetSitemapLocation);
-                $sitemapsUrls[] = $this->baseURL . '/' . htmlentities($targetSitemapLocation);
+            $targetSitemapLocation = $this->basePath . $this->sitemapFileName;
+            if ($this->isCompressionEnabled) {
+                $this->fs->copy($this->flushedSitemaps[0], 'compress.zlib://' . $targetSitemapLocation . '.gz');
+                $this->fs->unlink($this->flushedSitemaps[0]);
+            } else {
+                $this->fs->rename($this->flushedSitemaps[0], $targetSitemapLocation);
             }
-            $this->createSitemapIndex($sitemapsUrls);
+            $generatedFiles['sitemaps'] = [$targetSitemapLocation];
+        } else if (count($this->flushedSitemaps) > 1) {
+            $ext = '.' . pathinfo($this->sitemapFileName, PATHINFO_EXTENSION);
+            $targetExt = $ext;
+            if ($this->isCompressionEnabled) {
+                $targetExt .= '.gz';
+            }
+
+            $sitemapsUrls = [];
+            $targetSitemapsLocations = [];
+            foreach ($this->flushedSitemaps as $i => $flushedSitemap) {
+                $targetSitemapFilename = str_replace($ext, ($i + 1) . $targetExt, $this->sitemapFileName);
+                $targetSitemapLocation = $this->basePath . $targetSitemapFilename;
+
+                if ($this->isCompressionEnabled) {
+                    $this->fs->copy($flushedSitemap, 'compress.zlib://' . $targetSitemapLocation);
+                    $this->fs->unlink($flushedSitemap);
+                } else {
+                    $this->fs->rename($flushedSitemap, $targetSitemapLocation);
+                }
+                $sitemapsUrls[] = htmlspecialchars($this->baseURL . '/' . $targetSitemapFilename, ENT_QUOTES);
+                $targetSitemapsLocations[] = $targetSitemapLocation;
+            }
+            $targetSitemapIndexLocation = $this->basePath . $this->sitemapIndexFileName;
+
+            $this->createSitemapIndex($sitemapsUrls, $targetSitemapIndexLocation);
+
+            if ($this->isCompressionEnabled) {
+                $this->fs->copy($targetSitemapIndexLocation, 'compress.zlib://' . $targetSitemapIndexLocation . '.gz');
+            }
+
+            $generatedFiles['sitemaps'] = $targetSitemapsLocations;
+            $generatedFiles['sitemaps_index'] = $targetSitemapIndexLocation;
         } else {
             throw new RuntimeException('failed to finalize, please add urls and flush first');
         }
+
+        return $generatedFiles;
     }
 
-    private function createSitemapIndex($sitemapsUrls) {
+    private function createSitemapIndex($sitemapsUrls, $sitemapIndexFileName) {
         $this->xmlWriter->flush(true);
         $this->writeSitemapIndexStart();
         foreach ($sitemapsUrls as $sitemapsUrl) {
@@ -412,7 +475,7 @@ class SitemapGenerator
         }
         $this->writeSitemapIndexEnd();
         $this->fs->file_put_contents(
-            $this->sitemapIndexFileName,
+            $sitemapIndexFileName,
             $this->xmlWriter->flush(true),
             FILE_APPEND
         );
@@ -658,7 +721,7 @@ class SitemapGenerator
      */
     private function appendGzPostfixIfEnabled(string $str): string
     {
-        if ($this->createGZipFile) {
+        if ($this->isCompressionEnabled) {
             return $str . ".gz";
         }
         return $str;
@@ -695,12 +758,12 @@ class SitemapGenerator
             $indexStr = $this->document->saveXML();
             $indexFilepath = $this->basePath . $this->sitemapIndex['filename'];
             $this->writeFile($indexStr, $indexFilepath);
-            if ($this->createGZipFile) {
+            if ($this->isCompressionEnabled) {
                 $this->writeGZipFile($indexStr, $indexFilepath . '.gz');
             }
             foreach ($this->sitemaps as $sitemap) {
                 $filepath = $this->basePath . $sitemap['filename'];
-                if ($this->createGZipFile) {
+                if ($this->isCompressionEnabled) {
                     $this->writeGZipFile($sitemap['source'], $filepath . '.gz');
                 } else {
                     $this->writeFile($sitemap['source'], $filepath);
@@ -712,7 +775,7 @@ class SitemapGenerator
             $docStr = $this->document->saveXML();
             $filepath = $this->basePath . $sitemap['filename'];
             $this->writeFile($docStr, $filepath);
-            if ($this->createGZipFile) {
+            if ($this->isCompressionEnabled) {
                 $this->writeGZipFile($docStr, $filepath . '.gz');
             }
         }

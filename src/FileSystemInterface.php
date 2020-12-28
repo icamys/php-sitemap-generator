@@ -17,4 +17,8 @@ interface FileSystemInterface
     public function gzclose($file);
 
     public function rename($oldname, $newname);
+
+    public function copy($source, $destination);
+
+    public function unlink($filepath);
 }

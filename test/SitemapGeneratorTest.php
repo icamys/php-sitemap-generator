@@ -248,7 +248,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->toggleGZipFileCreation();
+        $this->g->toggleSitemapCompression();
         $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->addURL('/product-2/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
@@ -308,7 +308,7 @@ class SitemapGeneratorTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        $this->g->toggleGZipFileCreation();
+        $this->g->toggleSitemapCompression();
         $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
@@ -340,7 +340,7 @@ class SitemapGeneratorTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        $this->g->toggleGZipFileCreation();
+        $this->g->toggleSitemapCompression();
         $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
@@ -375,7 +375,7 @@ class SitemapGeneratorTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        $this->g->toggleGZipFileCreation();
+        $this->g->toggleSitemapCompression();
         $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();
@@ -396,7 +396,7 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setMaxURLsPerSitemap(1);
         $this->g->setSitemapFilename("sitemap.xml");
         $this->g->setSitemapIndexFilename("sitemap-index.xml");
-        $this->g->toggleGZipFileCreation();
+        $this->g->toggleSitemapCompression();
         $this->g->addURL('/product-1/', $this->now, 'always', 0.8);
         $this->g->createSitemap();
         $this->g->writeSitemap();

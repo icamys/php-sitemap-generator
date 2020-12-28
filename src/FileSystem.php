@@ -34,7 +34,18 @@ class FileSystem implements FileSystemInterface
         return file_exists($filepath);
     }
 
-    public function rename($oldname, $newname) {
+    public function rename($oldname, $newname)
+    {
         return rename($oldname, $newname);
+    }
+
+    public function copy($source, $destination)
+    {
+        return copy($source, $destination);
+    }
+
+    public function unlink($filepath)
+    {
+        return unlink($filepath);
     }
 }
