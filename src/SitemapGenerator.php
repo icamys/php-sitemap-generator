@@ -6,10 +6,8 @@ use BadMethodCallException;
 use DateTime;
 use DOMDocument;
 use InvalidArgumentException;
-use LengthException;
 use OutOfRangeException;
 use RuntimeException;
-use SimpleXMLElement;
 use XMLWriter;
 
 /**
