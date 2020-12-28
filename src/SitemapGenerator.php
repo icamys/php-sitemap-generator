@@ -242,7 +242,7 @@ class SitemapGenerator
             $this->runtime = $runtime;
         }
 
-        if (is_writable($basePath) === false) {
+        if ($this->runtime->is_writable($basePath) === false) {
             throw new InvalidArgumentException(
                 sprintf('the provided basePath (%s) should be a writable directory,', $basePath) .
                 ' please check its existence and permissions'

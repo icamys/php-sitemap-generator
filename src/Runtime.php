@@ -8,4 +8,9 @@ class Runtime implements RuntimeInterface
     {
         return extension_loaded($extname);
     }
+
+    public function is_writable($filepath)
+    {
+        return is_writable($filepath);
+    }
 }
