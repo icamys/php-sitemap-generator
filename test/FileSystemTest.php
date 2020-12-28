@@ -30,21 +30,6 @@ class FileSystemTest extends TestCase
      */
     private $fileExistsSpy;
 
-    /**
-     * @var Spy for gzopen function
-     */
-    private $gzopenSpy;
-
-    /**
-     * @var Spy for gzwrite function
-     */
-    private $gzwriteSpy;
-
-    /**
-     * @var Spy for gzclose function
-     */
-    private $gzcloseSpy;
-
     public function testFilePutContentsCall() {
         $this->fs->file_put_contents('path', 'contents');
         $this->assertCount(1, $this->filePutContentsSpy->getInvocations());
@@ -64,26 +49,6 @@ class FileSystemTest extends TestCase
         $this->assertEquals('path', $this->fileExistsSpy->getInvocations()[0]->getArguments()[0]);
     }
 
-    public function testGzipFileOpenCall() {
-        $this->fs->gzopen('path', 'w');
-        $this->assertCount(1, $this->gzopenSpy->getInvocations());
-        $this->assertEquals('path', $this->gzopenSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertEquals('w', $this->gzopenSpy->getInvocations()[0]->getArguments()[1]);
-    }
-
-    public function testGzipFileWriteCall() {
-        $this->fs->gzwrite(true, 'content');
-        $this->assertCount(1, $this->gzwriteSpy->getInvocations());
-        $this->assertEquals(true, $this->gzwriteSpy->getInvocations()[0]->getArguments()[0]);
-        $this->assertEquals('content', $this->gzwriteSpy->getInvocations()[0]->getArguments()[1]);
-    }
-
-    public function testGzipFileCloseCall() {
-        $this->fs->gzclose(true);
-        $this->assertCount(1, $this->gzcloseSpy->getInvocations());
-        $this->assertEquals(true, $this->gzcloseSpy->getInvocations()[0]->getArguments()[0]);
-    }
-
     /**
      * @throws \phpmock\MockEnabledException
      */
@@ -96,12 +61,6 @@ class FileSystemTest extends TestCase
         $this->fileGetContentsSpy->enable();
         $this->fileExistsSpy = new Spy(__NAMESPACE__, "file_exists", function (){});
         $this->fileExistsSpy->enable();
-        $this->gzopenSpy = new Spy(__NAMESPACE__, "gzopen", function (){});
-        $this->gzopenSpy->enable();
-        $this->gzwriteSpy = new Spy(__NAMESPACE__, "gzwrite", function (){});
-        $this->gzwriteSpy->enable();
-        $this->gzcloseSpy = new Spy(__NAMESPACE__, "gzclose", function (){});
-        $this->gzcloseSpy->enable();
     }
 
     protected function tearDown(): void
@@ -110,8 +69,5 @@ class FileSystemTest extends TestCase
         $this->filePutContentsSpy->disable();
         $this->fileGetContentsSpy->disable();
         $this->fileExistsSpy->disable();
-        $this->gzopenSpy->disable();
-        $this->gzwriteSpy->disable();
-        $this->gzcloseSpy->disable();
     }
 }
