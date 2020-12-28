@@ -135,10 +135,6 @@ class SitemapGenerator
      */
     private $sitemapFullURL;
     /**
-     * @var DOMDocument
-     */
-    private $document;
-    /**
      * Lines for robots.txt file that are written if file does not exist
      * @var array
      */
@@ -233,9 +229,6 @@ class SitemapGenerator
     {
         $this->urls = [];
         $this->baseURL = rtrim($baseURL, '/');
-        $this->document = new DOMDocument("1.0");
-        $this->document->preserveWhiteSpace = false;
-        $this->document->formatOutput = true;
 
         if ($fs === null) {
             $this->fs = new FileSystem();
