@@ -431,7 +431,7 @@ class SitemapGenerator
 
     private function writeSitemapIndexUrl($url) {
         $this->xmlWriter->startElement('sitemap');
-        $this->xmlWriter->writeElement(self::ATTR_NAME_LOC, $url);
+        $this->xmlWriter->writeElement(self::ATTR_NAME_LOC, htmlspecialchars($url, ENT_QUOTES));
         $this->xmlWriter->writeElement(self::ATTR_NAME_LASTMOD, date('c'));
         $this->xmlWriter->endElement(); // sitemap
     }
@@ -623,7 +623,7 @@ class SitemapGenerator
             $sitemapXml = new SimpleXMLElement($sitemapIndexHeader);
             foreach ($this->sitemaps as $sitemap) {
                 $row = $sitemapXml->addChild('sitemap');
-                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlentities($sitemap['filename'])));
+                $row->addChild(self::ATTR_NAME_LOC, $this->baseURL . "/" . $this->appendGzPostfixIfEnabled(htmlspecialchars($sitemap['filename'], ENT_QUOTES)));
                 $row->addChild(self::ATTR_NAME_LASTMOD, date('c'));
             }
             $this->sitemapFullURL = $this->baseURL . "/" . $this->appendGzPostfixIfEnabled($this->sitemapIndexFileName);
