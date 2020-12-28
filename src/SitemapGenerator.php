@@ -252,6 +252,12 @@ class SitemapGenerator
         if (strlen($basePath) > 0 && substr($basePath, -1) != DIRECTORY_SEPARATOR) {
             $basePath = $basePath . DIRECTORY_SEPARATOR;
         }
+        if (is_writable($basePath) === false) {
+            throw new InvalidArgumentException(
+                sprintf('the provided basePath (%s) should be a writable directory,', $basePath) .
+                ' please check its existence and permissions'
+            );
+        }
         $this->basePath = $basePath;
 
         $this->xmlWriter = $this->createXmlWriter();
