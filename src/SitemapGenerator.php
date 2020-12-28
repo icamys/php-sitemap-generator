@@ -10,6 +10,7 @@ use LengthException;
 use OutOfRangeException;
 use RuntimeException;
 use SimpleXMLElement;
+use XMLWriter;
 
 /**
  * Class SitemapGenerator
@@ -196,6 +197,20 @@ class SitemapGenerator
      */
     private $runtime;
 
+    private $xmlBuilder;
+    private $xmlWriter;
+
+    private $flushedSitemapFilenameFormat;
+    private $flushedSitemapSize = 0;
+    private $flushedSitemapCounter = 0;
+    private $flushedSitemaps = [];
+
+    private $isSitemapStarted = false;
+
+    private $urlCount = 0;
+
+    private $urlsetClosingTagLen = 10; // strlen("</urlset>\n")
+
     /**
      * @param string $baseURL You site URL
      * @param string $basePath Relative path where sitemap and robots should be stored.
@@ -205,7 +220,7 @@ class SitemapGenerator
     public function __construct(string $baseURL, string $basePath = "", FileSystemInterface $fs = null, RuntimeInterface $runtime = null)
     {
         $this->urls = [];
-        $this->baseURL = $baseURL;
+        $this->baseURL = rtrim($baseURL, '/');
         $this->document = new DOMDocument("1.0");
         $this->document->preserveWhiteSpace = false;
         $this->document->formatOutput = true;
@@ -226,6 +241,17 @@ class SitemapGenerator
             $basePath = $basePath . DIRECTORY_SEPARATOR;
         }
         $this->basePath = $basePath;
+
+        $this->xmlBuilder = new SitemapXMLBuilder($this->baseURL, $this->classVersion);
+        $this->xmlWriter = $this->createXmlWriter();
+        $this->flushedSitemapFilenameFormat = sprintf("sm-%%d-%d.xml", time());
+    }
+
+    private function createXmlWriter() {
+        $w = new XMLWriter();
+        $w->openMemory();
+        $w->setIndent(true);
+        return $w;
     }
 
     /**
@@ -291,73 +317,190 @@ class SitemapGenerator
         return $this;
     }
 
-    /**
-     * Use this to add single URL to sitemap.
-     * @param string $loc
-     * @param DateTime|null $lastModified
-     * @param string|null $changeFrequency ex. 'always'
-     * @param float|null $priority ex. '0.5'
-     * @param array|null $alternates
-     * @return SitemapGenerator
-     * @throws InvalidArgumentException
-     * @todo add scheme and domain check
-     * @todo check that port of url is the same as base url port
-     * @see http://php.net/manual/en/function.date.php
-     * @see http://en.wikipedia.org/wiki/ISO_8601
-     */
     public function addURL(
-        string $loc = '',
+        string $loc,
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
         array $alternates = null
     ): SitemapGenerator
     {
-        if (strlen($loc) === 0) {
-            throw new InvalidArgumentException("loc parameter is required");
-        }
-        if (mb_strlen($loc) > self::MAX_URL_LEN) {
-            throw new InvalidArgumentException(
-                sprintf("url is too large (%d of %d)", mb_strlen($loc), self::MAX_URL_LEN)
+        if ($this->urlCount >= self::TOTAL_MAX_URLS) {
+            throw new OutOfRangeException(
+                sprintf("Max url limit reached (%d)", self::TOTAL_MAX_URLS)
             );
         }
-        if (count($this->urls) >= self::TOTAL_MAX_URLS) {
-            throw new RuntimeException(sprintf(
-                'Too many urls for sitemap. Max value is %d', self::TOTAL_MAX_URLS
-            ));
+        if ($this->isValidLocValue($loc) === false) {
+            throw new InvalidArgumentException(
+                sprintf("loc parameter length should be between 1 and %d", self::MAX_URL_LEN)
+            );
+        }
+        if ($changeFrequency !== null && $this->isValidChangefreqValue($changeFrequency) === false) {
+            throw new InvalidArgumentException(
+                'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
+            );
+        }
+        if ($priority !== null && $this->isValidPriorityValue($priority) === false) {
+            throw new InvalidArgumentException("priority should be a float number in the range [0.0..1.0]");
         }
 
-        $url = [];
-
-        $url[self::ATTR_NAME_LOC] = $loc;
-
-        if (isset($lastModified)) {
-            $url[self::ATTR_NAME_LASTMOD] = $lastModified->format(DateTime::ATOM);
+        if ($this->isSitemapStarted === false) {
+            $this->writeSitemapStart();
         }
 
-        if (isset($changeFrequency)) {
-            if ($this->isValidChangefreqValue($changeFrequency) === false) {
-                throw new InvalidArgumentException(
-                    'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
-                );
-            }
-            $url[self::ATTR_NAME_CHANGEFREQ] = $changeFrequency;
+        $this->writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates);
+        $this->urlCount++;
+
+        if ($this->urlCount % 1000 === 0 || $this->urlCount >= $this->maxURLsPerSitemap) {
+            $this->flushSitemap();
         }
 
-        if (isset($priority)) {
-            if (!$this->isValidPriorityValue($priority)) {
-                throw new InvalidArgumentException("priority should be a float number in the range [0.0..1.0]");
-            }
-
-            $url[self::ATTR_NAME_PRIORITY] = number_format($priority, 1, ".", "");
+        if ($this->urlCount === self::MAX_URLS_PER_SITEMAP) {
+            $this->writeSitemapEnd();
         }
 
-        if (isset($alternates)) {
-            $url[self::ATTR_NAME_ALTERNATES] = $alternates;
-        }
-
-        $this->urls[] = $url;
         return $this;
+    }
+
+    private function flushSitemap() {
+        $flushedXmlString = $this->xmlWriter->outputMemory(true);
+        $this->flushedSitemapSize += mb_strlen($flushedXmlString);
+
+        if ($this->flushedSitemapSize > self::MAX_FILE_SIZE - $this->urlsetClosingTagLen) {
+            $this->writeSitemapEnd();
+            $this->writeSitemapStart();
+        }
+        $this->fs->file_put_contents(
+            sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter),
+            $flushedXmlString,
+            FILE_APPEND
+        );
+    }
+
+    public function flush() {
+        $this->flushSitemap();
+        $this->writeSitemapEnd();
+    }
+
+    public function finalize()
+    {
+        if (count($this->flushedSitemaps) === 1) {
+            $this->fs->rename($this->flushedSitemaps[0], $this->sitemapFileName);
+        } elseif (count($this->flushedSitemaps) > 1) {
+            $sitemapFilenameExt = pathinfo($this->sitemapFileName, PATHINFO_EXTENSION);
+            $sitemapsUrls = [];
+            foreach ($this->flushedSitemaps as $i => $flushedSitemap) {
+                $targetSitemapLocation = str_replace(
+                    '.' . $sitemapFilenameExt,
+                    ($i+1) . '.' . $sitemapFilenameExt,
+                    $this->sitemapFileName
+                );
+                $this->fs->rename($flushedSitemap, $targetSitemapLocation);
+                $sitemapsUrls[] = $this->baseURL . '/' . htmlentities($targetSitemapLocation);
+            }
+            $this->createSitemapIndex($sitemapsUrls);
+        } else {
+            throw new RuntimeException('failed to finalize, please add urls and flush first');
+        }
+    }
+
+    private function createSitemapIndex($sitemapsUrls) {
+        $this->xmlWriter->flush(true);
+        $this->writeSitemapIndexStart();
+        foreach ($sitemapsUrls as $sitemapsUrl) {
+            $this->writeSitemapIndexUrl($sitemapsUrl);
+        }
+        $this->writeSitemapIndexEnd();
+        $this->fs->file_put_contents(
+            $this->sitemapIndexFileName,
+            $this->xmlWriter->flush(true),
+            FILE_APPEND
+        );
+    }
+
+    private function writeSitemapIndexStart() {
+        $this->xmlWriter->startDocument("1.0", "UTF-8");
+        $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
+        $this->xmlWriter->writeComment(sprintf('generator-version="%s"', $this->classVersion));
+        $this->xmlWriter->writeComment(sprintf('generated-on="%s"', date('c')));
+        $this->xmlWriter->startElement('sitemapindex');
+        $this->xmlWriter->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        $this->xmlWriter->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $this->xmlWriter->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd');
+    }
+
+    private function writeSitemapIndexUrl($url) {
+        $this->xmlWriter->startElement('sitemap');
+        $this->xmlWriter->writeElement(self::ATTR_NAME_LOC, $url);
+        $this->xmlWriter->writeElement(self::ATTR_NAME_LASTMOD, date('c'));
+        $this->xmlWriter->endElement(); // sitemap
+    }
+
+    private function writeSitemapIndexEnd() {
+        $this->xmlWriter->endElement(); // sitemapindex
+        $this->xmlWriter->endDocument();
+    }
+
+    private function writeSitemapStart() {
+        $this->xmlWriter->startDocument("1.0", "UTF-8");
+        $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
+        $this->xmlWriter->writeComment(sprintf('generator-version="%s"', $this->classVersion));
+        $this->xmlWriter->writeComment(sprintf('generated-on="%s"', date('c')));
+        $this->xmlWriter->startElement('urlset');
+        $this->xmlWriter->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        $this->xmlWriter->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+        $this->xmlWriter->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd');
+        $this->isSitemapStarted = true;
+    }
+
+    private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates) {
+        $this->xmlWriter->startElement('url');
+        $this->xmlWriter->writeElement(self::ATTR_NAME_LOC, htmlspecialchars($this->baseURL . $loc, ENT_QUOTES));
+
+        if ($lastModified !== null) {
+            $this->xmlWriter->writeElement(self::ATTR_NAME_LASTMOD, $lastModified->format(DateTime::ATOM));
+        }
+
+        if ($changeFrequency !== null) {
+            $this->xmlWriter->writeElement(self::ATTR_NAME_CHANGEFREQ, $changeFrequency);
+        }
+
+        if ($priority !== null) {
+            $this->xmlWriter->writeElement(self::ATTR_NAME_PRIORITY, number_format($priority, 1, ".", ""));
+        }
+
+        if (is_array($alternates) && count($alternates) > 0) {
+            foreach ($alternates as $alternate) {
+                if (is_array($alternate) && isset($alternate['hreflang']) && isset($alternate['href'])) {
+                    $this->xmlWriter->startElement('link');
+                    $this->xmlWriter->writeAttribute('rel', 'alternate');
+                    $this->xmlWriter->writeAttribute('hreflang', $alternate['hreflang']);
+                    $this->xmlWriter->writeAttribute('href', $alternate['href']);
+                    $this->xmlWriter->endElement();
+                }
+            }
+        }
+
+        $this->xmlWriter->endElement(); // url
+    }
+
+    private function writeSitemapEnd() {
+        $this->xmlWriter->endElement(); // urlset
+        $this->xmlWriter->endDocument();
+        $this->fs->file_put_contents(
+            sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter),
+            $this->xmlWriter->flush(true),
+            FILE_APPEND
+        );
+        $this->isSitemapStarted = false;
+        $this->flushedSitemaps[] = sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
+        $this->flushedSitemapCounter++;
+        $this->flushedSitemapSize = 0;
+    }
+
+    public function isValidLocValue($value): bool
+    {
+        return 1 <= mb_strlen($value) && mb_strlen($value) <= self::MAX_URL_LEN;
     }
 
     public function isValidChangefreqValue($value): bool

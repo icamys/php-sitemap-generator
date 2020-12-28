@@ -9,9 +9,9 @@ class FileSystem implements FileSystemInterface
         return file_get_contents($filepath);
     }
 
-    public function file_put_contents($filepath, $content)
+    public function file_put_contents($filepath, $content, $flags = 0)
     {
-        return file_put_contents($filepath, $content);
+        return file_put_contents($filepath, $content, $flags);
     }
 
     public function gzopen($filepath, $mode)
@@ -32,5 +32,9 @@ class FileSystem implements FileSystemInterface
     public function file_exists($filepath)
     {
         return file_exists($filepath);
+    }
+
+    public function rename($oldname, $newname) {
+        return rename($oldname, $newname);
     }
 }

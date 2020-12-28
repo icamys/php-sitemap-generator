@@ -22,7 +22,8 @@
     "ext-simplexml": "*",
     "ext-mbstring": "*",
     "ext-zlib": "*",
-    "ext-curl": "*"
+    "ext-curl": "*",
+    "ext-xmlwriter": "*"
   },
   "autoload": {
     "psr-4": {"Icamys\\SitemapGenerator\\": "src/"}

@@ -9,7 +9,7 @@ use DOMDocument;
 use DOMElement;
 use Exception;
 
-class SitemapTemplateBuilder
+class SitemapXMLBuilder
 {
     const ATTR_NAME_LOC = 'loc';
     const ATTR_NAME_LASTMOD = 'lastmod';
