@@ -11,7 +11,7 @@ Library for sitemap generation and submission.
 Features:
 * Follows [sitemaps.org](https://sitemaps.org/) protocol
 * Supports alternative links for multi-language pages (see [google docs](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
-* Fixed low memory usage for any amount of URLs
+* Low memory usage for any amount of URLs
 
 Installation with Composer:
 
