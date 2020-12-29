@@ -6,7 +6,6 @@ namespace Icamys\SitemapGenerator\Extensions;
 
 use DateTime;
 use InvalidArgumentException;
-use OutOfRangeException;
 use XMLWriter;
 
 
@@ -144,13 +143,13 @@ class GoogleVideoExtension
             throw new InvalidArgumentException('The field video:player_loc must not be the same as the <loc> URL.');
         }
         if (isset($extFields['video:duration']) && !(1 <= $extFields['video:duration'] && $extFields['video:duration'] <= 28800)) {
-            throw new OutOfRangeException('the video:duration value should be between 1 and 28800');
+            throw new InvalidArgumentException('The video:duration value should be between 1 and 28800');
         }
         if (isset($extFields['video:expiration_date'])
             && DateTime::createFromFormat(DateTime::ATOM, $extFields['video:expiration_date']) === false
             && DateTime::createFromFormat('Y-m-d', $extFields['video:expiration_date']) === false
         ) {
-            throw new InvalidArgumentException('Invalid video:expiration_date format. ' .
+            throw new InvalidArgumentException('Invalid video:expiration_date value. ' .
                 'Supported values are complete date (YYYY-MM-DD) or complete date plus hours, ' .
                 'minutes and seconds, and timezone (YYYY-MM-DDThh:mm:ss+TZD)');
         }
