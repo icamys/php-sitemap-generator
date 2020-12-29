@@ -458,7 +458,7 @@ class SitemapGenerator
 
         foreach ($extensions as $extName => $extFields) {
             if ($extName === 'google_video') {
-                GoogleVideoExtension::writeVideoTag($this->xmlWriter, $extFields);
+                GoogleVideoExtension::writeVideoTag($this->xmlWriter, $loc, $extFields);
             }
         }
 
