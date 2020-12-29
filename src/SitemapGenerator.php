@@ -338,6 +338,7 @@ class SitemapGenerator
      * @param string|null $changeFrequency
      * @param float|null $priority
      * @param array|null $alternates
+     * @param array $extensions
      * @return $this
      */
     public function addURL(
@@ -345,7 +346,8 @@ class SitemapGenerator
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
-        array $alternates = null
+        array $alternates = null,
+        array $extensions = []
     ): SitemapGenerator
     {
         if ($this->totalUrlCount >= self::TOTAL_MAX_URLS) {
@@ -371,7 +373,7 @@ class SitemapGenerator
             $this->writeSitemapStart();
         }
 
-        $this->writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates);
+        $this->writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
             $this->flushSitemap();
@@ -412,7 +414,7 @@ class SitemapGenerator
         $this->isSitemapStarted = true;
     }
 
-    private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates)
+    private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions)
     {
         $this->xmlWriter->startElement('url');
         $this->xmlWriter->writeElement('loc', htmlspecialchars($this->baseURL . $loc, ENT_QUOTES));
@@ -438,6 +440,12 @@ class SitemapGenerator
                     $this->xmlWriter->writeAttribute('href', $alternate['href']);
                     $this->xmlWriter->endElement();
                 }
+            }
+        }
+
+        foreach ($extensions as $extName => $extFields) {
+            if ($extName === 'google_video') {
+                GoogleVideoExtension::writeVideoTag($this->xmlWriter, $extFields);
             }
         }
 
