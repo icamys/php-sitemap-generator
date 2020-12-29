@@ -709,12 +709,6 @@ class SitemapGeneratorTest extends TestCase
         $outputDir = '/tmp';
 
         $generator = new SitemapGenerator($siteUrl, $outputDir);
-        $alternates = [
-            ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
-            ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
-        ];
-
-        $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
         $extensions = [
             'google_video' => [
@@ -758,7 +752,7 @@ class SitemapGeneratorTest extends TestCase
             ]
         ];
 
-        $generator->addURL("/path/to/page/", $lastmod, 'always', 0.5, $alternates, $extensions);
+        $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
 
         $generator->flush();
         $generator->finalize();
