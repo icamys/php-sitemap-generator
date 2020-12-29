@@ -398,21 +398,6 @@ class SitemapGenerator
         return $this;
     }
 
-    public function isValidLocValue($value): bool
-    {
-        return 1 <= mb_strlen($value) && mb_strlen($value) <= self::MAX_URL_LEN;
-    }
-
-    public function isValidChangefreqValue($value): bool
-    {
-        return in_array($value, $this->validChangefreqValues);
-    }
-
-    public function isValidPriorityValue(float $value): bool
-    {
-        return in_array($value, $this->validPriorities);
-    }
-
     private function writeSitemapStart()
     {
         $this->xmlWriter->startDocument("1.0", "UTF-8");

@@ -164,37 +164,6 @@ class SitemapGeneratorTest extends TestCase
         $this->g->submitSitemap();
     }
 
-    public function testIsValidChangefreqValue()
-    {
-        $this->assertTrue($this->g->isValidChangefreqValue('always'));
-        $this->assertFalse($this->g->isValidChangefreqValue('blahblah'));
-    }
-
-    public function testIsValidPriorityValue()
-    {
-        $this->assertTrue($this->g->isValidPriorityValue(0.0));
-        $this->assertTrue($this->g->isValidPriorityValue(0.1));
-        $this->assertTrue($this->g->isValidPriorityValue(0.2));
-        $this->assertTrue($this->g->isValidPriorityValue(0.3));
-        $this->assertTrue($this->g->isValidPriorityValue(0.4));
-        $this->assertTrue($this->g->isValidPriorityValue(0.5));
-        $this->assertTrue($this->g->isValidPriorityValue(0.6));
-        $this->assertTrue($this->g->isValidPriorityValue(0.7));
-        $this->assertTrue($this->g->isValidPriorityValue(0.8));
-        $this->assertTrue($this->g->isValidPriorityValue(0.9));
-        $this->assertTrue($this->g->isValidPriorityValue(1.0));
-        $this->assertTrue($this->g->isValidPriorityValue('0.0'));
-        $this->assertTrue($this->g->isValidPriorityValue('1.0'));
-
-        $this->assertFalse($this->g->isValidPriorityValue(0.11));
-        $this->assertFalse($this->g->isValidPriorityValue(0.01));
-        $this->assertFalse($this->g->isValidPriorityValue(1.01));
-        $this->assertFalse($this->g->isValidPriorityValue(1.11));
-        $this->assertFalse($this->g->isValidPriorityValue('0.01'));
-        $this->assertFalse($this->g->isValidPriorityValue('1.01'));
-        $this->assertFalse($this->g->isValidPriorityValue(-0.1));
-    }
-
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
