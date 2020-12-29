@@ -70,7 +70,7 @@ class SitemapGenerator
      * @var int
      * @access public
      */
-    private $maxURLsPerSitemap = self::MAX_URLS_PER_SITEMAP;
+    private $maxUrlsPerSitemap = self::MAX_URLS_PER_SITEMAP;
     /**
      * If true, two sitemap files (.xml and .xml.gz) will be created and added to robots.txt.
      * If true, .gz file will be submitted to search engines.
@@ -212,12 +212,14 @@ class SitemapGenerator
     /**
      * @var int
      */
-    private $urlCount = 0;
+    private $totalUrlCount = 0;
 
     /**
      * @var int
      */
     private $urlsetClosingTagLen = 10; // strlen("</urlset>\n")
+    private $sitemapUrlCount = 0;
+    private $generatedFiles = [];
 
     /**
      * @param string $baseURL You site URL
@@ -311,14 +313,14 @@ class SitemapGenerator
      * @param int $value
      * @return $this
      */
-    public function setMaxURLsPerSitemap(int $value): SitemapGenerator
+    public function setMaxUrlsPerSitemap(int $value): SitemapGenerator
     {
         if ($value < 1 || self::MAX_URLS_PER_SITEMAP < $value) {
             throw new OutOfRangeException(
                 sprintf('value %d is out of range 1-%d', $value, self::MAX_URLS_PER_SITEMAP)
             );
         }
-        $this->maxURLsPerSitemap = $value;
+        $this->maxUrlsPerSitemap = $value;
         return $this;
     }
 
@@ -354,7 +356,7 @@ class SitemapGenerator
         array $alternates = null
     ): SitemapGenerator
     {
-        if ($this->urlCount >= self::TOTAL_MAX_URLS) {
+        if ($this->totalUrlCount >= self::TOTAL_MAX_URLS) {
             throw new OutOfRangeException(
                 sprintf("Max url limit reached (%d)", self::TOTAL_MAX_URLS)
             );
@@ -378,13 +380,12 @@ class SitemapGenerator
         }
 
         $this->writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates);
-        $this->urlCount++;
 
-        if ($this->urlCount % 1000 === 0 || $this->urlCount >= $this->maxURLsPerSitemap) {
+        if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
             $this->flushSitemap();
         }
 
-        if ($this->urlCount === self::MAX_URLS_PER_SITEMAP) {
+        if ($this->sitemapUrlCount === $this->maxUrlsPerSitemap) {
             $this->writeSitemapEnd();
         }
 
@@ -449,19 +450,8 @@ class SitemapGenerator
         }
 
         $this->xmlWriter->endElement(); // url
-    }
-
-    private function flushSitemap()
-    {
-        $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
-        $flushedXmlString = $this->xmlWriter->outputMemory(true);
-        $this->flushedSitemapSize += mb_strlen($flushedXmlString);
-
-        if ($this->flushedSitemapSize > self::MAX_FILE_SIZE - $this->urlsetClosingTagLen) {
-            $this->writeSitemapEnd();
-            $this->writeSitemapStart();
-        }
-        $this->fs->file_put_contents($targetSitemapFilepath, $flushedXmlString, FILE_APPEND);
+        $this->sitemapUrlCount++;
+        $this->totalUrlCount++;
     }
 
     private function writeSitemapEnd()
@@ -473,7 +463,7 @@ class SitemapGenerator
         $this->isSitemapStarted = false;
         $this->flushedSitemaps[] = $targetSitemapFilepath;
         $this->flushedSitemapCounter++;
-        $this->flushedSitemapSize = 0;
+        $this->sitemapUrlCount = 0;
     }
 
     /**
@@ -482,7 +472,28 @@ class SitemapGenerator
     public function flush()
     {
         $this->flushSitemap();
-        $this->writeSitemapEnd();
+        if ($this->isSitemapStarted) {
+            $this->writeSitemapEnd();
+        }
+    }
+
+    private function flushSitemap()
+    {
+        $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
+        $flushedString = $this->xmlWriter->outputMemory(true);
+        $flushedStringLen = mb_strlen($flushedString);
+
+        if ($flushedStringLen === 0) {
+            return;
+        }
+
+        $this->flushedSitemapSize += $flushedStringLen;
+
+        if ($this->flushedSitemapSize > self::MAX_FILE_SIZE - $this->urlsetClosingTagLen) {
+            $this->writeSitemapEnd();
+            $this->writeSitemapStart();
+        }
+        $this->fs->file_put_contents($targetSitemapFilepath, $flushedString, FILE_APPEND);
     }
 
     /**
@@ -541,16 +552,6 @@ class SitemapGenerator
         }
     }
 
-    private $generatedFiles = [];
-
-    /**
-     * @return array Array of previously generated files
-     */
-    public function getPreviousGeneratedFiles(): array
-    {
-        return $this->generatedFiles;
-    }
-
     private function createSitemapIndex($sitemapsUrls, $sitemapIndexFileName)
     {
         $this->xmlWriter->flush(true);
@@ -590,6 +591,14 @@ class SitemapGenerator
     {
         $this->xmlWriter->endElement(); // sitemapindex
         $this->xmlWriter->endDocument();
+    }
+
+    /**
+     * @return array Array of previously generated files
+     */
+    public function getPreviousGeneratedFiles(): array
+    {
+        return $this->generatedFiles;
     }
 
     /**
