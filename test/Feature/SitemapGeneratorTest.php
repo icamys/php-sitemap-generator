@@ -741,6 +741,8 @@ class SitemapGeneratorTest extends TestCase
                     [
                         'currency' => 'EUR',
                         'value' => 1.99,
+                        'type' => 'rent',
+                        'resolution' => 'hd',
                     ]
                 ],
                 'video:requires_subscription' => 'yes',
