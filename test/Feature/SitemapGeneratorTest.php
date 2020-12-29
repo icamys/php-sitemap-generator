@@ -405,7 +405,6 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
 
-        $datetimeStr = '2020-12-29T08:46:55+00:00';
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
         for ($i = 0; $i < 2; $i++) {
@@ -577,7 +576,6 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
 
-        $datetimeStr = '2020-12-29T08:46:55+00:00';
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
         for ($i = 0; $i < 2; $i++) {
@@ -640,7 +638,6 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
 
-        $datetimeStr = '2020-12-29T08:46:55+00:00';
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
         for ($i = 0; $i < 2; $i++) {
@@ -683,7 +680,6 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
 
-        $datetimeStr = '2020-12-29T08:46:55+00:00';
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
         for ($i = 0; $i < 2; $i++) {
@@ -718,7 +714,6 @@ class SitemapGeneratorTest extends TestCase
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
         ];
 
-        $datetimeStr = '2020-12-29T08:46:55+00:00';
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
         $extensions = [
