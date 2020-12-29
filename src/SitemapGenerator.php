@@ -4,6 +4,7 @@ namespace Icamys\SitemapGenerator;
 
 use BadMethodCallException;
 use DateTime;
+use Icamys\SitemapGenerator\Extensions\GoogleVideoExtension;
 use InvalidArgumentException;
 use OutOfRangeException;
 use RuntimeException;
@@ -328,6 +329,29 @@ class SitemapGenerator
         return $this->isCompressionEnabled;
     }
 
+    public function validate(
+        string $loc,
+        DateTime $lastModified = null,
+        string $changeFrequency = null,
+        float $priority = null,
+        array $alternates = null,
+        array $extensions = [])
+    {
+        if (!1 <= mb_strlen($loc) && mb_strlen($loc) <= self::MAX_URL_LEN) {
+            throw new InvalidArgumentException(
+                sprintf("The loc argument length must be less than or equal to %d.", self::MAX_URL_LEN)
+            );
+        }
+        if ($changeFrequency !== null && !in_array($changeFrequency, $this->validChangefreqValues)) {
+            throw new InvalidArgumentException(
+                'The change frequency argument should be one of: %s' . implode(',', $this->validChangefreqValues)
+            );
+        }
+        if ($priority !== null && !in_array($priority, $this->validPriorities)) {
+            throw new InvalidArgumentException("Priority argument should be a float number in the range [0.0..1.0]");
+        }
+    }
+
     /**
      * Add url components.
      * Instead of storing all urls in the memory, the generator will flush sets of added urls
@@ -350,25 +374,13 @@ class SitemapGenerator
         array $extensions = []
     ): SitemapGenerator
     {
+        $this->validate($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
+
         if ($this->totalUrlCount >= self::TOTAL_MAX_URLS) {
             throw new OutOfRangeException(
                 sprintf("Max url limit reached (%d)", self::TOTAL_MAX_URLS)
             );
         }
-        if ($this->isValidLocValue($loc) === false) {
-            throw new InvalidArgumentException(
-                sprintf("loc parameter length should be between 1 and %d", self::MAX_URL_LEN)
-            );
-        }
-        if ($changeFrequency !== null && $this->isValidChangefreqValue($changeFrequency) === false) {
-            throw new InvalidArgumentException(
-                'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
-            );
-        }
-        if ($priority !== null && $this->isValidPriorityValue($priority) === false) {
-            throw new InvalidArgumentException("priority should be a float number in the range [0.0..1.0]");
-        }
-
         if ($this->isSitemapStarted === false) {
             $this->writeSitemapStart();
         }
