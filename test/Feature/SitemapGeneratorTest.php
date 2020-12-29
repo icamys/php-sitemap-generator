@@ -61,6 +61,13 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('fr', $sitemap->url[1]->link[1]->attributes()['hreflang']);
         $this->assertEquals('http://www.example.com/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithCustomSitemapName()
@@ -85,6 +92,13 @@ class SitemapGeneratorTest extends TestCase
         $sitemapFilepath = $this->saveDir . '/custom.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/custom.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/custom.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithExtendedSiteUrl()
@@ -141,6 +155,13 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('fr', $sitemap->url[1]->link[1]->attributes()['hreflang']);
         $this->assertEquals('http://www.example.com/submodule/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/submodule/sitemap.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithEnabledCompression()
@@ -201,6 +222,13 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('http://www.example.com/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
         unlink($sitemapFilepathUncompressed);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml.gz', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/sitemap.xml.gz', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithEnabledCompressionAndCreatedRobots()
@@ -268,6 +296,13 @@ class SitemapGeneratorTest extends TestCase
         $robotsContent = file_get_contents($robotsPath);
         $this->assertStringContainsString('Sitemap: https://example.com/sitemap.xml.gz', $robotsContent);
         unlink($robotsPath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml.gz', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/sitemap.xml.gz', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testMultipleSitemapsWithDefaultValues()
@@ -345,6 +380,15 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('fr', $sitemap2->url[0]->link[1]->attributes()['hreflang']);
         $this->assertEquals('http://www.example.com/fr', $sitemap2->url[0]->link[1]->attributes()['href']);
         unlink($sitemapFilepath2);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(3, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(2, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('./test/Feature/sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals('./test/Feature/sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals('https://example.com/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testMultipleSitemapsWithCustomSitemapIndexName()
@@ -381,6 +425,15 @@ class SitemapGeneratorTest extends TestCase
         $sitemapFilepath2 = $this->saveDir . '/sitemap2.xml';
         $this->assertFileExists($sitemapFilepath2);
         unlink($sitemapFilepath2);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(3, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(2, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('./test/Feature/sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals('./test/Feature/custom-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals('https://example.com/custom-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testMultipleSitemapsCompressionAndCreatedRobots()
@@ -473,5 +526,14 @@ class SitemapGeneratorTest extends TestCase
         $robotsContent = file_get_contents($robotsPath);
         $this->assertStringContainsString('Sitemap: https://example.com/sitemap-index.xml', $robotsContent);
         unlink($robotsPath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(3, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(2, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap1.xml.gz', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('./test/Feature/sitemap2.xml.gz', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals('./test/Feature/sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals('https://example.com/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 }

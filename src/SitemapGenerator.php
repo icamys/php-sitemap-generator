@@ -517,8 +517,8 @@ class SitemapGenerator
             } else {
                 $this->fs->rename($this->flushedSitemaps[0], $targetSitemapFilepath);
             }
-            $this->generatedFiles['sitemaps'] = [$targetSitemapFilepath];
-            $this->generatedFiles['sitemap_full_url'] = $this->baseURL . '/' . $targetSitemapFilename;
+            $this->generatedFiles['sitemaps_location'] = [$targetSitemapFilepath];
+            $this->generatedFiles['sitemaps_index_url'] = $this->baseURL . '/' . $targetSitemapFilename;
         } else if (count($this->flushedSitemaps) > 1) {
             $ext = '.' . pathinfo($this->sitemapFileName, PATHINFO_EXTENSION);
             $targetExt = $ext;
@@ -544,9 +544,9 @@ class SitemapGenerator
 
             $targetSitemapIndexFilepath = $this->basePath . $this->sitemapIndexFileName;
             $this->createSitemapIndex($sitemapsUrls, $targetSitemapIndexFilepath);
-            $this->generatedFiles['sitemaps'] = $targetSitemapFilepaths;
-            $this->generatedFiles['sitemaps_index'] = $targetSitemapIndexFilepath;
-            $this->generatedFiles['sitemap_full_url'] = $this->baseURL . '/' . $this->sitemapIndexFileName;
+            $this->generatedFiles['sitemaps_location'] = $targetSitemapFilepaths;
+            $this->generatedFiles['sitemaps_index_location'] = $targetSitemapIndexFilepath;
+            $this->generatedFiles['sitemaps_index_url'] = $this->baseURL . '/' . $this->sitemapIndexFileName;
         } else {
             throw new RuntimeException('failed to finalize, please add urls and flush first');
         }
@@ -596,7 +596,7 @@ class SitemapGenerator
     /**
      * @return array Array of previously generated files
      */
-    public function getPreviousGeneratedFiles(): array
+    public function getGeneratedFiles(): array
     {
         return $this->generatedFiles;
     }
@@ -620,7 +620,7 @@ class SitemapGenerator
         if (!$this->runtime->extension_loaded('curl')) {
             throw new BadMethodCallException("cURL extension is needed to do submission.");
         }
-        if (isset($this->generatedFiles['sitemap_full_url']) === false) {
+        if (isset($this->generatedFiles['sitemaps_index_url']) === false) {
             throw new RuntimeException('please run finalize() method before submitting sitemaps');
         }
         $searchEngines = $this->searchEngines;
@@ -629,7 +629,7 @@ class SitemapGenerator
             $searchEngines[0][1];
         $result = [];
         for ($i = 0; $i < count($searchEngines); $i++) {
-            $submitUrl = $searchEngines[$i] . htmlspecialchars($this->generatedFiles['sitemap_full_url'], ENT_QUOTES);
+            $submitUrl = $searchEngines[$i] . htmlspecialchars($this->generatedFiles['sitemaps_index_url'], ENT_QUOTES);
             $submitSite = curl_init($submitUrl);
             curl_setopt($submitSite, CURLOPT_RETURNTRANSFER, true);
             $responseContent = curl_exec($submitSite);
@@ -695,11 +695,11 @@ class SitemapGenerator
             $robotsFileContent = $this->getSampleRobotsContent();
         }
 
-        if (isset($this->generatedFiles['sitemap_full_url']) === false) {
+        if (isset($this->generatedFiles['sitemaps_index_url']) === false) {
             throw new RuntimeException('please run finalize() method before generating creating robots.txt');
         }
 
-        $robotsFileContent .= "Sitemap: {$this->generatedFiles['sitemap_full_url']}";
+        $robotsFileContent .= "Sitemap: {$this->generatedFiles['sitemaps_index_url']}";
 
         return $robotsFileContent;
     }
