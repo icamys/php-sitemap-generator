@@ -330,16 +330,16 @@ class SitemapGenerator
     }
 
     public function validate(
-        string $loc,
+        string $path,
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
         array $alternates = null,
         array $extensions = [])
     {
-        if (!1 <= mb_strlen($loc) && mb_strlen($loc) <= self::MAX_URL_LEN) {
+        if (!(1 <= mb_strlen($path) && mb_strlen($path) <= self::MAX_URL_LEN)) {
             throw new InvalidArgumentException(
-                sprintf("The loc argument length must be less than or equal to %d.", self::MAX_URL_LEN)
+                sprintf("The urlPath argument length must be between 1 and %d.", self::MAX_URL_LEN)
             );
         }
         if ($changeFrequency !== null && !in_array($changeFrequency, $this->validChangefreqValues)) {
@@ -357,7 +357,7 @@ class SitemapGenerator
      * Instead of storing all urls in the memory, the generator will flush sets of added urls
      * to the temporary files created on your disk.
      * The file format is 'sm-{index}-{timestamp}.xml'
-     * @param string $loc
+     * @param string $path
      * @param DateTime|null $lastModified
      * @param string|null $changeFrequency
      * @param float|null $priority
@@ -366,7 +366,7 @@ class SitemapGenerator
      * @return $this
      */
     public function addURL(
-        string $loc,
+        string $path,
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
@@ -374,7 +374,7 @@ class SitemapGenerator
         array $extensions = []
     ): SitemapGenerator
     {
-        $this->validate($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
+        $this->validate($path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalUrlCount >= self::TOTAL_MAX_URLS) {
             throw new OutOfRangeException(
@@ -385,7 +385,7 @@ class SitemapGenerator
             $this->writeSitemapStart();
         }
 
-        $this->writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
+        $this->writeSitemapUrl($this->baseURL . $path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
             $this->flushSitemap();
@@ -430,7 +430,7 @@ class SitemapGenerator
     private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions)
     {
         $this->xmlWriter->startElement('url');
-        $this->xmlWriter->writeElement('loc', htmlspecialchars($this->baseURL . $loc, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', htmlspecialchars($loc, ENT_QUOTES));
 
         if ($lastModified !== null) {
             $this->xmlWriter->writeElement('lastmod', $lastModified->format(DateTime::ATOM));

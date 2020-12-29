@@ -58,7 +58,7 @@ $alternates = [
     ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
 ];
 
-// Add url components: `loc`, `lastmodified`, `changefreq`, `priority`, `alternates`
+// Add url components: `path`, `lastmodified`, `changefreq`, `priority`, `alternates`
 // Instead of storing all urls in the memory, the generator will flush sets of added urls
 // to the temporary files created on your disk.
 // The file format is 'sm-{index}-{timestamp}.xml'

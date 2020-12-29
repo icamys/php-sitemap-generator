@@ -750,7 +750,7 @@ class SitemapGeneratorTest extends TestCase
                 ],
                 'video:requires_subscription' => 'yes',
                 'video:uploader' => [
-                    'info' => 'http://www.example.com/users/grillymcgrillerson',
+                    'info' => 'https://example.com/users/grillymcgrillerson',
                     'value' => 'GrillyMcGrillerson',
                 ],
                 'video:live' => 'no',
