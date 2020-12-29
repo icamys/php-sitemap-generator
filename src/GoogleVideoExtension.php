@@ -47,16 +47,12 @@ class GoogleVideoExtension
         $xmlWriter->startElement('video:video');
         $xmlWriter->writeElement('video:thumbnail_loc', $extFields['video:thumbnail_loc']);
 
-        $xmlWriter->startElement('video:title');
-        $xmlWriter->writeCData($extFields['video:title']);
-        $xmlWriter->endElement();
+        $xmlWriter->writeElement('video:title', htmlentities($extFields['video:title'], ENT_QUOTES));
 
         if (mb_strlen($extFields['video:description']) > 2048) {
             throw new InvalidArgumentException('Value video:description should be maximum 2048 characters');
         }
-        $xmlWriter->startElement('video:description');
-        $xmlWriter->writeCData($extFields['video:description']);
-        $xmlWriter->endElement();
+        $xmlWriter->writeElement('video:description', htmlentities($extFields['video:description'], ENT_QUOTES));
 
         if (isset($extFields['video:content_loc'])) { // todo: Must not be the same as the <loc> URL.
             $xmlWriter->writeElement('video:content_loc', $extFields['video:content_loc']);
@@ -225,6 +221,15 @@ class GoogleVideoExtension
             }
             $xmlWriter->writeRaw($extFields['video:uploader']['value']);
             $xmlWriter->endElement();
+        }
+
+        if (isset($extFields['video:live'])) {
+            if (!in_array($extFields['video:live'], ['yes', 'no'])) {
+                throw new InvalidArgumentException(
+                    'Invalid video:live value. Allowed values are yes or no.'
+                );
+            }
+            $xmlWriter->writeElement('video:live', $extFields['video:live']);
         }
 
         if (isset($extFields['video:tag'])) {
