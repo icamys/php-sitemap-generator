@@ -10,6 +10,7 @@ use phpmock\phpunit\PHPMock;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
+use RuntimeException;
 
 class SitemapGeneratorTest extends TestCase
 {
@@ -63,10 +64,25 @@ class SitemapGeneratorTest extends TestCase
         return $method->invokeArgs($object, $parameters);
     }
 
-    public function testSetSitemapFilenameException()
+    public function testSetSitemapFilenameExceptionWhenEmptyFilenamePassed()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->g->setSitemapFilename();
+    }
+
+    public function testSetSitemapFilenameExceptionWhenInvalidExtensionPassed()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->g->setSitemapFilename('doc.pdf');
+    }
+
+    public function testCompressionStates()
+    {
+        $this->assertFalse($this->g->isCompressionEnabled());
+        $this->g->enableCompression();
+        $this->assertTrue($this->g->isCompressionEnabled());
+        $this->g->disableCompression();
+        $this->assertFalse($this->g->isCompressionEnabled());
     }
 
     public function testSetSitemapIndexFilenameException()
@@ -75,10 +91,28 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapIndexFilename();
     }
 
+    public function testFinalizeExceptionIfNoUrlsAdded()
+    {
+        $this->expectException(RuntimeException::class);
+        $this->g->finalize();
+    }
+
     public function testSetRobotsFileNameException()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->g->setRobotsFileName('');
+    }
+
+    public function testSetRobotsExceptionWhenFinalizeWasNotCalled()
+    {
+        $this->expectException(BadMethodCallException::class);
+        $this->g->updateRobots();
+    }
+
+    public function testSubmitSitemapExceptionBeforeAddedUrls()
+    {
+        $this->expectException(BadMethodCallException::class);
+        $this->g->submitSitemap();
     }
 
     public function testSetRobotsFileName()

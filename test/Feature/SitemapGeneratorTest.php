@@ -1,5 +1,6 @@
 <?php
 
+use Icamys\SitemapGenerator\Runtime;
 use Icamys\SitemapGenerator\SitemapGenerator;
 use PHPUnit\Framework\TestCase;
 
@@ -535,5 +536,174 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('./test/Feature/sitemap2.xml.gz', $generatedFiles['sitemaps_location'][1]);
         $this->assertEquals('./test/Feature/sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
         $this->assertEquals('https://example.com/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
+    }
+
+    public function testSubmitValuesWithYahooIdentifier()
+    {
+        $siteUrl = 'https://example.com';
+        $outputDir = $this->saveDir;
+
+        $runtimeMock = $this->createMock(Runtime::class);
+        $runtimeMock
+            ->expects($this->exactly(1))
+            ->method('extension_loaded')
+            ->with('curl')
+            ->willReturn(true);
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_init')
+            ->withConsecutive(
+                [$this->equalTo('http://search.yahooapis.com/SiteExplorerService/V1/updateNotification?appid=YAHOO_APP_ID_TEST&url=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://www.google.com/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://submissions.ask.com/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://www.bing.com/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://www.webmaster.yandex.ru/ping?sitemap=https://example.com/sitemap.xml')],
+            )
+            ->willReturn(true);
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_getinfo')
+            ->willReturn(['http_code' => 200]);
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_setopt');
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_exec');
+
+        $generator = new SitemapGenerator($siteUrl, $outputDir, null, $runtimeMock);
+        $alternates = [
+            ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
+            ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
+        ];
+
+        $datetimeStr = '2020-12-29T08:46:55+00:00';
+        $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
+
+        for ($i = 0; $i < 2; $i++) {
+            $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
+        }
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $this->saveDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+        unlink($sitemapFilepath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
+
+        $generator->submitSitemap('YAHOO_APP_ID_TEST');
+    }
+
+    public function testSubmitValuesWithoutYahooIdentifier()
+    {
+        $siteUrl = 'https://example.com';
+        $outputDir = $this->saveDir;
+
+        $runtimeMock = $this->createMock(Runtime::class);
+        $runtimeMock
+            ->expects($this->exactly(1))
+            ->method('extension_loaded')
+            ->with('curl')
+            ->willReturn(true);
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_init')
+            ->withConsecutive(
+                [$this->equalTo('http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://www.google.com/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://submissions.ask.com/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://www.bing.com/ping?sitemap=https://example.com/sitemap.xml')],
+                [$this->equalTo('http://www.webmaster.yandex.ru/ping?sitemap=https://example.com/sitemap.xml')],
+            )
+            ->willReturn(true);
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_getinfo')
+            ->willReturn(['http_code' => 200]);
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_setopt');
+        $runtimeMock
+            ->expects($this->exactly(5))
+            ->method('curl_exec');
+
+        $generator = new SitemapGenerator($siteUrl, $outputDir, null, $runtimeMock);
+        $alternates = [
+            ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
+            ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
+        ];
+
+        $datetimeStr = '2020-12-29T08:46:55+00:00';
+        $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
+
+        for ($i = 0; $i < 2; $i++) {
+            $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
+        }
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $this->saveDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+        unlink($sitemapFilepath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
+
+        $generator->submitSitemap();
+    }
+
+    public function testExceptionWhenCurlIsNotPresent()
+    {
+        $this->expectException(BadMethodCallException::class);
+        $siteUrl = 'https://example.com';
+        $outputDir = $this->saveDir;
+
+        $runtimeMock = $this->createMock(Runtime::class);
+        $runtimeMock
+            ->expects($this->exactly(1))
+            ->method('extension_loaded')
+            ->with('curl')
+            ->willReturn(false);
+
+        $generator = new SitemapGenerator($siteUrl, $outputDir, null, $runtimeMock);
+        $alternates = [
+            ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
+            ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
+        ];
+
+        $datetimeStr = '2020-12-29T08:46:55+00:00';
+        $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
+
+        for ($i = 0; $i < 2; $i++) {
+            $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
+        }
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $this->saveDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+        unlink($sitemapFilepath);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(1, $generatedFiles['sitemaps_location']);
+        $this->assertEquals('./test/Feature/sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
+
+        $generator->submitSitemap('YAHOO_APP_ID_TEST');
     }
 }
