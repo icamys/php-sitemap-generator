@@ -38,15 +38,6 @@ class SitemapGeneratorTest extends TestCase
      */
     private $now;
 
-    public function getSizeDiffInPercentsProvider(): array
-    {
-        return [
-            ['args' => [100, 90], 'expected' => -10],
-            ['args' => [100, 110], 'expected' => 10],
-            ['args' => [200, 100], 'expected' => -50],
-        ];
-    }
-
     /**
      * Call protected/private method of a class.
      * @param object &$object Instantiated object that we will run method on.
