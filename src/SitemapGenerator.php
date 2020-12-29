@@ -4,6 +4,7 @@ namespace Icamys\SitemapGenerator;
 
 use BadMethodCallException;
 use DateTime;
+use Icamys\SitemapGenerator\Extensions\GoogleVideoExtension;
 use InvalidArgumentException;
 use OutOfRangeException;
 use RuntimeException;
@@ -99,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.0.0";
+    private $classVersion = "4.1.0";
     /**
      * Search engines URLs
      * @var array of strings
@@ -328,50 +329,63 @@ class SitemapGenerator
         return $this->isCompressionEnabled;
     }
 
+    public function validate(
+        string $path,
+        DateTime $lastModified = null,
+        string $changeFrequency = null,
+        float $priority = null,
+        array $alternates = null,
+        array $extensions = [])
+    {
+        if (!(1 <= mb_strlen($path) && mb_strlen($path) <= self::MAX_URL_LEN)) {
+            throw new InvalidArgumentException(
+                sprintf("The urlPath argument length must be between 1 and %d.", self::MAX_URL_LEN)
+            );
+        }
+        if ($changeFrequency !== null && !in_array($changeFrequency, $this->validChangefreqValues)) {
+            throw new InvalidArgumentException(
+                'The change frequency argument should be one of: %s' . implode(',', $this->validChangefreqValues)
+            );
+        }
+        if ($priority !== null && !in_array($priority, $this->validPriorities)) {
+            throw new InvalidArgumentException("Priority argument should be a float number in the range [0.0..1.0]");
+        }
+    }
+
     /**
      * Add url components.
      * Instead of storing all urls in the memory, the generator will flush sets of added urls
      * to the temporary files created on your disk.
      * The file format is 'sm-{index}-{timestamp}.xml'
-     * @param string $loc
+     * @param string $path
      * @param DateTime|null $lastModified
      * @param string|null $changeFrequency
      * @param float|null $priority
      * @param array|null $alternates
+     * @param array $extensions
      * @return $this
      */
     public function addURL(
-        string $loc,
+        string $path,
         DateTime $lastModified = null,
         string $changeFrequency = null,
         float $priority = null,
-        array $alternates = null
+        array $alternates = null,
+        array $extensions = []
     ): SitemapGenerator
     {
+        $this->validate($path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
+
         if ($this->totalUrlCount >= self::TOTAL_MAX_URLS) {
             throw new OutOfRangeException(
                 sprintf("Max url limit reached (%d)", self::TOTAL_MAX_URLS)
             );
         }
-        if ($this->isValidLocValue($loc) === false) {
-            throw new InvalidArgumentException(
-                sprintf("loc parameter length should be between 1 and %d", self::MAX_URL_LEN)
-            );
-        }
-        if ($changeFrequency !== null && $this->isValidChangefreqValue($changeFrequency) === false) {
-            throw new InvalidArgumentException(
-                'invalid change frequency passed, valid values are: %s' . implode(',', $this->validChangefreqValues)
-            );
-        }
-        if ($priority !== null && $this->isValidPriorityValue($priority) === false) {
-            throw new InvalidArgumentException("priority should be a float number in the range [0.0..1.0]");
-        }
-
         if ($this->isSitemapStarted === false) {
             $this->writeSitemapStart();
         }
 
-        $this->writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates);
+        $this->writeSitemapUrl($this->baseURL . $path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
             $this->flushSitemap();
@@ -384,21 +398,6 @@ class SitemapGenerator
         return $this;
     }
 
-    public function isValidLocValue($value): bool
-    {
-        return 1 <= mb_strlen($value) && mb_strlen($value) <= self::MAX_URL_LEN;
-    }
-
-    public function isValidChangefreqValue($value): bool
-    {
-        return in_array($value, $this->validChangefreqValues);
-    }
-
-    public function isValidPriorityValue(float $value): bool
-    {
-        return in_array($value, $this->validPriorities);
-    }
-
     private function writeSitemapStart()
     {
         $this->xmlWriter->startDocument("1.0", "UTF-8");
@@ -407,15 +406,16 @@ class SitemapGenerator
         $this->xmlWriter->writeComment(sprintf('generated-on="%s"', date('c')));
         $this->xmlWriter->startElement('urlset');
         $this->xmlWriter->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        $this->xmlWriter->writeAttribute('xmlns:video', 'http://www.google.com/schemas/sitemap-video/1.1');
         $this->xmlWriter->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
         $this->xmlWriter->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd');
         $this->isSitemapStarted = true;
     }
 
-    private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates)
+    private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions)
     {
         $this->xmlWriter->startElement('url');
-        $this->xmlWriter->writeElement('loc', htmlspecialchars($this->baseURL . $loc, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', htmlspecialchars($loc, ENT_QUOTES));
 
         if ($lastModified !== null) {
             $this->xmlWriter->writeElement('lastmod', $lastModified->format(DateTime::ATOM));
@@ -438,6 +438,12 @@ class SitemapGenerator
                     $this->xmlWriter->writeAttribute('href', $alternate['href']);
                     $this->xmlWriter->endElement();
                 }
+            }
+        }
+
+        foreach ($extensions as $extName => $extFields) {
+            if ($extName === 'google_video') {
+                GoogleVideoExtension::writeVideoTag($this->xmlWriter, $loc, $extFields);
             }
         }
 
