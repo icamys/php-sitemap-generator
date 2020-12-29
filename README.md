@@ -11,6 +11,7 @@ Library for sitemap generation and submission.
 Features:
 * Follows [sitemaps.org](https://sitemaps.org/) protocol
 * Supports alternative links for multi-language pages (see [google docs](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
+* Supports video sitemap generation  
 * Low memory usage for any amount of URLs
 
 Installation with Composer:
@@ -19,7 +20,7 @@ Installation with Composer:
 composer require icamys/php-sitemap-generator
 ```
 
-Usage example:
+## Usage
 
 ```php
 <?php
@@ -77,7 +78,71 @@ $generator->updateRobots();
 $generator->submitSitemap();
 ```
 
-### Testing
+### Video sitemap
+
+To create video sitemap, pass the `$extensions` parameter to the `addURL()` method as follows:
+
+```php
+<?php
+
+// Initialize the generator
+// ...
+
+// Initialize variable with video tags
+// Also see the google docs about that:
+// https://developers.google.com/search/docs/advanced/sitemaps/video-sitemaps
+$videoTags = [
+    'video:thumbnail_loc' => 'http://www.example.com/thumbs/123.jpg',
+    'video:title' => 'Grilling steaks for summer',
+    'video:description' => 'Alkis shows you how to get perfectly done steaks every time',
+    'video:content_loc' => 'http://streamserver.example.com/video123.mp4',
+    'video:player_loc' => 'http://www.example.com/videoplayer.php?video=123',
+    'video:duration' => 600,
+    'video:expiration_date' => '2021-11-05T19:20:30+08:00',
+    'video:rating' => 4.2,
+    'video:view_count' => 12345,
+    'video:publication_date' => '2007-11-05T19:20:30+08:00',
+    'video:family_friendly' => 'yes',
+    'video:restriction' => [
+        'relationship' => 'allow',
+        'value' => 'IE GB US CA',
+    ],
+    'video:platform' => [
+        'relationship' => 'allow',
+        'value' => 'web mobile',
+    ],
+    'video:price' => [
+        [
+            'currency' => 'EUR',
+            'value' => 1.99,
+            'type' => 'rent',
+            'resolution' => 'hd',
+        ]
+    ],
+    'video:requires_subscription' => 'yes',
+    'video:uploader' => [
+        'info' => 'https://example.com/users/grillymcgrillerson',
+        'value' => 'GrillyMcGrillerson',
+    ],
+    'video:live' => 'no',
+    'video:tag' => [
+        "steak", "meat", "summer", "outdoor"
+    ],
+    'video:category' => 'baking',
+];
+
+
+$extensions = [
+    'google_video' => $videoTags
+];
+
+$generator->addURL('/path/to/page/', null, null, null, null, $extensions);
+
+// generate, flush, etc.
+// ...
+```
+
+## Testing
 
 Run tests with command:
 
@@ -91,6 +156,6 @@ Run code coverage:
 $ XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html ./coverage
 ```
 
-### Changelog
+## Changelog
 
 You can find full changelog on the [releases page](https://github.com/icamys/php-sitemap-generator/releases).
