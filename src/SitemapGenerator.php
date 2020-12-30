@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.2.0";
+    private $classVersion = "4.3.0";
     /**
      * Search engines URLs
      * @var array of strings
@@ -349,6 +349,9 @@ class SitemapGenerator
         }
         if ($priority !== null && !in_array($priority, $this->validPriorities)) {
             throw new InvalidArgumentException("Priority argument should be a float number in the range [0.0..1.0]");
+        }
+        if ($extensions !== null && isset($extensions['google_video'])) {
+            GoogleVideoExtension::validate($this->baseURL . $path, $extensions['google_video']);
         }
     }
 

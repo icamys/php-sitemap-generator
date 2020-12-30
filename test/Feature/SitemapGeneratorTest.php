@@ -787,4 +787,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('outdoor', $video->tag[3]);
         $this->assertEquals('baking', $video->category);
     }
+
+    public function testGoogleVideoExtensionValidationErrorOnUrlAdd()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Missing required fields: thumbnail_loc, title, description');
+        $siteUrl = 'https://example.com';
+        $outputDir = '/tmp';
+        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $extensions = ['google_video' => []];
+        $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
+        $generator->flush();
+        $generator->finalize();
+    }
 }
