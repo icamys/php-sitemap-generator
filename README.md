@@ -92,26 +92,26 @@ To create video sitemap, pass the `$extensions` parameter to the `addURL()` meth
 // Also see the google docs about that:
 // https://developers.google.com/search/docs/advanced/sitemaps/video-sitemaps
 $videoTags = [
-    'video:thumbnail_loc' => 'http://www.example.com/thumbs/123.jpg',
-    'video:title' => 'Grilling steaks for summer',
-    'video:description' => 'Alkis shows you how to get perfectly done steaks every time',
-    'video:content_loc' => 'http://streamserver.example.com/video123.mp4',
-    'video:player_loc' => 'http://www.example.com/videoplayer.php?video=123',
-    'video:duration' => 600,
-    'video:expiration_date' => '2021-11-05T19:20:30+08:00',
-    'video:rating' => 4.2,
-    'video:view_count' => 12345,
-    'video:publication_date' => '2007-11-05T19:20:30+08:00',
-    'video:family_friendly' => 'yes',
-    'video:restriction' => [
+    'thumbnail_loc' => 'http://www.example.com/thumbs/123.jpg',
+    'title' => 'Grilling steaks for summer',
+    'description' => 'Alkis shows you how to get perfectly done steaks every time',
+    'content_loc' => 'http://streamserver.example.com/video123.mp4',
+    'player_loc' => 'http://www.example.com/videoplayer.php?video=123',
+    'duration' => 600,
+    'expiration_date' => '2021-11-05T19:20:30+08:00',
+    'rating' => 4.2,
+    'view_count' => 12345,
+    'publication_date' => '2007-11-05T19:20:30+08:00',
+    'family_friendly' => 'yes',
+    'restriction' => [
         'relationship' => 'allow',
         'value' => 'IE GB US CA',
     ],
-    'video:platform' => [
+    'platform' => [
         'relationship' => 'allow',
         'value' => 'web mobile',
     ],
-    'video:price' => [
+    'price' => [
         [
             'currency' => 'EUR',
             'value' => 1.99,
@@ -119,16 +119,16 @@ $videoTags = [
             'resolution' => 'hd',
         ]
     ],
-    'video:requires_subscription' => 'yes',
-    'video:uploader' => [
+    'requires_subscription' => 'yes',
+    'uploader' => [
         'info' => 'https://example.com/users/grillymcgrillerson',
         'value' => 'GrillyMcGrillerson',
     ],
-    'video:live' => 'no',
-    'video:tag' => [
+    'live' => 'no',
+    'tag' => [
         "steak", "meat", "summer", "outdoor"
     ],
-    'video:category' => 'baking',
+    'category' => 'baking',
 ];
 
 

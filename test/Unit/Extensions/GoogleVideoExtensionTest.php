@@ -7,10 +7,10 @@ class GoogleVideoExtensionTest extends TestCase
 {
     public function testMissingFieldsException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing required fields: video:title, video:description');
+        $this->expectExceptionMessage('Missing required fields: title, description');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
+            'thumbnail_loc' => 'test',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
@@ -20,132 +20,132 @@ class GoogleVideoExtensionTest extends TestCase
         $this->expectExceptionMessage('At least one of the following values are required but missing');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testTooLongDescriptionException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('The field video:description must be less than or equal to a 2048');
+        $this->expectExceptionMessage('The field description must be less than or equal to a 2048');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => str_repeat('a', 2100),
-            'video:content_loc' => 'test',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => str_repeat('a', 2100),
+            'content_loc' => 'test',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testContentLocSameAsLocException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('The field video:content_loc must not be the same as');
+        $this->expectExceptionMessage('The field content_loc must not be the same as');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:content_loc' => 'http://e.com',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'content_loc' => 'http://e.com',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testPlayerLocSameAsLocException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('The field video:player_loc must not be the same as');
+        $this->expectExceptionMessage('The field player_loc must not be the same as');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'http://e.com',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'http://e.com',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testInvalidDurationException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('The video:duration value should be between 1 and 28800');
+        $this->expectExceptionMessage('The duration value should be between 1 and 28800');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:duration' => 30000,
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'duration' => 30000,
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testExpirationDateException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid video:expiration_date value');
+        $this->expectExceptionMessage('Invalid expiration_date value');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:expiration_date' => '10.10.2020',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'expiration_date' => '10.10.2020',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testInvalidRatingException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid video:rating value');
+        $this->expectExceptionMessage('Invalid rating value');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:rating' => '5.5',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'rating' => '5.5',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testPublicationDateException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid video:publication_date value');
+        $this->expectExceptionMessage('Invalid publication_date value');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:publication_date' => '10.10.2020',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'publication_date' => '10.10.2020',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testFamlilyFriendlyException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid video:family_friendly value');
+        $this->expectExceptionMessage('Invalid family_friendly value');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:family_friendly' => 'yep',
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'family_friendly' => 'yep',
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
     public function testVideoRestrictionRelationshipException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid video:restriction.relationship value. Allowed values are allow or deny.');
+        $this->expectExceptionMessage('Invalid restriction.relationship value. Allowed values are allow or deny.');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:restriction' => [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'restriction' => [
                 'relationship' => 'permit',
                 'value' => 'UK',
             ],
@@ -155,14 +155,14 @@ class GoogleVideoExtensionTest extends TestCase
 
     public function testVideoRestrictionValueException() {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Value video:restriction.value is required');
+        $this->expectExceptionMessage('Value restriction.value is required');
 
         $fields = [
-            'video:thumbnail_loc' => 'test',
-            'video:title' => 'test',
-            'video:description' => 'test',
-            'video:player_loc' => 'test',
-            'video:restriction' => [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'restriction' => [
                 'relationship' => 'allow',
             ],
         ];
