@@ -66,9 +66,7 @@ $alternates = [
 $generator->addURL('/path/to/page/', new DateTime(), 'always', 0.5, $alternates);
 
 // Flush all stored urls from memory to the disk and close all necessary tags.
-$generator->flush();
-
-// Move flushed files to their final location. Compress if the option is enabled.
+// Move flushed files to their final location. Compresses files if necessary.
 $generator->finalize();
 
 // Update robots.txt file in output directory or create a new one
@@ -138,7 +136,7 @@ $extensions = [
 
 $generator->addURL('/path/to/page/', null, null, null, null, $extensions);
 
-// generate, flush, etc.
+// finalize, etc.
 // ...
 ```
 

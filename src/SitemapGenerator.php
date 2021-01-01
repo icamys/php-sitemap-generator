@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.0";
+    private $classVersion = "5.0.0";
     /**
      * Search engines URLs
      * @var array of strings
@@ -391,7 +391,7 @@ class SitemapGenerator
         $this->writeSitemapUrl($this->baseURL . $path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
-            $this->flushWriter();
+            $this->flush();
         }
 
         if ($this->sitemapUrlCount === $this->maxUrlsPerSitemap) {
@@ -403,6 +403,9 @@ class SitemapGenerator
 
     private function writeSitemapStart()
     {
+        if ($this->isSitemapStarted) {
+            return;
+        }
         $this->xmlWriter->startDocument("1.0", "UTF-8");
         $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
         $this->xmlWriter->writeComment(sprintf('generator-version="%s"', $this->classVersion));
@@ -455,7 +458,10 @@ class SitemapGenerator
         $this->totalUrlCount++;
     }
 
-    private function flushWriter()
+    /**
+     * Flush all stored urls from memory to the disk and close all necessary tags.
+     */
+    private function flush()
     {
         $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $flushedString = $this->xmlWriter->outputMemory(true);
@@ -476,6 +482,9 @@ class SitemapGenerator
 
     private function writeSitemapEnd()
     {
+        if (!$this->isSitemapStarted) {
+            return;
+        }
         $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $this->xmlWriter->endElement(); // urlset
         $this->xmlWriter->endDocument();
@@ -487,21 +496,14 @@ class SitemapGenerator
     }
 
     /**
-     * Flush all stored urls from memory to the disk and close all necessary tags.
-     */
-    public function flush()
-    {
-        $this->flushWriter();
-        if ($this->isSitemapStarted) {
-            $this->writeSitemapEnd();
-        }
-    }
-
-    /**
-     * Move flushed files to their final location. Compress if necessary.
+     * Flushes all stored urls from memory to the disk and closes all necessary tags.
+     * Moves flushed files to their final location. Compresses files if necessary.
      */
     public function finalize()
     {
+        $this->flush();
+        $this->writeSitemapEnd();
+
         $this->generatedFiles = [];
 
         if (count($this->flushedSitemaps) === 1) {
@@ -549,7 +551,7 @@ class SitemapGenerator
             $this->generatedFiles['sitemaps_index_location'] = $targetSitemapIndexFilepath;
             $this->generatedFiles['sitemaps_index_url'] = $this->baseURL . '/' . $this->sitemapIndexFileName;
         } else {
-            throw new RuntimeException('failed to finalize, please add urls and flush first');
+            throw new RuntimeException('failed to finalize, please add urls first');
         }
     }
 

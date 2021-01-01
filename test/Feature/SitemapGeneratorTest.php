@@ -26,7 +26,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
@@ -87,7 +86,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", new DateTime(), 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/custom.xml';
@@ -120,7 +118,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
 
@@ -184,7 +181,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml.gz';
@@ -251,7 +247,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml.gz';
@@ -325,7 +320,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapIndexFilepath = $this->saveDir . '/sitemap-index.xml';
@@ -411,7 +405,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapIndexFilepath = $this->saveDir . '/custom-index.xml';
@@ -456,7 +449,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapIndexFilepath = $this->saveDir . '/sitemap-index.xml';
@@ -582,7 +574,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
@@ -644,7 +635,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
@@ -686,7 +676,6 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
@@ -754,7 +743,6 @@ class SitemapGeneratorTest extends TestCase
 
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
 
-        $generator->flush();
         $generator->finalize();
 
         $sitemapFilepath = $outputDir . '/sitemap.xml';
@@ -797,7 +785,6 @@ class SitemapGeneratorTest extends TestCase
         $generator = new SitemapGenerator($siteUrl, $outputDir);
         $extensions = ['google_video' => []];
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
-        $generator->flush();
         $generator->finalize();
     }
 }
