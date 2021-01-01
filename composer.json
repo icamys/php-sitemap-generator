@@ -23,7 +23,8 @@
     "ext-mbstring": "*",
     "ext-zlib": "*",
     "ext-curl": "*",
-    "ext-xmlwriter": "*"
+    "ext-xmlwriter": "*",
+    "ext-openssl": "*"
   },
   "autoload": {
     "psr-4": {"Icamys\\SitemapGenerator\\": "src/"}

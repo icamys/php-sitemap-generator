@@ -244,7 +244,12 @@ class SitemapGenerator
         $this->basePath = $basePath;
 
         $this->xmlWriter = $this->createXmlWriter();
-        $this->flushedSitemapFilenameFormat = sprintf("sm-%%d-%d.xml", time());
+        $this->refreshFlushedSitemapFilenameFormat();
+    }
+
+    private function refreshFlushedSitemapFilenameFormat() {
+        $randomKey = bin2hex(openssl_random_pseudo_bytes(4));
+        $this->flushedSitemapFilenameFormat = sprintf("sm-%%d-%s.xml", $randomKey);
     }
 
     private function createXmlWriter(): XMLWriter
@@ -553,6 +558,8 @@ class SitemapGenerator
         } else {
             throw new RuntimeException('failed to finalize, please add urls first');
         }
+
+        $this->refreshFlushedSitemapFilenameFormat();
 
         return $this->generatedFiles;
     }
