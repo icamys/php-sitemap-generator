@@ -391,7 +391,7 @@ class SitemapGenerator
         $this->writeSitemapUrl($this->baseURL . $path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
-            $this->flushSitemap();
+            $this->flushWriter();
         }
 
         if ($this->sitemapUrlCount === $this->maxUrlsPerSitemap) {
@@ -455,7 +455,7 @@ class SitemapGenerator
         $this->totalUrlCount++;
     }
 
-    private function flushSitemap()
+    private function flushWriter()
     {
         $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $flushedString = $this->xmlWriter->outputMemory(true);
@@ -491,7 +491,7 @@ class SitemapGenerator
      */
     public function flush()
     {
-        $this->flushSitemap();
+        $this->flushWriter();
         if ($this->isSitemapStarted) {
             $this->writeSitemapEnd();
         }
