@@ -26,7 +26,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
@@ -62,7 +62,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('http://www.example.com/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -86,13 +85,12 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", new DateTime(), 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/custom.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -118,7 +116,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
 
         $this->assertFileExists($sitemapFilepath);
@@ -154,7 +152,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('http://www.example.com/submodule/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -181,7 +178,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml.gz';
         $sitemapFilepathUncompressed = $this->saveDir . '/sitemap.xml';
@@ -220,7 +217,6 @@ class SitemapGeneratorTest extends TestCase
         unlink($sitemapFilepath);
         unlink($sitemapFilepathUncompressed);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -247,7 +243,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml.gz';
         $sitemapFilepathUncompressed = $this->saveDir . '/sitemap.xml';
@@ -293,7 +289,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertStringContainsString('Sitemap: https://example.com/sitemap.xml.gz', $robotsContent);
         unlink($robotsPath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -320,7 +315,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapIndexFilepath = $this->saveDir . '/sitemap-index.xml';
         $this->assertFileExists($sitemapIndexFilepath);
@@ -376,7 +371,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('http://www.example.com/fr', $sitemap2->url[0]->link[1]->attributes()['href']);
         unlink($sitemapFilepath2);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(3, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(2, $generatedFiles['sitemaps_location']);
@@ -405,7 +399,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapIndexFilepath = $this->saveDir . '/custom-index.xml';
         $this->assertFileExists($sitemapIndexFilepath);
@@ -419,7 +413,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertFileExists($sitemapFilepath2);
         unlink($sitemapFilepath2);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(3, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(2, $generatedFiles['sitemaps_location']);
@@ -449,7 +442,7 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapIndexFilepath = $this->saveDir . '/sitemap-index.xml';
         $this->assertFileExists($sitemapIndexFilepath);
@@ -519,7 +512,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertStringContainsString('Sitemap: https://example.com/sitemap-index.xml', $robotsContent);
         unlink($robotsPath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(3, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(2, $generatedFiles['sitemaps_location']);
@@ -574,13 +566,12 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -635,13 +626,12 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
@@ -676,13 +666,12 @@ class SitemapGeneratorTest extends TestCase
             $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
         }
 
-        $generator->finalize();
+        $generatedFiles = $generator->finalize();
 
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
-        $generatedFiles = $generator->getGeneratedFiles();
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);

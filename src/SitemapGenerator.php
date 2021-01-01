@@ -553,6 +553,8 @@ class SitemapGenerator
         } else {
             throw new RuntimeException('failed to finalize, please add urls first');
         }
+
+        return $this->generatedFiles;
     }
 
     private function createSitemapIndex($sitemapsUrls, $sitemapIndexFileName)
@@ -594,14 +596,6 @@ class SitemapGenerator
     {
         $this->xmlWriter->endElement(); // sitemapindex
         $this->xmlWriter->endDocument();
-    }
-
-    /**
-     * @return array Array of previously generated files
-     */
-    public function getGeneratedFiles(): array
-    {
-        return $this->generatedFiles;
     }
 
     /**
