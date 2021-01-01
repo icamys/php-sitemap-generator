@@ -65,8 +65,8 @@ $alternates = [
 // The file format is 'sm-{index}-{timestamp}.xml'
 $generator->addURL('/path/to/page/', new DateTime(), 'always', 0.5, $alternates);
 
-// Flush all stored urls from memory to the disk and close all necessary tags.
-// Move flushed files to their final location. Compresses files if necessary.
+// Finalize flushes all stored urls from memory to the disk, closes all necessary xml tags,
+// moves flushed files to their final location, and compresses files if necessary.
 $generator->finalize();
 
 // Update robots.txt file in output directory or create a new one
