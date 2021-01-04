@@ -20,6 +20,10 @@ Installation with Composer:
 composer require icamys/php-sitemap-generator
 ```
 
+## Survey
+
+If you found this package useful, please [take survey](https://forms.gle/ngeponiTd1zWgmkC9) to improve your sitemap generation experience.
+
 ## Usage
 
 ```php
