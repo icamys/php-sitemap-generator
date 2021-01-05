@@ -112,16 +112,16 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($this->g, $return);
     }
 
-    public function testSetMaxURLsPerSitemapLeftOutOfRangeException()
+    public function testSetMaxURLsPerFileLeftOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
-        $this->g->setMaxUrlsPerSitemap(0);
+        $this->g->setMaxUrlsPerFile(0);
     }
 
-    public function testSetMaxURLsPerSitemapRightOutOfRangeException()
+    public function testSetMaxURLsPerFileRightOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
-        $this->g->setMaxUrlsPerSitemap(50001);
+        $this->g->setMaxUrlsPerFile(50001);
     }
 
     public function testAddURLWithInvalidChangeFreq()

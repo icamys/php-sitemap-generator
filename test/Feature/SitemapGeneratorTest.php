@@ -302,7 +302,7 @@ class SitemapGeneratorTest extends TestCase
         $outputDir = $this->saveDir;
 
         $generator = new SitemapGenerator($siteUrl, $outputDir);
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxUrlsPerFile(1);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -387,7 +387,7 @@ class SitemapGeneratorTest extends TestCase
 
         $generator = new SitemapGenerator($siteUrl, $outputDir);
         $generator->setSitemapIndexFilename('custom-index.xml');
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxUrlsPerFile(1);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -428,7 +428,7 @@ class SitemapGeneratorTest extends TestCase
         $outputDir = $this->saveDir;
 
         $generator = new SitemapGenerator($siteUrl, $outputDir);
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxUrlsPerFile(1);
         $generator->enableCompression();
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],

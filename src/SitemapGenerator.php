@@ -26,18 +26,18 @@ class SitemapGenerator
      * Max number of urls per sitemap according to spec.
      * @see https://www.sitemaps.org/protocol.html
      */
-    private const MAX_URLS_PER_SITEMAP = 50000;
+    private const MAX_URLS_PER_FILE = 50000;
 
     /**
      * Max number of sitemaps per index file according to spec.
      * @see http://www.sitemaps.org/protocol.html
      */
-    private const MAX_SITEMAPS_PER_INDEX = 50000;
+    private const MAX_SITEMAPS_PER_INDEX = self::MAX_URLS_PER_FILE;
 
     /**
      * Total max number of URLs.
      */
-    private const TOTAL_MAX_URLS = self::MAX_URLS_PER_SITEMAP * self::MAX_SITEMAPS_PER_INDEX;
+    private const TOTAL_MAX_URLS = self::MAX_URLS_PER_FILE * self::MAX_SITEMAPS_PER_INDEX;
 
     /**
      * Max url length according to spec.
@@ -70,7 +70,7 @@ class SitemapGenerator
      * @var int
      * @access public
      */
-    private $maxUrlsPerSitemap = self::MAX_URLS_PER_SITEMAP;
+    private $maxUrlsPerFile = self::MAX_URLS_PER_FILE;
     /**
      * If true, two sitemap files (.xml and .xml.gz) will be created and added to robots.txt.
      * If true, .gz file will be submitted to search engines.
@@ -306,14 +306,14 @@ class SitemapGenerator
      * @param int $value
      * @return $this
      */
-    public function setMaxUrlsPerSitemap(int $value): SitemapGenerator
+    public function setMaxUrlsPerFile(int $value): SitemapGenerator
     {
-        if ($value < 1 || self::MAX_URLS_PER_SITEMAP < $value) {
+        if ($value < 1 || self::MAX_URLS_PER_FILE < $value) {
             throw new OutOfRangeException(
-                sprintf('value %d is out of range 1-%d', $value, self::MAX_URLS_PER_SITEMAP)
+                sprintf('value %d is out of range 1-%d', $value, self::MAX_URLS_PER_FILE)
             );
         }
-        $this->maxUrlsPerSitemap = $value;
+        $this->maxUrlsPerFile = $value;
         return $this;
     }
 
@@ -395,11 +395,11 @@ class SitemapGenerator
 
         $this->writeSitemapUrl($this->baseURL . $path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
-        if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerSitemap) {
+        if ($this->totalUrlCount % 1000 === 0 || $this->sitemapUrlCount >= $this->maxUrlsPerFile) {
             $this->flush();
         }
 
-        if ($this->sitemapUrlCount === $this->maxUrlsPerSitemap) {
+        if ($this->sitemapUrlCount === $this->maxUrlsPerFile) {
             $this->writeSitemapEnd();
         }
 
