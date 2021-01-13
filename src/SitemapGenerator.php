@@ -409,6 +409,7 @@ class SitemapGenerator
         $this->xmlWriter->writeComment(sprintf('generated-on="%s"', date('c')));
         $this->xmlWriter->startElement('urlset');
         $this->xmlWriter->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        $this->xmlWriter->writeAttribute('xmlns:xhtml', 'http://www.w3.org/1999/xhtml');
         $this->xmlWriter->writeAttribute('xmlns:video', 'http://www.google.com/schemas/sitemap-video/1.1');
         $this->xmlWriter->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
         $this->xmlWriter->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd');
@@ -435,7 +436,7 @@ class SitemapGenerator
         if (is_array($alternates) && count($alternates) > 0) {
             foreach ($alternates as $alternate) {
                 if (is_array($alternate) && isset($alternate['hreflang']) && isset($alternate['href'])) {
-                    $this->xmlWriter->startElement('link');
+                    $this->xmlWriter->startElement('xhtml:link');
                     $this->xmlWriter->writeAttribute('rel', 'alternate');
                     $this->xmlWriter->writeAttribute('hreflang', $alternate['hreflang']);
                     $this->xmlWriter->writeAttribute('href', $alternate['href']);
