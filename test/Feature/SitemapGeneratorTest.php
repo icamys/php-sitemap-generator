@@ -32,6 +32,17 @@ class SitemapGeneratorTest extends TestCase
         $sitemapFilepath = $this->saveDir . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
 
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath));
         $this->assertEquals('urlset', $sitemap->getName());
         $this->assertEquals(2, $sitemap->count());
@@ -44,23 +55,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap->url[0]->lastmod);
         $this->assertEquals('always', $sitemap->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap->url[0]->link[1]->attributes()['href']);
 
         $this->assertEquals('https://example.com/path/to/page-1/', $sitemap->url[1]->loc);
         $this->assertEquals($datetimeStr, $sitemap->url[1]->lastmod);
         $this->assertEquals('always', $sitemap->url[1]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[1]->priority);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[1]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap->url[1]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[1]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
 
         $generatedFiles = $generator->getGeneratedFiles();
@@ -126,6 +125,17 @@ class SitemapGeneratorTest extends TestCase
 
         $this->assertFileExists($sitemapFilepath);
 
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/submodule/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/submodule/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath));
         $this->assertEquals('urlset', $sitemap->getName());
         $this->assertEquals(2, $sitemap->count());
@@ -138,23 +148,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap->url[0]->lastmod);
         $this->assertEquals('always', $sitemap->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/submodule/de', $sitemap->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/submodule/fr', $sitemap->url[0]->link[1]->attributes()['href']);
 
         $this->assertEquals('https://example.com/submodule/path/to/page-1/', $sitemap->url[1]->loc);
         $this->assertEquals($datetimeStr, $sitemap->url[1]->lastmod);
         $this->assertEquals('always', $sitemap->url[1]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[1]->priority);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[1]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/submodule/de', $sitemap->url[1]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[1]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/submodule/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
 
         $generatedFiles = $generator->getGeneratedFiles();
@@ -192,6 +190,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertFileExists($sitemapFilepath);
         copy('compress.zlib://' . $sitemapFilepath, $sitemapFilepathUncompressed);
 
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepathUncompressed), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepathUncompressed));
         $this->assertEquals('urlset', $sitemap->getName());
         $this->assertEquals(2, $sitemap->count());
@@ -204,23 +213,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap->url[0]->lastmod);
         $this->assertEquals('always', $sitemap->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap->url[0]->link[1]->attributes()['href']);
 
         $this->assertEquals('https://example.com/path/to/page-1/', $sitemap->url[1]->loc);
         $this->assertEquals($datetimeStr, $sitemap->url[1]->lastmod);
         $this->assertEquals('always', $sitemap->url[1]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[1]->priority);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[1]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap->url[1]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[1]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
         unlink($sitemapFilepathUncompressed);
 
@@ -259,6 +256,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertFileExists($sitemapFilepath);
         copy('compress.zlib://' . $sitemapFilepath, $sitemapFilepathUncompressed);
 
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepathUncompressed), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepathUncompressed));
         $this->assertEquals('urlset', $sitemap->getName());
         $this->assertEquals(2, $sitemap->count());
@@ -271,23 +279,11 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap->url[0]->lastmod);
         $this->assertEquals('always', $sitemap->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap->url[0]->link[1]->attributes()['href']);
 
         $this->assertEquals('https://example.com/path/to/page-1/', $sitemap->url[1]->loc);
         $this->assertEquals($datetimeStr, $sitemap->url[1]->lastmod);
         $this->assertEquals('always', $sitemap->url[1]->changefreq);
         $this->assertEquals('0.5', $sitemap->url[1]->priority);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap->url[1]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap->url[1]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap->url[1]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap->url[1]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap->url[1]->link[1]->attributes()['href']);
         unlink($sitemapFilepath);
         unlink($sitemapFilepathUncompressed);
 
@@ -344,6 +340,18 @@ class SitemapGeneratorTest extends TestCase
 
         $sitemapFilepath1 = $this->saveDir . '/sitemap1.xml';
         $this->assertFileExists($sitemapFilepath1);
+
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath1), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap1 = new SimpleXMLElement(file_get_contents($sitemapFilepath1));
         $this->assertEquals('urlset', $sitemap1->getName());
         $this->assertEquals(1, $sitemap1->count());
@@ -354,16 +362,22 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap1->url[0]->lastmod);
         $this->assertEquals('always', $sitemap1->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap1->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap1->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap1->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap1->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap1->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap1->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap1->url[0]->link[1]->attributes()['href']);
         unlink($sitemapFilepath1);
 
         $sitemapFilepath2 = $this->saveDir . '/sitemap2.xml';
         $this->assertFileExists($sitemapFilepath2);
+
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath2), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap2 = new SimpleXMLElement(file_get_contents($sitemapFilepath2));
         $this->assertEquals('urlset', $sitemap2->getName());
         $this->assertEquals(1, $sitemap2->count());
@@ -374,12 +388,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap2->url[0]->lastmod);
         $this->assertEquals('always', $sitemap2->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap2->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap2->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap2->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap2->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap2->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap2->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap2->url[0]->link[1]->attributes()['href']);
         unlink($sitemapFilepath2);
 
         $generatedFiles = $generator->getGeneratedFiles();
@@ -477,6 +485,18 @@ class SitemapGeneratorTest extends TestCase
         $sitemapFilepath1Compressed = $sitemapFilepath1 . '.gz';
         $this->assertFileExists($sitemapFilepath1Compressed);
         copy('compress.zlib://' . $sitemapFilepath1Compressed, $sitemapFilepath1);
+
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath1), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap1 = new SimpleXMLElement(file_get_contents($sitemapFilepath1));
         $this->assertEquals('urlset', $sitemap1->getName());
         $this->assertEquals(1, $sitemap1->count());
@@ -487,12 +507,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap1->url[0]->lastmod);
         $this->assertEquals('always', $sitemap1->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap1->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap1->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap1->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap1->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap1->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap1->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap1->url[0]->link[1]->attributes()['href']);
         unlink($sitemapFilepath1);
         unlink($sitemapFilepath1Compressed);
 
@@ -501,6 +515,18 @@ class SitemapGeneratorTest extends TestCase
         $this->assertFileExists($sitemapFilepath2Compressed);
         copy('compress.zlib://' . $sitemapFilepath2Compressed, $sitemapFilepath2);
         $this->assertFileExists($sitemapFilepath2);
+
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath2), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
         $sitemap2 = new SimpleXMLElement(file_get_contents($sitemapFilepath2));
         $this->assertEquals('urlset', $sitemap2->getName());
         $this->assertEquals(1, $sitemap2->count());
@@ -511,12 +537,6 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals($datetimeStr, $sitemap2->url[0]->lastmod);
         $this->assertEquals('always', $sitemap2->url[0]->changefreq);
         $this->assertEquals('0.5', $sitemap2->url[0]->priority);
-        $this->assertEquals('alternate', $sitemap2->url[0]->link[0]->attributes()['rel']);
-        $this->assertEquals('de', $sitemap2->url[0]->link[0]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/de', $sitemap2->url[0]->link[0]->attributes()['href']);
-        $this->assertEquals('alternate', $sitemap2->url[0]->link[1]->attributes()['rel']);
-        $this->assertEquals('fr', $sitemap2->url[0]->link[1]->attributes()['hreflang']);
-        $this->assertEquals('http://www.example.com/fr', $sitemap2->url[0]->link[1]->attributes()['href']);
         unlink($sitemapFilepath2);
         unlink($sitemapFilepath2Compressed);
 
