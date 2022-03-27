@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.4";
+    private $classVersion = "4.3.5";
     /**
      * Search engines URLs
      * @var array of strings
@@ -116,12 +116,6 @@ class SitemapGenerator
         "http://www.bing.com/ping?sitemap=",
         "http://www.webmaster.yandex.ru/ping?sitemap=",
     ];
-    /**
-     * Array with urls
-     * @var array
-     * @access private
-     */
-    private $urls;
     /**
      * Lines for robots.txt file that are written if file does not exist
      * @var array
@@ -217,7 +211,6 @@ class SitemapGenerator
      */
     public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null, Runtime $runtime = null)
     {
-        $this->urls = [];
         $this->baseURL = rtrim($baseURL, '/');
 
         if ($fs === null) {
