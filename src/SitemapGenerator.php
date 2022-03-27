@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.3";
+    private $classVersion = "4.3.4";
     /**
      * Search engines URLs
      * @var array of strings
@@ -565,7 +565,6 @@ class SitemapGenerator
         $this->fs->file_put_contents(
             $sitemapIndexFileName,
             $this->xmlWriter->flush(true),
-            FILE_APPEND
         );
     }
 
