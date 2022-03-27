@@ -163,3 +163,7 @@ $ XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html ./coverage
 ## Changelog
 
 You can find full changelog on the [releases page](https://github.com/icamys/php-sitemap-generator/releases).
+
+## Todo
+
+* Remove `$yahooAppId` parameter. 

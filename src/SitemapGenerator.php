@@ -100,16 +100,13 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.8";
+    private $classVersion = "4.3.9";
     /**
      * Search engines URLs
      * @var array of strings
      * @access private
      */
     private $searchEngines = [
-        [
-            "http://search.yahooapis.com/SiteExplorerService/V1/updateNotification?appid=USERID&url=",
-        ],
         "http://www.google.com/ping?sitemap=",
         "http://submissions.ask.com/ping?sitemap=",
         "http://www.bing.com/ping?sitemap=",
@@ -597,11 +594,8 @@ class SitemapGenerator
 
     /**
      * Will inform search engines about newly created sitemaps.
-     * Google, Ask, Bing and Yahoo will be noticed.
-     * If You don't pass yahooAppId, Yahoo still will be informed,
-     * but this method can be used once per day. If You will do this often,
-     * message that limit was exceeded  will be returned from Yahoo.
-     * @param string $yahooAppId Your site Yahoo appid.
+     * Google, Ask, Bing will be notified.
+     * @param string $yahooAppId Your site Yahoo appid. This is a deprecated parameter and will be removed in future versions.
      * @return array of messages and http codes from each search engine
      * @access public
      * @throws BadMethodCallException
@@ -615,9 +609,6 @@ class SitemapGenerator
             throw new BadMethodCallException("cURL extension is needed to do submission.");
         }
         $searchEngines = $this->searchEngines;
-        $searchEngines[0] = isset($yahooAppId) ?
-            str_replace("USERID", $yahooAppId, $searchEngines[0][0]) :
-            $searchEngines[0][1];
         $result = [];
         for ($i = 0; $i < count($searchEngines); $i++) {
             $submitUrl = $searchEngines[$i] . htmlspecialchars($this->generatedFiles['sitemaps_index_url'], ENT_QUOTES);
