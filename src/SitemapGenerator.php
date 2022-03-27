@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.7";
+    private $classVersion = "4.3.8";
     /**
      * Search engines URLs
      * @var array of strings
@@ -477,6 +477,7 @@ class SitemapGenerator
         $this->flushedSitemaps[] = $targetSitemapFilepath;
         $this->flushedSitemapCounter++;
         $this->sitemapUrlCount = 0;
+        $this->flushedSitemapSize = 0;
     }
 
     /**
