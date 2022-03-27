@@ -1,6 +1,6 @@
 {
   "name": "icamys/php-sitemap-generator",
-  "version": "4.3.6",
+  "version": "4.3.7",
   "description": "Simple PHP sitemap generator.",
   "keywords": ["php", "sitemap", "generator", "psr-1", "psr-2", "psr-4"],
   "homepage": "https://github.com/icamys/php-sitemap-generator",

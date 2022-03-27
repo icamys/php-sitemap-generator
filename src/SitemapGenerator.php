@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.6";
+    private $classVersion = "4.3.7";
     /**
      * Search engines URLs
      * @var array of strings
@@ -109,7 +109,6 @@ class SitemapGenerator
     private $searchEngines = [
         [
             "http://search.yahooapis.com/SiteExplorerService/V1/updateNotification?appid=USERID&url=",
-            "http://search.yahooapis.com/SiteExplorerService/V1/ping?sitemap=",
         ],
         "http://www.google.com/ping?sitemap=",
         "http://submissions.ask.com/ping?sitemap=",
