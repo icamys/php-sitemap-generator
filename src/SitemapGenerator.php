@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.3.9";
+    private $classVersion = "4.3.10";
     /**
      * Search engines URLs
      * @var array of strings
