@@ -4,6 +4,7 @@ namespace Icamys\SitemapGenerator;
 
 use BadMethodCallException;
 use DateTime;
+use Icamys\SitemapGenerator\Extensions\GoogleImageExtension;
 use Icamys\SitemapGenerator\Extensions\GoogleVideoExtension;
 use InvalidArgumentException;
 use OutOfRangeException;
@@ -319,12 +320,12 @@ class SitemapGenerator
     }
 
     public function validate(
-        string $path,
+        string   $path,
         DateTime $lastModified = null,
-        string $changeFrequency = null,
-        float $priority = null,
-        array $alternates = null,
-        array $extensions = [])
+        string   $changeFrequency = null,
+        float    $priority = null,
+        array    $alternates = null,
+        array    $extensions = [])
     {
         if (!(1 <= mb_strlen($path) && mb_strlen($path) <= self::MAX_URL_LEN)) {
             throw new InvalidArgumentException(
@@ -339,8 +340,14 @@ class SitemapGenerator
         if ($priority !== null && !in_array($priority, $this->validPriorities)) {
             throw new InvalidArgumentException("Priority argument should be a float number in the range [0.0..1.0]");
         }
-        if ($extensions !== null && isset($extensions['google_video'])) {
-            GoogleVideoExtension::validate($this->baseURL . $path, $extensions['google_video']);
+        if ($extensions !== null) {
+            if (isset($extensions['google_video'])) {
+                GoogleVideoExtension::validate($this->baseURL . $path, $extensions['google_video']);
+            }
+
+            if (isset($extensions['google_image'])) {
+                GoogleImageExtension::validate($extensions['google_image']);
+            }
         }
     }
 
@@ -358,12 +365,12 @@ class SitemapGenerator
      * @return $this
      */
     public function addURL(
-        string $path,
+        string   $path,
         DateTime $lastModified = null,
-        string $changeFrequency = null,
-        float $priority = null,
-        array $alternates = null,
-        array $extensions = []
+        string   $changeFrequency = null,
+        float    $priority = null,
+        array    $alternates = null,
+        array    $extensions = []
     ): SitemapGenerator
     {
         $this->validate($path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
@@ -400,6 +407,7 @@ class SitemapGenerator
         $this->xmlWriter->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
         $this->xmlWriter->writeAttribute('xmlns:xhtml', 'http://www.w3.org/1999/xhtml');
         $this->xmlWriter->writeAttribute('xmlns:video', 'http://www.google.com/schemas/sitemap-video/1.1');
+        $this->xmlWriter->writeAttribute('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1');
         $this->xmlWriter->writeAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
         $this->xmlWriter->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd');
         $this->isSitemapStarted = true;
@@ -437,6 +445,9 @@ class SitemapGenerator
         foreach ($extensions as $extName => $extFields) {
             if ($extName === 'google_video') {
                 GoogleVideoExtension::writeVideoTag($this->xmlWriter, $loc, $extFields);
+            }
+            if ($extName === 'google_image') {
+                GoogleImageExtension::writeImageTag($this->xmlWriter, $extFields);
             }
         }
 

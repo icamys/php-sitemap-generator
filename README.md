@@ -10,8 +10,8 @@ Library for sitemap generation and submission.
 
 Features:
 * Follows [sitemaps.org](https://sitemaps.org/) protocol
-* Supports alternative links for multi-language pages (see [google docs](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
-* Supports video sitemap generation  
+* Supports alternative links for multi-language pages (see [google documentation](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
+* Supports video and image sitemap generation  
 * Low memory usage for any amount of URLs
 
 Installation with Composer:
@@ -82,7 +82,7 @@ $generator->updateRobots();
 $generator->submitSitemap();
 ```
 
-### Video sitemap
+### Video sitemap example
 
 To create video sitemap, pass the `$extensions` parameter to the `addURL()` method as follows:
 
@@ -93,7 +93,7 @@ To create video sitemap, pass the `$extensions` parameter to the `addURL()` meth
 // ...
 
 // Initialize variable with video tags
-// Also see the google docs about that:
+// For more see the official google documentation:
 // https://developers.google.com/search/docs/advanced/sitemaps/video-sitemaps
 $videoTags = [
     'thumbnail_loc' => 'http://www.example.com/thumbs/123.jpg',
@@ -138,6 +138,38 @@ $videoTags = [
 
 $extensions = [
     'google_video' => $videoTags
+];
+
+$generator->addURL('/path/to/page/', null, null, null, null, $extensions);
+
+// generate, flush, etc.
+// ...
+```
+
+
+### Image sitemap example
+
+To create image sitemap, pass the `$extensions` parameter to the `addURL()` method as follows:
+
+```php
+<?php
+
+// Initialize the generator
+// ...
+
+// Initialize variable with image tags
+// For more see the official google documentation:
+// https://developers.google.com/search/docs/advanced/sitemaps/image-sitemaps
+$imageTags = [
+    'loc' => 'https://www.example.com/thumbs/123.jpg',
+    'title' => 'Cat vs Cabbage',
+    'caption' => 'A funny picture of a cat eating cabbage',
+    'geo_location' => 'Lyon, France',
+    'license' => 'https://example.com/image-license',
+];
+
+$extensions = [
+    'google_image' => $imageTags
 ];
 
 $generator->addURL('/path/to/page/', null, null, null, null, $extensions);

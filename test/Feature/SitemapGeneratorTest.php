@@ -757,4 +757,52 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
     }
+
+    public function testGoogleImageExtension()
+    {
+        $siteUrl = 'https://example.com';
+        $outputDir = '/tmp';
+
+        $generator = new SitemapGenerator($siteUrl, $outputDir);
+
+        $extensions = [
+            'google_image' => [
+                'loc' => 'https://www.example.com/thumbs/123.jpg',
+                'title' => 'Cat vs Cabbage',
+                'caption' => 'A funny picture of a cat eating cabbage',
+                'geo_location' => 'Lyon, France',
+                'license' => 'https://example.com/image-license',
+            ]
+        ];
+
+        $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $outputDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+
+        $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'image', true);
+        $image = $sitemap->children()[0]->children('image', true)->image;
+        $this->assertEquals('https://www.example.com/thumbs/123.jpg', $image->loc);
+        $this->assertEquals('Cat vs Cabbage', $image->title);
+        $this->assertEquals('A funny picture of a cat eating cabbage', $image->caption);
+        $this->assertEquals('Lyon, France', $image->geo_location);
+        $this->assertEquals('https://example.com/image-license', $image->license);
+    }
+
+    public function testGoogleImageExtensionValidationErrorOnUrlAdd()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Missing required fields: loc');
+        $siteUrl = 'https://example.com';
+        $outputDir = '/tmp';
+        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $extensions = ['google_image' => []];
+        $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
+        $generator->flush();
+        $generator->finalize();
+    }
+
 }
