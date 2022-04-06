@@ -101,7 +101,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.4";
+    private $classVersion = "4.4.1";
     /**
      * Search engines URLs
      * @var array of strings
@@ -617,16 +617,29 @@ class SitemapGenerator
             throw new BadMethodCallException("To update robots.txt, call finalize() first.");
         }
         if (!$this->runtime->extension_loaded('curl')) {
-            throw new BadMethodCallException("cURL extension is needed to do submission.");
+            throw new BadMethodCallException("curl extension is needed to do submission.");
         }
         $searchEngines = $this->searchEngines;
         $result = [];
         for ($i = 0; $i < count($searchEngines); $i++) {
             $submitUrl = $searchEngines[$i] . htmlspecialchars($this->generatedFiles['sitemaps_index_url'], ENT_QUOTES);
-            $submitSite = $this->runtime->curl_init($submitUrl);
-            $this->runtime->curl_setopt($submitSite, CURLOPT_RETURNTRANSFER, true);
-            $responseContent = $this->runtime->curl_exec($submitSite);
-            $response = $this->runtime->curl_getinfo($submitSite);
+            $curlResource = $this->runtime->curl_init($submitUrl);
+            if ($curlResource == false) {
+                throw new RuntimeException("failed to execute curl_init for url " . $submitUrl);
+            }
+            if ($this->runtime->curl_setopt($curlResource, CURLOPT_RETURNTRANSFER, true) == false) {
+                throw new RuntimeException(
+                    "failed to set curl option CURLOPT_RETURNTRANSFER to true, error: "
+                    . $this->runtime->curl_error($curlResource)
+                );
+            }
+            $responseContent = $this->runtime->curl_exec($curlResource);
+            if ($responseContent == false) {
+                throw new RuntimeException(
+                    "failed to run curl_exec, error: " . $this->runtime->curl_error($curlResource)
+                );
+            }
+            $response = $this->runtime->curl_getinfo($curlResource);
             $submitSiteShort = array_reverse(explode(".", parse_url($searchEngines[$i], PHP_URL_HOST)));
             $result[] = [
                 "site" => $submitSiteShort[1] . "." . $submitSiteShort[0],

@@ -584,10 +584,12 @@ class SitemapGeneratorTest extends TestCase
             ->willReturn(['http_code' => 200]);
         $runtimeMock
             ->expects($this->exactly(4))
-            ->method('curl_setopt');
+            ->method('curl_setopt')
+            ->willReturn(true);
         $runtimeMock
             ->expects($this->exactly(4))
-            ->method('curl_exec');
+            ->method('curl_exec')
+            ->willReturn(true);
 
         $generator = new SitemapGenerator($siteUrl, $outputDir, null, $runtimeMock);
         $alternates = [

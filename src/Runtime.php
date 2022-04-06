@@ -33,4 +33,9 @@ class Runtime
     {
         return curl_getinfo($handle, $option);
     }
+
+    public function curl_error($handle)
+    {
+        return curl_error($handle);
+    }
 }

@@ -40,6 +40,12 @@ class RuntimeTest extends TestCase
      */
     private $curlGetinfoSpy;
 
+
+    /**
+     * @var Spy for curl_error function
+     */
+    private $curlErrorSpy;
+
     public function testExtensionLoadedCall() {
         $this->r->extension_loaded('curl');
         $this->assertCount(1, $this->extensionLoadedSpy->getInvocations());
@@ -72,6 +78,12 @@ class RuntimeTest extends TestCase
         $this->assertEquals(null, $this->curlGetinfoSpy->getInvocations()[0]->getArguments()[0]);
     }
 
+    public function testCurlErrorCall() {
+        $this->r->curl_error(null);
+        $this->assertCount(1, $this->curlErrorSpy->getInvocations());
+        $this->assertEquals(null, $this->curlErrorSpy->getInvocations()[0]->getArguments()[0]);
+    }
+
     /**
      * @throws \phpmock\MockEnabledException
      */
@@ -88,6 +100,8 @@ class RuntimeTest extends TestCase
         $this->curlExecSpy->enable();
         $this->curlGetinfoSpy = new Spy(__NAMESPACE__, "curl_getinfo", function (){});
         $this->curlGetinfoSpy->enable();
+        $this->curlErrorSpy = new Spy(__NAMESPACE__, "curl_error", function (){});
+        $this->curlErrorSpy->enable();
     }
 
     protected function tearDown(): void
@@ -98,5 +112,6 @@ class RuntimeTest extends TestCase
         $this->curlSetoptSpy->disable();
         $this->curlExecSpy->disable();
         $this->curlGetinfoSpy->disable();
+        $this->curlErrorSpy->disable();
     }
 }
