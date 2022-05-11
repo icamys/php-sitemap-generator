@@ -397,7 +397,7 @@ class SitemapGenerator
         return $this;
     }
 
-    private function writeSitemapStart()
+    protected function writeSitemapStart()
     {
         $this->xmlWriter->startDocument("1.0", "UTF-8");
         $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
@@ -569,7 +569,7 @@ class SitemapGenerator
         );
     }
 
-    private function writeSitemapIndexStart()
+    protected function writeSitemapIndexStart()
     {
         $this->xmlWriter->startDocument("1.0", "UTF-8");
         $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
