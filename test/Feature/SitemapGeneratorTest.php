@@ -807,4 +807,28 @@ class SitemapGeneratorTest extends TestCase
         $generator->finalize();
     }
 
+    public function testUrlsWithHtmlSpecialChars()
+    {
+        $siteUrl = 'https://example.com';
+        $outputDir = '/tmp';
+
+        $generator = new SitemapGenerator($siteUrl, $outputDir);
+
+        $generator->addURL('/index.php?param1=p1&param2=p2', null, null, null, null);
+        $generator->addURL('/index.php?param1="p 1"&param2="p 2"', null, null, null, null);
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $outputDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+
+        $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath));
+        $url1 = $sitemap->children()->url[0];
+        $url2 = $sitemap->children()->url[1];
+
+        $this->assertEquals('https://example.com/index.php?param1=p1&param2=p2', $url1->loc);
+        $this->assertEquals('https://example.com/index.php?param1="p 1"&param2="p 2"', $url2->loc);
+    }
+
 }

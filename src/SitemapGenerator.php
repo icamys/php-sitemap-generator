@@ -416,7 +416,7 @@ class SitemapGenerator
     private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions)
     {
         $this->xmlWriter->startElement('url');
-        $this->xmlWriter->writeElement('loc', htmlspecialchars($loc, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', $loc);
 
         if ($lastModified !== null) {
             $this->xmlWriter->writeElement('lastmod', $lastModified->format(DateTime::ATOM));
@@ -584,7 +584,7 @@ class SitemapGenerator
     private function writeSitemapIndexUrl($url)
     {
         $this->xmlWriter->startElement('sitemap');
-        $this->xmlWriter->writeElement('loc', htmlspecialchars($url, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', $url);
         $this->xmlWriter->writeElement('lastmod', date('c'));
         $this->xmlWriter->endElement(); // sitemap
     }
