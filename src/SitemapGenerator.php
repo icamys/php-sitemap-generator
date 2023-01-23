@@ -157,6 +157,10 @@ class SitemapGenerator
      * @var Runtime object used to communicate with runtime
      */
     private $runtime;
+    /**
+     * @var Stylesheet Defines stylesheet file location
+     */
+    private $stylesheet;
 
     /**
      * @var XMLWriter Used for writing xml to files
@@ -206,7 +210,7 @@ class SitemapGenerator
      * @param FileSystem|null $fs
      * @param Runtime|null $runtime
      */
-    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null, Runtime $runtime = null)
+    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null, Runtime $runtime = null, string $stylesheet = null)
     {
         $this->baseURL = rtrim($baseURL, '/');
 
@@ -235,6 +239,7 @@ class SitemapGenerator
 
         $this->xmlWriter = $this->createXmlWriter();
         $this->flushedSitemapFilenameFormat = sprintf("sm-%%d-%d.xml", time());
+        $this->stylesheet = $stylesheet;
     }
 
     private function createXmlWriter(): XMLWriter
@@ -403,6 +408,8 @@ class SitemapGenerator
         $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
         $this->xmlWriter->writeComment(sprintf('generator-version="%s"', $this->classVersion));
         $this->xmlWriter->writeComment(sprintf('generated-on="%s"', date('c')));
+        if (!is_null($this->stylesheet))
+            $this->xmlWriter->writePi('xml-stylesheet', sprintf('type="text/xml" href="%s"', $this->stylesheet));
         $this->xmlWriter->startElement('urlset');
         $this->xmlWriter->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
         $this->xmlWriter->writeAttribute('xmlns:xhtml', 'http://www.w3.org/1999/xhtml');
