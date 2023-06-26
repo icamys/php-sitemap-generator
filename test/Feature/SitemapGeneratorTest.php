@@ -561,7 +561,14 @@ class SitemapGeneratorTest extends TestCase
     {
         $siteUrl = 'https://example.com';
         $outputDir = $this->saveDir;
-
+        $submitUrls = [
+            'http://www.google.com/ping?sitemap=https://example.com/sitemap.xml',
+            'http://www.webmaster.yandex.ru/ping?sitemap=https://example.com/sitemap.xml',
+        ];
+        $consecutiveCallUrls = [];
+        foreach ($submitUrls as $url) {
+            $consecutiveCallUrls[] = [$this->equalTo($url)];
+        }
         $runtimeMock = $this->createMock(Runtime::class);
         $runtimeMock
             ->expects($this->exactly(1))
@@ -569,25 +576,20 @@ class SitemapGeneratorTest extends TestCase
             ->with('curl')
             ->willReturn(true);
         $runtimeMock
-            ->expects($this->exactly(4))
+            ->expects($this->exactly(count($consecutiveCallUrls)))
             ->method('curl_init')
-            ->withConsecutive(
-                [$this->equalTo('http://www.google.com/ping?sitemap=https://example.com/sitemap.xml')],
-                [$this->equalTo('http://submissions.ask.com/ping?sitemap=https://example.com/sitemap.xml')],
-                [$this->equalTo('http://www.bing.com/ping?sitemap=https://example.com/sitemap.xml')],
-                [$this->equalTo('http://www.webmaster.yandex.ru/ping?sitemap=https://example.com/sitemap.xml')],
-            )
+            ->withConsecutive(...$consecutiveCallUrls)
             ->willReturn(true);
         $runtimeMock
-            ->expects($this->exactly(4))
+            ->expects($this->exactly(count($consecutiveCallUrls)))
             ->method('curl_getinfo')
             ->willReturn(['http_code' => 200]);
         $runtimeMock
-            ->expects($this->exactly(4))
+            ->expects($this->exactly(count($consecutiveCallUrls)))
             ->method('curl_setopt')
             ->willReturn(true);
         $runtimeMock
-            ->expects($this->exactly(4))
+            ->expects($this->exactly(count($consecutiveCallUrls)))
             ->method('curl_exec')
             ->willReturn(true);
 
