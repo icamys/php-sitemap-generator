@@ -78,7 +78,7 @@ $generator->finalize();
 // Update robots.txt file in output directory or create a new one
 $generator->updateRobots();
 
-// Submit your sitemaps to Google, Yahoo, Bing and Ask.com
+// Submit your sitemaps to Google and Yandex.
 $generator->submitSitemap();
 ```
 
