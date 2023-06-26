@@ -109,7 +109,6 @@ class SitemapGenerator
      */
     private $searchEngines = [
         "http://www.google.com/ping?sitemap=",
-        "http://www.bing.com/ping?sitemap=",
         "http://www.webmaster.yandex.ru/ping?sitemap=",
     ];
     /**
@@ -604,7 +603,7 @@ class SitemapGenerator
 
     /**
      * Will inform search engines about newly created sitemaps.
-     * Google, Ask, Bing will be notified.
+     * Google and Yandex will be notified.
      * @param string $yahooAppId Your site Yahoo appid. This is a deprecated parameter and will be removed in future versions.
      * @return array of messages and http codes from each search engine
      * @access public
