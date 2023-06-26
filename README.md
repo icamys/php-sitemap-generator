@@ -13,6 +13,7 @@ Features:
 * Supports alternative links for multi-language pages (see [google documentation](https://webmasters.googleblog.com/2012/05/multilingual-and-multinational-site.html))
 * Supports video and image sitemap generation  
 * Low memory usage for any amount of URLs
+* Supports sitemap stylesheets
 
 Installation with Composer:
 
