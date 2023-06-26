@@ -1,12 +1,15 @@
-name: icamys/php-sitemap-generator
+name: Run tests
 on:
   push:
     branches:
     - "**/*"
   pull_request:
-concurrency:
-#   # This item has no matching transformer
-#   maximum_number_of_builds: 0
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
 env:
   XDEBUG_MODE: coverage
 jobs:
