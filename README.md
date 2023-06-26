@@ -69,6 +69,10 @@ $alternates = [
 // The file format is 'sm-{index}-{timestamp}.xml'
 $generator->addURL('/path/to/page/', new DateTime(), 'always', 0.5, $alternates);
 
+// Optional: add sitemap stylesheet. Note that you need to create
+// the file 'sitemap.xsl' beforehand on your own.
+$generator->setSitemapStylesheet('sitemap.xsl');
+
 // Flush all stored urls from memory to the disk and close all necessary tags.
 $generator->flush();
 

@@ -70,6 +70,81 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
     }
 
+    public function testSitemapWithStylesheets()
+    {
+        $siteUrl = 'https://example.com';
+        $stylesheetUrl = "stylesheet.xsl";
+        $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
+
+        $generator = new SitemapGenerator($siteUrl, $this->saveDir);
+        $generator->setSitemapStylesheet($stylesheetUrl);
+        $generator->addURL("/path/to/page-1/", $lastmod, 'always', 0.5);
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $this->saveDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+
+        $stylesheetAttrs = $this->getXMLStylesheetAttributes($sitemapFilepath);
+        $this->assertNotNull($stylesheetAttrs);
+        $this->assertEquals('text/xsl', $stylesheetAttrs['type']);
+        $this->assertEquals($stylesheetUrl, $stylesheetAttrs['href']);
+        unlink($sitemapFilepath);
+    }
+
+    public function testSitemapWithoutStylesheets()
+    {
+        $siteUrl = 'https://example.com';
+        $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
+
+        $generator = new SitemapGenerator($siteUrl, $this->saveDir);
+        $generator->addURL("/path/to/page-1/", $lastmod, 'always', 0.5);
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $this->saveDir . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+
+        $stylesheetAttrs = $this->getXMLStylesheetAttributes($sitemapFilepath);
+        $this->assertNull($stylesheetAttrs);
+        unlink($sitemapFilepath);
+    }
+
+    /**
+     * Retrieves the attributes of the <?xml-stylesheet?> element from an XML sitemap file.
+     *
+     * @param string $sitemapFilePath The path to the XML sitemap file.
+     * @return array|null An associative array of attributes for the <?xml-stylesheet?> element, or null if not found.
+     */
+    private function getXMLStylesheetAttributes($sitemapFilePath)
+    {
+        $xml = new DOMDocument();
+        $xml->load($sitemapFilePath);
+
+        $xpath = new DOMXPath($xml);
+        $stylesheetElement = $xpath->query('/processing-instruction("xml-stylesheet")')->item(0);
+
+        if ($stylesheetElement) {
+            $attributes = [];
+            $data = $stylesheetElement->data;
+            $data = trim(str_replace('?>', '', $data));
+
+            $parts = explode(' ', $data);
+            foreach ($parts as $part) {
+                $attribute = explode('=', $part);
+                $attributeName = trim($attribute[0]);
+                $attributeValue = trim($attribute[1], '"\'');
+                $attributes[$attributeName] = $attributeValue;
+            }
+
+            return $attributes;
+        }
+
+        return null;
+    }
+
     public function testSingleSitemapWithCustomSitemapName()
     {
         $siteUrl = 'https://example.com';

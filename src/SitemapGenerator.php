@@ -65,6 +65,11 @@ class SitemapGenerator
      */
     private $sitemapIndexFileName = "sitemap-index.xml";
     /**
+     * Sitemap Stylesheet link.
+     * @var string
+     */
+    private $sitemapStylesheetLink = "";
+    /**
      * Quantity of URLs per single sitemap file.
      * If Your links are very long, sitemap file can be bigger than 10MB,
      * in this case use smaller value.
@@ -101,7 +106,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $classVersion = "4.5.0";
+    private $classVersion = "4.6.0";
     /**
      * Search engines URLs
      * @var array of strings
@@ -260,6 +265,19 @@ class SitemapGenerator
     }
 
     /**
+     * @param string $path
+     * @return SitemapGenerator
+     */
+    public function setSitemapStylesheet(string $path): SitemapGenerator
+    {
+        if (strlen($path) === 0) {
+            throw new InvalidArgumentException('sitemap stylesheet path should not be empty');
+        }
+        $this->sitemapStylesheetLink = $path;
+        return $this;
+    }
+
+    /**
      * @param string $filename
      * @return $this
      */
@@ -395,9 +413,13 @@ class SitemapGenerator
         return $this;
     }
 
-    protected function writeSitemapStart()
+    protected function writeSitemapStart(): void
     {
         $this->xmlWriter->startDocument("1.0", "UTF-8");
+        if ($this->sitemapStylesheetLink != "") {
+            $this->xmlWriter->writePi('xml-stylesheet',
+                sprintf('type="text/xsl" href="%s"', $this->sitemapStylesheetLink));
+        }
         $this->xmlWriter->writeComment(sprintf('generator-class="%s"', get_class($this)));
         $this->xmlWriter->writeComment(sprintf('generator-version="%s"', $this->classVersion));
         $this->xmlWriter->writeComment(sprintf('generated-on="%s"', date('c')));
