@@ -1,0 +1,35 @@
+name: Run tests
+on:
+  push:
+    branches:
+    - "**/*"
+
+env:
+  XDEBUG_MODE: coverage
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - uses: shivammathur/setup-php@2.25.0
+      with:
+        tools: phpunit
+        php-version: "${{ matrix.php }}"
+    - name: Set up cache
+      uses: actions/cache@v3.3.1
+      with:
+        path: "${{ github.workspace }}/.composer/cache"
+        key: "${{ runner.os }}-path"
+    - run: composer install --no-interaction --prefer-source
+    - run: vendor/bin/phpunit --coverage-clover=coverage.xml
+    - run: bash <(curl -s https://codecov.io/bash)
+      if: "${{ success() }}"
+    strategy:
+      matrix:
+        php:
+        - '7.3'
+        - '7.4'
+        - '8.0'
+        - '8.1'
+        - '8.2'
