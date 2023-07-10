@@ -11,24 +11,36 @@ use XMLWriter;
 
 class GoogleVideoExtension
 {
+    /**
+     * @var string[]
+     */
     private static $requiredFields = [
         'thumbnail_loc',
         'title',
         'description',
     ];
 
+    /**
+     * @var string[]
+     */
     private static $requiredEitherFields = [
         'content_loc',
         'player_loc',
     ];
 
+    /**
+     * @var string[]
+     */
     private static $platforms = [
         'web',
         'mobile',
         'tv',
     ];
 
-    public static function writeVideoTag(XMLWriter $xmlWriter, string $loc, array $extFields)
+    /**
+     * @param mixed[] $extFields
+     */
+    public static function writeVideoTag(XMLWriter $xmlWriter, string $loc, array $extFields): void
     {
         self::validate($loc, $extFields);
 
@@ -117,7 +129,12 @@ class GoogleVideoExtension
         $xmlWriter->endElement();
     }
 
-    public static function validate($loc, $extFields)
+    /**
+     * @param string $loc
+     * @param array $extFields
+     * @throws InvalidArgumentException
+     */
+    public static function validate(string $loc, array $extFields): void
     {
         $extFieldNames = array_keys($extFields);
 

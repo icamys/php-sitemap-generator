@@ -7,11 +7,14 @@ use XMLWriter;
 
 class GoogleImageExtension
 {
+    /**
+     * @var string[]
+     */
     private static $requiredFields = [
         'loc',
     ];
 
-    public static function writeImageTag(XMLWriter $xmlWriter, array $extFields)
+    public static function writeImageTag(XMLWriter $xmlWriter, array $extFields): void
     {
         self::validate($extFields);
 
@@ -37,7 +40,11 @@ class GoogleImageExtension
         $xmlWriter->endElement();
     }
 
-    public static function validate($extFields)
+    /**
+     * @param mixed[] $extFields
+     * @throws InvalidArgumentException
+     */
+    public static function validate(array $extFields): void
     {
         $extFieldNames = array_keys($extFields);
 
