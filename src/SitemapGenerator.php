@@ -125,7 +125,7 @@ class SitemapGenerator
         "Allow: /",
     ];
     /**
-     * @var array list of valid changefreq values according to the spec
+     * @var string[] list of valid changefreq values according to the spec
      */
     private $validChangefreqValues = [
         'always',
@@ -182,7 +182,7 @@ class SitemapGenerator
     private $flushedSitemapCounter = 0;
 
     /**
-     * @var array
+     * @var array<int, string>
      */
     private $flushedSitemaps = [];
 
@@ -356,7 +356,7 @@ class SitemapGenerator
         if ($priority !== null && !in_array($priority, $this->validPriorities)) {
             throw new InvalidArgumentException("Priority argument should be a float number in the range [0.0..1.0]");
         }
-        if ($extensions !== null) {
+        if (!empty($extensions)) {
             if (isset($extensions['google_video'])) {
                 GoogleVideoExtension::validate($this->baseURL . $path, $extensions['google_video']);
             }

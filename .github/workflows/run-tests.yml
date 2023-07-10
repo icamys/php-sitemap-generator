@@ -25,6 +25,7 @@ jobs:
     - run: vendor/bin/phpunit --coverage-clover=coverage.xml
     - run: bash <(curl -s https://codecov.io/bash)
       if: "${{ success() }}"
+    - run: vendor/bin/psalm
     strategy:
       matrix:
         php:
