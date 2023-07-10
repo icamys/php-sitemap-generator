@@ -575,7 +575,7 @@ class SitemapGenerator
         }
     }
 
-    private function createSitemapIndex($sitemapsUrls, $sitemapIndexFileName)
+    public function createSitemapIndex($sitemapsUrls, $sitemapIndexFileName)
     {
         $this->xmlWriter->flush(true);
         $this->writeSitemapIndexStart();
