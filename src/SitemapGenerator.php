@@ -433,10 +433,18 @@ class SitemapGenerator
         $this->isSitemapStarted = true;
     }
 
+    private function encodeEscapeURL($url): string {
+        // In-place encoding only on non-ASCII characters, like browsers do.
+        $encoded = preg_replace_callback('/[^\x20-\x7f]/', function($match) {
+            return urlencode($match[0]);
+        }, $url);
+        return htmlspecialchars($encoded, ENT_QUOTES, 'UTF-8');
+    }
+
     private function writeSitemapUrl($loc, $lastModified, $changeFrequency, $priority, $alternates, $extensions)
     {
         $this->xmlWriter->startElement('url');
-        $this->xmlWriter->writeElement('loc', htmlspecialchars($loc, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', $this->encodeEscapeURL($loc));
 
         if ($lastModified !== null) {
             $this->xmlWriter->writeElement('lastmod', $lastModified->format(DateTime::ATOM));
@@ -604,7 +612,7 @@ class SitemapGenerator
     private function writeSitemapIndexUrl($url)
     {
         $this->xmlWriter->startElement('sitemap');
-        $this->xmlWriter->writeElement('loc', htmlspecialchars($url, ENT_QUOTES));
+        $this->xmlWriter->writeElement('loc', $this->encodeEscapeURL($url));
         $this->xmlWriter->writeElement('lastmod', date('c'));
         $this->xmlWriter->endElement(); // sitemap
     }
