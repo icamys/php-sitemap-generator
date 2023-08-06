@@ -884,4 +884,68 @@ class SitemapGeneratorTest extends TestCase
         $generator->finalize();
     }
 
+    public function URLsWithHTMLSpecialCharsData(): array {
+        return [
+            'ampersand' => [
+                'input path' => 'https://example.com/index.php?param1=p1&param2=p2',
+                'expected path' => 'https://example.com/index.php?param1=p1&amp;param2=p2',
+            ],
+            'double quotes' => [
+                'input path' => 'https://example.com/index.php?param1="p 1"&param2="p 2"',
+                'expected path' => 'https://example.com/index.php?param1=&quot;p 1&quot;&amp;param2=&quot;p 2&quot;',
+            ],
+            'single quotes' => [
+                'input path' => "https://example.com/index.php?param1='p 1'&param2='p 2'",
+                'expected path' => 'https://example.com/index.php?param1=&#039;p 1&#039;&amp;param2=&#039;p 2&#039;',
+            ],
+            'greater than and less than' => [
+                'input path' => 'https://example.com/index.php?param1=<p 1>&param2=<p 2>',
+                'expected path' => 'https://example.com/index.php?param1=&lt;p 1&gt;&amp;param2=&lt;p 2&gt;',
+            ],
+            'non-ascii characters' => [
+                'input path' => 'https://example.com/ümlat.php&q=name',
+                'expected path' => 'https://example.com/%C3%BCmlat.php&amp;q=name',
+            ],
+            'non-ascii characters - cyrillic' => [
+                'input path' => 'https://example.com/кириллица.php&q=name',
+                'expected path' => 'https://example.com/%D0%BA%D0%B8%D1%80%D0%B8%D0%BB%D0%BB%D0%B8%D1%86%D0%B0.php&amp;q=name',
+            ],
+            'non-ascii characters - korean' => [
+                'input path' => 'https://example.com/Hello/세상아/세상아-안녕',
+                'expected path' => 'https://example.com/Hello/%EC%84%B8%EC%83%81%EC%95%84/%EC%84%B8%EC%83%81%EC%95%84-%EC%95%88%EB%85%95',
+            ],
+            'non-ascii characters - japanese' => [
+                'input path' => 'https://example.com/Hello/世界/こんにちは、世界',
+                'expected path' => 'https://example.com/Hello/%E4%B8%96%E7%95%8C/%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF%E3%80%81%E4%B8%96%E7%95%8C',
+            ],
+            'non-ascii characters - chinese' => [
+                'input path' => 'https://example.com/Hello/世界/你好，世界',
+                'expected path' => 'https://example.com/Hello/%E4%B8%96%E7%95%8C/%E4%BD%A0%E5%A5%BD%EF%BC%8C%E4%B8%96%E7%95%8C',
+            ],
+            'non-ascii characters - czech' => [
+                'input path' => 'https://example.com/Hello/Světe/Ahoj-Světe',
+                'expected path' => 'https://example.com/Hello/Sv%C4%9Bte/Ahoj-Sv%C4%9Bte',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider URLsWithHTMLSpecialCharsData
+     */
+    public function testEncodeEscapeURL($inputPath, $expectedURL)
+    {
+        $siteURL = 'https://example.com';
+        $outputDir = '/tmp';
+
+        $class = new ReflectionClass('Icamys\SitemapGenerator\SitemapGenerator');
+        $method = $class->getMethod('encodeEscapeURL');
+        $method->setAccessible(true);
+        $obj = new SitemapGenerator($siteURL, $outputDir);
+        try {
+            $gotURL = $method->invokeArgs($obj, array($inputPath));
+        } catch (Exception $e) {
+            $this->fail('Exception thrown: ' . $e->getMessage());
+        }
+        $this->assertEquals($expectedURL, $gotURL);
+    }
 }
