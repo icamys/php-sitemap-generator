@@ -55,14 +55,17 @@ jobs:
       - name: Install dependencies with Composer
         run: composer install --no-interaction --prefer-source
 
+      - name: Create tests results directory
+        run: "mkdir ${{ github.workspace }}/tests-results"
+
       - name: Set up cache for tests results
         uses: actions/cache@v3.3.1
         with:
-          path: "${{ github.workspace }}"
-          key: "${{ runner.os }}-path"
+          path: "${{ github.workspace }}/tests-results"
+          key: "${{ runner.os }}-php-${{ matrix.php-version }}-tests-results"
 
       - name: Run tests
-        run: "vendor/bin/phpunit --coverage-clover=${{ github.workspace }}/coverage.xml"
+        run: "vendor/bin/phpunit --coverage-clover=${{ github.workspace }}/tests-results/coverage.xml"
 
   code-coverage:
     name: Code Coverage
@@ -79,7 +82,7 @@ jobs:
       - name: Set up cache for tests results
         uses: actions/cache@v3.3.1
         with:
-          path: "${{ github.workspace }}"
-          key: "${{ runner.os }}-path"
+          path: "${{ github.workspace }}/tests-results"
+          key: "${{ runner.os }}-php-8.2-tests-cache"
 
-      - run: "bash <(curl -s https://codecov.io/bash) -f ${{ github.workspace }}/coverage.xml"
+      - run: "bash <(curl -s https://codecov.io/bash) -f ${{ github.workspace }}/tests-results/coverage.xml"
