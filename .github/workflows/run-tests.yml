@@ -51,11 +51,11 @@ jobs:
       - name: Set up cache for tests results
         uses: actions/cache@v3.3.1
         with:
-          path: "${{ github.workspace }}/tests/cache"
+          path: "${{ github.workspace }}"
           key: "${{ runner.os }}-path"
 
       - name: Run tests
-        run: vendor/bin/phpunit --coverage-clover=tests/cache/coverage.xml
+        run: "vendor/bin/phpunit --coverage-clover=${{ github.workspace }}/coverage.xml"
 
   code-coverage:
     name: Code Coverage
@@ -72,7 +72,7 @@ jobs:
       - name: Set up cache for tests results
         uses: actions/cache@v3.3.1
         with:
-          path: "${{ github.workspace }}/tests/cache"
+          path: "${{ github.workspace }}"
           key: "${{ runner.os }}-path"
 
-      - run: "bash <(curl -s https://codecov.io/bash) -f ${{ github.workspace }}/tests/cache/coverage.xml"
+      - run: "bash <(curl -s https://codecov.io/bash) -f ${{ github.workspace }}/coverage.xml"
