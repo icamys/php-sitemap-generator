@@ -15,14 +15,15 @@
   ],
   "require": {
     "php": "^8.0",
-    "ext-SPL": "*",
-    "ext-xml": "*",
-    "ext-dom": "*",
-    "ext-simplexml": "*",
-    "ext-mbstring": "*",
-    "ext-zlib": "*",
     "ext-curl": "*",
-    "ext-xmlwriter": "*"
+    "ext-dom": "*",
+    "ext-mbstring": "*",
+    "ext-simplexml": "*",
+    "ext-SPL": "*",
+    "ext-tokenizer": "*",
+    "ext-xml": "*",
+    "ext-xmlwriter": "*",
+    "ext-zlib": "*"
   },
   "autoload": {
     "psr-4": {"Icamys\\SitemapGenerator\\": "src/"}

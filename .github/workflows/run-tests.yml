@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      PHP_EXTENSIONS: none, curl, dom, mbstring, simplexml, xml, xmlwriter, zlib
+      PHP_EXTENSIONS: none, curl, dom, mbstring, simplexml, tokenizer, xml, xmlwriter, zlib
 
     strategy:
       matrix:
