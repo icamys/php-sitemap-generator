@@ -75,4 +75,4 @@ jobs:
           path: "${{ github.workspace }}/tests/cache"
           key: "${{ runner.os }}-path"
 
-      - run: bash <(curl -s https://codecov.io/bash) -f tests/cache/coverage.xml
+      - run: "bash <(curl -s https://codecov.io/bash) -f ${{ github.workspace }}/tests/cache/coverage.xml"
