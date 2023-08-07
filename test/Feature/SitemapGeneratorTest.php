@@ -742,7 +742,7 @@ class SitemapGeneratorTest extends TestCase
     public function testGoogleVideoExtension()
     {
         $siteUrl = 'https://example.com';
-        $outputDir = '/tmp';
+        $outputDir = sys_get_temp_dir();
 
         $generator = new SitemapGenerator($siteUrl, $outputDir);
 
@@ -829,7 +829,7 @@ class SitemapGeneratorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: thumbnail_loc, title, description');
         $siteUrl = 'https://example.com';
-        $outputDir = '/tmp';
+        $outputDir = sys_get_temp_dir();
         $generator = new SitemapGenerator($siteUrl, $outputDir);
         $extensions = ['google_video' => []];
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
@@ -840,7 +840,7 @@ class SitemapGeneratorTest extends TestCase
     public function testGoogleImageExtension()
     {
         $siteUrl = 'https://example.com';
-        $outputDir = '/tmp';
+        $outputDir = sys_get_temp_dir();
 
         $generator = new SitemapGenerator($siteUrl, $outputDir);
 
@@ -876,7 +876,7 @@ class SitemapGeneratorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: loc');
         $siteUrl = 'https://example.com';
-        $outputDir = '/tmp';
+        $outputDir = sys_get_temp_dir();
         $generator = new SitemapGenerator($siteUrl, $outputDir);
         $extensions = ['google_image' => []];
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
@@ -935,7 +935,7 @@ class SitemapGeneratorTest extends TestCase
     public function testEncodeEscapeURL($inputPath, $expectedURL)
     {
         $siteURL = 'https://example.com';
-        $outputDir = '/tmp';
+        $outputDir = sys_get_temp_dir();
 
         $class = new ReflectionClass('Icamys\SitemapGenerator\SitemapGenerator');
         $method = $class->getMethod('encodeEscapeURL');
