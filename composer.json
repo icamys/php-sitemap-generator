@@ -20,7 +20,6 @@
     "ext-mbstring": "*",
     "ext-simplexml": "*",
     "ext-SPL": "*",
-    "ext-tokenizer": "*",
     "ext-xml": "*",
     "ext-xmlwriter": "*",
     "ext-zlib": "*"
