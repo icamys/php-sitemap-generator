@@ -1,12 +1,16 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="3"
-    resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
-    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    xsi:schemaLocation="https://getpsalm.org/schema/config ../vendor/vimeo/psalm/config.xsd"
+    resolveFromConfigFile="false"
+    cacheDirectory=".psalm/cache"
+    checkForThrowsDocblock="true"
+    findUnusedVariablesAndParams="false"
+    findUnusedCode="false"
+    errorBaseline=".psalm/baseline.xml"
     findUnusedBaselineEntry="true"
-    errorBaseline="known-psalm-issues.xml"
+    errorLevel="3"
 >
     <projectFiles>
         <directory name="src" />

@@ -1,28 +1,62 @@
-name: Run tests
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+name: CI
+
 on:
-  push:
-    branches:
-    - "**/*"
+  - pull_request
+  - push
 
 env:
   XDEBUG_MODE: coverage
 jobs:
-  test:
+  type-checker:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout
+      - name: Checkout
+        uses: actions/checkout@v3.5.0
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@2.25.0
+        with:
+          tools: phpunit
+          php-version: 8.2
+
+      - name: Set up cache
+        uses: actions/cache@v3.3.1
+        with:
+          path: "${{ github.workspace }}/.composer/cache"
+          key: "${{ runner.os }}-path"
+
+      - name: Install dependencies with Composer
+        run: composer install --no-interaction --prefer-source
+
+      - name: Run Psalm
+        run: vendor/bin/psalm --config=.psalm/config.xml --no-progress --shepherd --show-info=false --stats
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
       uses: actions/checkout@v3.5.0
-    - uses: shivammathur/setup-php@2.25.0
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@2.25.0
       with:
         tools: phpunit
         php-version: "${{ matrix.php }}"
+
     - name: Set up cache
       uses: actions/cache@v3.3.1
       with:
         path: "${{ github.workspace }}/.composer/cache"
         key: "${{ runner.os }}-path"
-    - run: composer install --no-interaction --prefer-source
-    - run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+    - name: Install dependencies with Composer
+      run: composer install --no-interaction --prefer-source
+
+    - name: Run tests
+      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
     - run: bash <(curl -s https://codecov.io/bash)
       if: "${{ success() }}"
     - run: vendor/bin/psalm
