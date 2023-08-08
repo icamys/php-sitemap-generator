@@ -101,5 +101,8 @@ jobs:
         run: "vendor/bin/phpunit --coverage-clover=coverage.xml"
 
       - name: Upload coverage to Codecov
-        run: "bash <(curl -s https://codecov.io/bash) -f coverage.xml"
-        if: "${{ success() }}"
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
