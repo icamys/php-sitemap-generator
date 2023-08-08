@@ -78,6 +78,7 @@ jobs:
         with:
           tools: phpunit
           php-version: 8.2
+          coverage: xdebug
           extensions: ${{ env.PHP_EXTENSIONS }}
 
       - name: Validate composer.json and composer.lock
@@ -98,11 +99,12 @@ jobs:
         run: composer install --no-interaction --prefer-source
 
       - name: Run tests
-        run: "vendor/bin/phpunit --coverage-clover=coverage.xml"
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
           fail_ci_if_error: true
           verbose: true
