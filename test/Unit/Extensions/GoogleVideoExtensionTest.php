@@ -215,4 +215,221 @@ class GoogleVideoExtensionTest extends TestCase
         ];
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
+
+    public function testMissingPriceCurrency()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'price' => [
+                [
+                    'value' => 10.5
+                ]
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value price.currency is required');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testMissingPriceValue()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'price' => [
+                [
+                    'currency' => 'USD'
+                ]
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value price.value is required');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testInvalidPriceValue()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'price' => [
+                [
+                    'currency' => 'USD',
+                    'value' => -5.0
+                ]
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value price.value should be a float value more than 0');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testInvalidPriceType()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'price' => [
+                [
+                    'currency' => 'USD',
+                    'value' => 10.5,
+                    'type' => 'invalid'
+                ]
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid price.type value. Allowed values are rent or own.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testInvalidPriceResolution()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'price' => [
+                [
+                    'currency' => 'USD',
+                    'value' => 10.5,
+                    'resolution' => 'invalid'
+                ]
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid price.resolution value. Allowed values are hd or sd.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testInvalidRequiresSubscriptionValue()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'requires_subscription' => 'invalid'
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid requires_subscription value. Allowed values are yes or no.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testUploaderValueTooLarge()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'uploader' => [
+                'value' => str_repeat('a', 256)
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value uploader.value is too large, max 255 characters.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testUploaderInfoDomainMismatch()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'uploader' => [
+                'value' => 'UploaderName',
+                'info' => 'http://different-domain.com/uploader-info'
+            ]
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The uploader.info must be in the same domain as the <loc> tag.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testInvalidLiveValue()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'live' => 'invalid'
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid live value. Allowed values are yes or no.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testTooManyTags()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'tag' => array_fill(0, 33, 'tag')
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The array tag is too large, max 32 tags.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
+
+    public function testCategoryValueTooLarge()
+    {
+        $loc = 'http://example.com';
+        $extFields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'player_loc' => 'test',
+            'category' => str_repeat('a', 257)
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value category is too large, max 256 characters.');
+
+        GoogleVideoExtension::validate($loc, $extFields);
+    }
 }
