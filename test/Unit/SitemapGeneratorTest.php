@@ -161,6 +161,81 @@ class SitemapGeneratorTest extends TestCase
         $this->g->setSitemapStylesheet("");
     }
 
+    public function testSubmitSitemapExceptionWhenCurlResourceInitFails()
+    {
+        $this->g->addURL("/path/to/page-1/");
+        $this->g->flush();
+        $this->g->finalize();
+
+        $this->runtime->expects(self::any())
+            ->method('extension_loaded')
+            ->with('curl')
+            ->willReturn(true);
+
+        $this->runtime->expects(self::any())
+            ->method('curl_init')
+            ->with(self::anything())
+            ->willReturn(false);
+
+        $this->expectException(RuntimeException::class);
+        $this->g->submitSitemap();
+    }
+
+    public function testSubmitSitemapExceptionWhenCurlSetOptFails()
+    {
+        $this->g->addURL("/path/to/page-1/");
+        $this->g->flush();
+        $this->g->finalize();
+
+        $this->runtime->expects(self::any())
+            ->method('extension_loaded')
+            ->with('curl')
+            ->willReturn(true);
+
+        $this->runtime->expects(self::any())
+            ->method('curl_init')
+            ->with(self::anything())
+            ->willReturn(true);
+
+        $this->runtime->expects(self::any())
+            ->method('curl_setopt')
+            ->with(self::anything(), CURLOPT_RETURNTRANSFER, true)
+            ->willReturn(false);
+
+        $this->expectException(RuntimeException::class);
+        $this->g->submitSitemap();
+    }
+
+    public function testSubmitSitemapExceptionWhenCurlExecFails()
+    {
+        $this->g->addURL("/path/to/page-1/");
+        $this->g->flush();
+        $this->g->finalize();
+
+        $this->runtime->expects(self::any())
+            ->method('extension_loaded')
+            ->with('curl')
+            ->willReturn(true);
+
+        $this->runtime->expects(self::any())
+            ->method('curl_init')
+            ->with(self::anything())
+            ->willReturn(true);
+
+        $this->runtime->expects(self::any())
+            ->method('curl_setopt')
+            ->with(self::anything(), CURLOPT_RETURNTRANSFER, true)
+            ->willReturn(true);
+
+        $this->runtime->expects(self::any())
+            ->method('curl_exec')
+            ->with(self::anything())
+            ->willReturn(false);
+
+        $this->expectException(RuntimeException::class);
+        $this->g->submitSitemap();
+    }
+
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
