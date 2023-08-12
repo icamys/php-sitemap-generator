@@ -148,11 +148,17 @@ class SitemapGeneratorTest extends TestCase
         $this->g->updateRobots();
     }
 
-
     public function testSubmitSitemapExceptionOnEmptySitemaps()
     {
         $this->expectException(BadMethodCallException::class);
         $this->g->submitSitemap();
+    }
+
+    public function testSetSitemapStylesheetThrowExceptionWhenEmptyPathPassed()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('sitemap stylesheet path should not be empty');
+        $this->g->setSitemapStylesheet("");
     }
 
     protected function setUp(): void

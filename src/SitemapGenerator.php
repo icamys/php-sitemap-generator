@@ -267,6 +267,7 @@ class SitemapGenerator
     /**
      * @param string $path
      * @return SitemapGenerator
+     * @throws InvalidArgumentException
      */
     public function setSitemapStylesheet(string $path): SitemapGenerator
     {
@@ -652,17 +653,17 @@ class SitemapGenerator
         for ($i = 0; $i < count($searchEngines); $i++) {
             $submitUrl = $searchEngines[$i] . htmlspecialchars($this->generatedFiles['sitemaps_index_url'], ENT_QUOTES);
             $curlResource = $this->runtime->curl_init($submitUrl);
-            if ($curlResource == false) {
+            if (!$curlResource) {
                 throw new RuntimeException("failed to execute curl_init for url " . $submitUrl);
             }
-            if ($this->runtime->curl_setopt($curlResource, CURLOPT_RETURNTRANSFER, true) == false) {
+            if (!$this->runtime->curl_setopt($curlResource, CURLOPT_RETURNTRANSFER, true)) {
                 throw new RuntimeException(
                     "failed to set curl option CURLOPT_RETURNTRANSFER to true, error: "
                     . $this->runtime->curl_error($curlResource)
                 );
             }
             $responseContent = $this->runtime->curl_exec($curlResource);
-            if ($responseContent == false) {
+            if (!$responseContent) {
                 throw new RuntimeException(
                     "failed to run curl_exec, error: " . $this->runtime->curl_error($curlResource)
                 );
