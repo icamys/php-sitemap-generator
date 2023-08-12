@@ -27,6 +27,53 @@ class GoogleVideoExtensionTest extends TestCase
         GoogleVideoExtension::validate('http://e.com', $fields);
     }
 
+    public function testInvalidPlatformRelationshipValue() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid platform.relationship value. Allowed values are allow or deny.');
+
+        $fields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'content_loc' => 'test',
+            'platform' => [
+                'relationship' => 'test'
+            ]
+        ];
+        GoogleVideoExtension::validate('http://e.com', $fields);
+    }
+
+    public function testMissingPlatformValueValue() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Value platform.value is required.');
+
+        $fields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'content_loc' => 'test',
+            'platform' => []
+        ];
+        GoogleVideoExtension::validate('http://e.com', $fields);
+    }
+
+    public function testInvalidPlatformValueValue() {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid platform.relationship value. '
+            .'Expecting a list of space-delimited platform types: web, mobile, tv.');
+
+        $fields = [
+            'thumbnail_loc' => 'test',
+            'title' => 'test',
+            'description' => 'test',
+            'content_loc' => 'test',
+            'platform' => [
+                'value' => 'test'
+            ]
+        ];
+        GoogleVideoExtension::validate('http://e.com', $fields);
+    }
+
     public function testTooLongDescriptionException() {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The field description must be less than or equal to a 2048');
