@@ -13,6 +13,22 @@ class GoogleImageExtension
 
     public static function writeImageTag(XMLWriter $xmlWriter, array $extFields)
     {
+        // If an assoc array, process it directly. If a numeric array, use foreach. Supported by PHP versions even older than 8.
+        if(is_array($extFields) && array_keys($extFields) !== range(0, count($extFields) - 1))
+        {
+            self::writeImageTagSingle($xmlWriter, $extFields);
+        }
+        else
+        {
+            foreach ($extFields as $extFieldSingle)
+            {
+                self::writeImageTagSingle($xmlWriter, $extFieldSingle);
+            }
+        }
+    }
+
+    public static function writeImageTagSingle(XMLWriter $xmlWriter, array $extFields)
+    {
         self::validate($extFields);
 
         $xmlWriter->startElement('image:image');
@@ -38,6 +54,22 @@ class GoogleImageExtension
     }
 
     public static function validate($extFields)
+    {
+        // If an assoc array, process it directly. If a numeric array, use foreach. Supported by PHP versions even older than 8.
+        if(is_array($extFields) && array_keys($extFields) !== range(0, count($extFields) - 1))
+        {
+            self::validateSingle($extFields);
+        }
+        else
+        {
+            foreach ($extFields as $extFieldSingle)
+            {
+                self::validateSingle($extFieldSingle);
+            }
+        }
+    }
+
+    public static function validateSingle($extFields)
     {
         $extFieldNames = array_keys($extFields);
 
