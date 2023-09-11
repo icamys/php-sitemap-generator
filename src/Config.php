@@ -5,19 +5,24 @@ namespace Icamys\SitemapGenerator;
 class Config implements IConfig
 {
     /**
-     * @var string Base URL of the website.
+     * @var string URL of the website.
      * It is used as a prefix to the paths added to sitemap using addURL() method.
      */
-    public string $baseURL;
+    private string $baseURL;
+
+    /**
+     * @var string URL of the sitemap file.
+     */
+    private string $sitemapIndexURL = "";
 
     /**
      * @var string Path to the directory where the sitemap and robots files will be saved.
      */
-    public string $saveDirectory = "";
+    private string $saveDirectory = "";
 
-    public IFileSystem|null $fs;
+    private IFileSystem|null $fs;
 
-    public IRuntime|null $runtime;
+    private IRuntime|null $runtime;
 
     public function __construct()
     {
@@ -94,6 +99,17 @@ class Config implements IConfig
     public function setRuntime(IRuntime|null $runtime): Config
     {
         $this->runtime = $runtime;
+        return $this;
+    }
+
+    public function getSitemapIndexURL(): string
+    {
+        return $this->sitemapIndexURL;
+    }
+
+    public function setSitemapIndexURL(string $sitemapIndexURL): Config
+    {
+        $this->sitemapIndexURL = $sitemapIndexURL;
         return $this;
     }
 }

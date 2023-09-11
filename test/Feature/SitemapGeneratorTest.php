@@ -911,6 +911,106 @@ class SitemapGeneratorTest extends TestCase
         $generator->finalize();
     }
 
+    public function testMultipleSitemapsWithSitemapBaseUrl()
+    {
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+        $config->setSitemapIndexURL('https://example.com/sitemaps/');
+
+        $generator = new SitemapGenerator($config);
+        $generator->setMaxUrlsPerSitemap(1);
+        $alternates = [
+            ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
+            ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
+        ];
+
+        $datetimeStr = '2020-12-29T08:46:55+00:00';
+        $lastmod = new DateTime($datetimeStr);
+
+        for ($i = 0; $i < 2; $i++) {
+            $generator->addURL("/path/to/page-$i/", $lastmod, 'always', 0.5, $alternates);
+        }
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapIndexFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap-index.xml';
+        $this->assertFileExists($sitemapIndexFilepath);
+        $sitemapIndex = new SimpleXMLElement(file_get_contents($sitemapIndexFilepath));
+        $this->assertEquals('sitemapindex', $sitemapIndex->getName());
+        $this->assertEquals(2, $sitemapIndex->count());
+        $ns = $sitemapIndex->getNamespaces();
+        $this->assertEquals('http://www.w3.org/2001/XMLSchema-instance', $ns['xsi']);
+        $this->assertEquals('http://www.sitemaps.org/schemas/sitemap/0.9', array_shift($ns));
+        $this->assertEquals('https://example.com/sitemaps/sitemap1.xml', $sitemapIndex->sitemap[0]->loc);
+        $this->assertNotNull($sitemapIndex->sitemap[0]->lastmod);
+        $this->assertEquals('https://example.com/sitemaps/sitemap2.xml', $sitemapIndex->sitemap[1]->loc);
+        $this->assertNotNull($sitemapIndex->sitemap[1]->lastmod);
+        unlink($sitemapIndexFilepath);
+
+        $sitemapFilepath1 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml';
+        $this->assertFileExists($sitemapFilepath1);
+
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath1), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
+        $sitemap1 = new SimpleXMLElement(file_get_contents($sitemapFilepath1));
+        $this->assertEquals('urlset', $sitemap1->getName());
+        $this->assertEquals(1, $sitemap1->count());
+        $ns = $sitemap1->getNamespaces();
+        $this->assertEquals('http://www.w3.org/2001/XMLSchema-instance', $ns['xsi']);
+        $this->assertEquals('http://www.sitemaps.org/schemas/sitemap/0.9', array_shift($ns));
+        $this->assertEquals('https://example.com/path/to/page-0/', $sitemap1->url[0]->loc);
+        $this->assertEquals($datetimeStr, $sitemap1->url[0]->lastmod);
+        $this->assertEquals('always', $sitemap1->url[0]->changefreq);
+        $this->assertEquals('0.5', $sitemap1->url[0]->priority);
+        unlink($sitemapFilepath1);
+
+        $sitemapFilepath2 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml';
+        $this->assertFileExists($sitemapFilepath2);
+
+        $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath2), 0, false, 'xhtml', true);
+        foreach ($sitemapXHTML->children() as $url) {
+            $links = $url->children('xhtml', true)->link;
+            $this->assertEquals('alternate', $links[0]->attributes()['rel']);
+            $this->assertEquals('de', $links[0]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/de', $links[0]->attributes()['href']);
+            $this->assertEquals('alternate', $links[1]->attributes()['rel']);
+            $this->assertEquals('fr', $links[1]->attributes()['hreflang']);
+            $this->assertEquals('http://www.example.com/fr', $links[1]->attributes()['href']);
+        }
+
+        $sitemap2 = new SimpleXMLElement(file_get_contents($sitemapFilepath2));
+        $this->assertEquals('urlset', $sitemap2->getName());
+        $this->assertEquals(1, $sitemap2->count());
+        $ns = $sitemap2->getNamespaces();
+        $this->assertEquals('http://www.w3.org/2001/XMLSchema-instance', $ns['xsi']);
+        $this->assertEquals('http://www.sitemaps.org/schemas/sitemap/0.9', array_shift($ns));
+        $this->assertEquals('https://example.com/path/to/page-1/', $sitemap2->url[0]->loc);
+        $this->assertEquals($datetimeStr, $sitemap2->url[0]->lastmod);
+        $this->assertEquals('always', $sitemap2->url[0]->changefreq);
+        $this->assertEquals('0.5', $sitemap2->url[0]->priority);
+        unlink($sitemapFilepath2);
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(3, $generatedFiles);
+        $this->assertNotEmpty($generatedFiles['sitemaps_location']);
+        $this->assertCount(2, $generatedFiles['sitemaps_location']);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals('https://example.com/sitemaps/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
+    }
+
     public function URLsWithHTMLSpecialCharsData(): array {
         return [
             'ampersand' => [

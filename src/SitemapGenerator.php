@@ -94,6 +94,13 @@ class SitemapGenerator
      */
     private $baseURL;
     /**
+     * URL to sitemap file(s).
+     * Script will use it to reference sitemap files in robots.txt and sitemap index.
+     * @var string
+     * @access private
+     */
+    private $sitemapIndexURL;
+    /**
      * Base path. Relative to script location.
      * Use this if Your sitemap and robots files should be stored in other
      * directory then script.
@@ -209,6 +216,11 @@ class SitemapGenerator
     public function __construct(IConfig $config)
     {
         $this->baseURL = rtrim($config->getBaseURL(), '/');
+        $this->sitemapIndexURL = rtrim($config->getBaseURL(), '/');
+
+        if ($config->getSitemapIndexURL()) {
+            $this->sitemapIndexURL = rtrim($config->getSitemapIndexURL(), '/');
+        }
 
         if ($config->getFS() === null) {
             $this->fs = new FileSystem();
@@ -432,9 +444,10 @@ class SitemapGenerator
         $this->isSitemapStarted = true;
     }
 
-    private function encodeEscapeURL($url): string {
+    private function encodeEscapeURL($url): string
+    {
         // In-place encoding only on non-ASCII characters, like browsers do.
-        $encoded = preg_replace_callback('/[^\x20-\x7f]/', function($match) {
+        $encoded = preg_replace_callback('/[^\x20-\x7f]/', function ($match) {
             return urlencode($match[0]);
         }, $url);
         return htmlspecialchars($encoded, ENT_QUOTES, 'UTF-8');
@@ -548,7 +561,7 @@ class SitemapGenerator
                 $this->fs->rename($this->flushedSitemaps[0], $targetSitemapFilepath);
             }
             $this->generatedFiles['sitemaps_location'] = [$targetSitemapFilepath];
-            $this->generatedFiles['sitemaps_index_url'] = $this->baseURL . '/' . $targetSitemapFilename;
+            $this->generatedFiles['sitemaps_index_url'] = $this->sitemapIndexURL . '/' . $targetSitemapFilename;
         } else if (count($this->flushedSitemaps) > 1) {
             $ext = '.' . pathinfo($this->sitemapFileName, PATHINFO_EXTENSION);
             $targetExt = $ext;
@@ -568,7 +581,8 @@ class SitemapGenerator
                 } else {
                     $this->fs->rename($flushedSitemap, $targetSitemapFilepath);
                 }
-                $sitemapsUrls[] = htmlspecialchars($this->baseURL . '/' . $targetSitemapFilename, ENT_QUOTES);
+                $sitemapsUrls[] = htmlspecialchars(
+                    $this->sitemapIndexURL . '/' . $targetSitemapFilename, ENT_QUOTES);
                 $targetSitemapFilepaths[] = $targetSitemapFilepath;
             }
 
@@ -576,7 +590,7 @@ class SitemapGenerator
             $this->createSitemapIndex($sitemapsUrls, $targetSitemapIndexFilepath);
             $this->generatedFiles['sitemaps_location'] = $targetSitemapFilepaths;
             $this->generatedFiles['sitemaps_index_location'] = $targetSitemapIndexFilepath;
-            $this->generatedFiles['sitemaps_index_url'] = $this->baseURL . '/' . $this->sitemapIndexFileName;
+            $this->generatedFiles['sitemaps_index_url'] = $this->sitemapIndexURL . '/' . $this->sitemapIndexFileName;
         } else {
             throw new RuntimeException('failed to finalize, please add urls and flush first');
         }

@@ -34,14 +34,18 @@ include "vendor/autoload.php";
 
 $config = new \Icamys\SitemapGenerator\Config();
 
-// Your site URL
+// Your site URL.
 $config->setBaseURL('https://example.com');
 
-// Setting the current working directory to be output directory
+// OPTIONAL. Setting the current working directory to be output directory
 // for generated sitemaps (and, if needed, robots.txt)
 // The output directory setting is optional and provided for demonstration purposes.
 // The generator writes output to the current directory by default. 
 $config->setSaveDirectory(sys_get_temp_dir());
+
+// OPTIONAL. Setting a custom sitemap URL base in case if the sitemap files location
+// is different from the website root. Most of the time this is unnecessary and can be skipped. 
+$config->setSitemapIndexURL('https://example.com/sitemaps/');
 
 $generator = new \Icamys\SitemapGenerator\SitemapGenerator($config);
 
