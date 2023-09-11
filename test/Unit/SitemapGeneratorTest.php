@@ -113,13 +113,13 @@ class SitemapGeneratorTest extends TestCase
     public function testSetMaxURLsPerSitemapLeftOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
-        $this->g->setMaxUrlsPerSitemap(0);
+        $this->g->setMaxURLsPerSitemap(0);
     }
 
     public function testSetMaxURLsPerSitemapRightOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
-        $this->g->setMaxUrlsPerSitemap(50001);
+        $this->g->setMaxURLsPerSitemap(50001);
     }
 
     public function testAddURLWithInvalidChangeFreq()
@@ -185,6 +185,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->flush();
         $this->g->finalize();
 
+        $curlHandle = curl_init();
+
         $this->runtime->expects(self::any())
             ->method('extension_loaded')
             ->with('curl')
@@ -193,7 +195,7 @@ class SitemapGeneratorTest extends TestCase
         $this->runtime->expects(self::any())
             ->method('curl_init')
             ->with(self::anything())
-            ->willReturn(true);
+            ->willReturn($curlHandle);
 
         $this->runtime->expects(self::any())
             ->method('curl_setopt')
@@ -210,6 +212,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->flush();
         $this->g->finalize();
 
+        $curlHandle = curl_init();
+
         $this->runtime->expects(self::any())
             ->method('extension_loaded')
             ->with('curl')
@@ -218,7 +222,7 @@ class SitemapGeneratorTest extends TestCase
         $this->runtime->expects(self::any())
             ->method('curl_init')
             ->with(self::anything())
-            ->willReturn(true);
+            ->willReturn($curlHandle);
 
         $this->runtime->expects(self::any())
             ->method('curl_setopt')
@@ -238,6 +242,10 @@ class SitemapGeneratorTest extends TestCase
     {
         $this->fs = $this->createMock(FileSystem::class);
         $this->runtime = $this->createMock(Runtime::class);
+        $this->runtime
+            ->expects($this->exactly(1))
+            ->method('is_writable')
+            ->willReturn(true);
 
         $config = new Config();
         $config->setBaseURL('http://example.com');

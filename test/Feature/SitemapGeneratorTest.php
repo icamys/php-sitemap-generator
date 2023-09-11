@@ -394,7 +394,7 @@ class SitemapGeneratorTest extends TestCase
         $config->setSaveDirectory(sys_get_temp_dir());
 
         $generator = new SitemapGenerator($config);
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxURLsPerSitemap(1);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -494,7 +494,7 @@ class SitemapGeneratorTest extends TestCase
 
         $generator = new SitemapGenerator($config);
         $generator->setSitemapIndexFilename('custom-index.xml');
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxURLsPerSitemap(1);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -538,7 +538,7 @@ class SitemapGeneratorTest extends TestCase
         $config->setSaveDirectory(sys_get_temp_dir());
 
         $generator = new SitemapGenerator($config);
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxURLsPerSitemap(1);
         $generator->enableCompression();
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
@@ -655,7 +655,12 @@ class SitemapGeneratorTest extends TestCase
         foreach ($submitUrls as $url) {
             $consecutiveCallUrls[] = [$this->equalTo($url)];
         }
+        $curlHandle = curl_init();
         $runtimeMock = $this->createMock(Runtime::class);
+        $runtimeMock
+            ->expects($this->exactly(1))
+            ->method('is_writable')
+            ->willReturn(true);
         $runtimeMock
             ->expects($this->exactly(1))
             ->method('extension_loaded')
@@ -665,7 +670,7 @@ class SitemapGeneratorTest extends TestCase
             ->expects($this->exactly(count($consecutiveCallUrls)))
             ->method('curl_init')
             ->withConsecutive(...$consecutiveCallUrls)
-            ->willReturn(true);
+            ->willReturn($curlHandle);
         $runtimeMock
             ->expects($this->exactly(count($consecutiveCallUrls)))
             ->method('curl_getinfo')
@@ -723,6 +728,10 @@ class SitemapGeneratorTest extends TestCase
             ->method('extension_loaded')
             ->with('curl')
             ->willReturn(false);
+        $runtimeMock
+            ->expects($this->exactly(1))
+            ->method('is_writable')
+            ->willReturn(true);
 
         $config = new Config();
         $config->setBaseURL('https://example.com');
@@ -919,7 +928,7 @@ class SitemapGeneratorTest extends TestCase
         $config->setSitemapIndexURL('https://example.com/sitemaps/');
 
         $generator = new SitemapGenerator($config);
-        $generator->setMaxUrlsPerSitemap(1);
+        $generator->setMaxURLsPerSitemap(1);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],

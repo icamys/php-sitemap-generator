@@ -57,7 +57,7 @@ $generator->enableCompression();
 // and your sitemap is out of allowed size (50Mb)
 // according to the standard protocol 50000 urls per sitemap
 // is the maximum allowed value (see http://www.sitemaps.org/protocol.html)
-$generator->setMaxUrlsPerSitemap(50000);
+$generator->setMaxURLsPerSitemap(50000);
 
 // Set the sitemap file name
 $generator->setSitemapFileName("sitemap.xml");
