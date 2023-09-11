@@ -2,7 +2,7 @@
 
 namespace Icamys\SitemapGenerator;
 
-class FileSystem
+class FileSystem implements IFileSystem
 {
     public function file_get_contents($filepath)
     {

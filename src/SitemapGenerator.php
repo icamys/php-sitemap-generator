@@ -100,7 +100,7 @@ class SitemapGenerator
      * @var string
      * @access private
      */
-    private $basePath;
+    private $saveDirectory;
     /**
      * Version of this class
      * @var string
@@ -204,37 +204,35 @@ class SitemapGenerator
     private $generatedFiles = [];
 
     /**
-     * @param string $baseURL You site URL
-     * @param string $basePath Relative path where sitemap and robots should be stored.
-     * @param FileSystem|null $fs
-     * @param Runtime|null $runtime
+     * @param IConfig $config Configuration object.
      */
-    public function __construct(string $baseURL, string $basePath = "", FileSystem $fs = null, Runtime $runtime = null)
+    public function __construct(IConfig $config)
     {
-        $this->baseURL = rtrim($baseURL, '/');
+        $this->baseURL = rtrim($config->getBaseURL(), '/');
 
-        if ($fs === null) {
+        if ($config->getFS() === null) {
             $this->fs = new FileSystem();
         } else {
-            $this->fs = $fs;
+            $this->fs = $config->getFS();
         }
 
-        if ($runtime === null) {
+        if ($config->getRuntime() === null) {
             $this->runtime = new Runtime();
         } else {
-            $this->runtime = $runtime;
+            $this->runtime = $config->getRuntime();
         }
 
-        if ($this->runtime->is_writable($basePath) === false) {
+        if ($this->runtime->is_writable($config->getSaveDirectory()) === false) {
             throw new InvalidArgumentException(
-                sprintf('the provided basePath (%s) should be a writable directory,', $basePath) .
+                sprintf('the provided basePath (%s) should be a writable directory,', $config->getSaveDirectory()) .
                 ' please check its existence and permissions'
             );
         }
-        if (strlen($basePath) > 0 && substr($basePath, -1) != DIRECTORY_SEPARATOR) {
-            $basePath = $basePath . DIRECTORY_SEPARATOR;
+
+        $this->saveDirectory = $config->getSaveDirectory();
+        if (strlen($this->saveDirectory) > 0 && substr($this->saveDirectory, -1) != DIRECTORY_SEPARATOR) {
+            $this->saveDirectory = $this->saveDirectory . DIRECTORY_SEPARATOR;
         }
-        $this->basePath = $basePath;
 
         $this->xmlWriter = $this->createXmlWriter();
         $this->flushedSitemapFilenameFormat = sprintf("sm-%%d-%d.xml", time());
@@ -487,7 +485,7 @@ class SitemapGenerator
 
     private function flushWriter()
     {
-        $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
+        $targetSitemapFilepath = $this->saveDirectory . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $flushedString = $this->xmlWriter->outputMemory(true);
         $flushedStringLen = mb_strlen($flushedString);
 
@@ -506,7 +504,7 @@ class SitemapGenerator
 
     private function writeSitemapEnd()
     {
-        $targetSitemapFilepath = $this->basePath . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
+        $targetSitemapFilepath = $this->saveDirectory . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $this->xmlWriter->endElement(); // urlset
         $this->xmlWriter->endDocument();
         $this->fs->file_put_contents($targetSitemapFilepath, $this->xmlWriter->flush(true), FILE_APPEND);
@@ -541,7 +539,7 @@ class SitemapGenerator
                 $targetSitemapFilename .= '.gz';
             }
 
-            $targetSitemapFilepath = $this->basePath . $targetSitemapFilename;
+            $targetSitemapFilepath = $this->saveDirectory . $targetSitemapFilename;
 
             if ($this->isCompressionEnabled) {
                 $this->fs->copy($this->flushedSitemaps[0], 'compress.zlib://' . $targetSitemapFilepath);
@@ -562,7 +560,7 @@ class SitemapGenerator
             $targetSitemapFilepaths = [];
             foreach ($this->flushedSitemaps as $i => $flushedSitemap) {
                 $targetSitemapFilename = str_replace($ext, ($i + 1) . $targetExt, $this->sitemapFileName);
-                $targetSitemapFilepath = $this->basePath . $targetSitemapFilename;
+                $targetSitemapFilepath = $this->saveDirectory . $targetSitemapFilename;
 
                 if ($this->isCompressionEnabled) {
                     $this->fs->copy($flushedSitemap, 'compress.zlib://' . $targetSitemapFilepath);
@@ -574,7 +572,7 @@ class SitemapGenerator
                 $targetSitemapFilepaths[] = $targetSitemapFilepath;
             }
 
-            $targetSitemapIndexFilepath = $this->basePath . $this->sitemapIndexFileName;
+            $targetSitemapIndexFilepath = $this->saveDirectory . $this->sitemapIndexFileName;
             $this->createSitemapIndex($sitemapsUrls, $targetSitemapIndexFilepath);
             $this->generatedFiles['sitemaps_location'] = $targetSitemapFilepaths;
             $this->generatedFiles['sitemaps_index_location'] = $targetSitemapIndexFilepath;
@@ -696,7 +694,7 @@ class SitemapGenerator
             throw new BadMethodCallException("To update robots.txt, call finalize() first.");
         }
 
-        $robotsFilePath = $this->basePath . $this->robotsFileName;
+        $robotsFilePath = $this->saveDirectory . $this->robotsFileName;
 
         $robotsFileContent = $this->createNewRobotsContentFromFile($robotsFilePath);
 

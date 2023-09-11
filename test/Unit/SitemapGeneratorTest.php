@@ -16,8 +16,6 @@ class SitemapGeneratorTest extends TestCase
 {
     use PHPMock;
 
-    private $testDomain = 'http://example.com';
-
     /**
      * @var SitemapGenerator
      */
@@ -240,7 +238,13 @@ class SitemapGeneratorTest extends TestCase
     {
         $this->fs = $this->createMock(FileSystem::class);
         $this->runtime = $this->createMock(Runtime::class);
-        $this->g = new SitemapGenerator($this->testDomain, '', $this->fs, $this->runtime);
+
+        $config = new Config();
+        $config->setBaseURL('http://example.com');
+        $config->setFS($this->fs);
+        $config->setRuntime($this->runtime);
+
+        $this->g = new SitemapGenerator($config);
         $this->now = new DateTime();
     }
 

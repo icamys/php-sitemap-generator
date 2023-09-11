@@ -1,19 +1,19 @@
 <?php
 
+use Icamys\SitemapGenerator\Config;
 use Icamys\SitemapGenerator\Runtime;
 use Icamys\SitemapGenerator\SitemapGenerator;
 use PHPUnit\Framework\TestCase;
 
 class SitemapGeneratorTest extends TestCase
 {
-    private string $saveDir = '.'.DIRECTORY_SEPARATOR.'test'.DIRECTORY_SEPARATOR.'Feature';
-
     public function testSingleSitemapWithDefaultValues()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -29,7 +29,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR. 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR. 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
 
         $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'xhtml', true);
@@ -66,24 +66,27 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($sitemapFilepath, $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSitemapWithStylesheets()
     {
-        $siteUrl = 'https://example.com';
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+
         $stylesheetUrl = "stylesheet.xsl";
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
-        $generator = new SitemapGenerator($siteUrl, $this->saveDir);
+        $generator = new SitemapGenerator($config);
         $generator->setSitemapStylesheet($stylesheetUrl);
         $generator->addURL("/path/to/page-1/", $lastmod, 'always', 0.5);
 
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
 
         $stylesheetAttrs = $this->getXMLStylesheetAttributes($sitemapFilepath);
@@ -95,16 +98,19 @@ class SitemapGeneratorTest extends TestCase
 
     public function testSitemapWithoutStylesheets()
     {
-        $siteUrl = 'https://example.com';
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+
         $lastmod = new DateTime('2020-12-29T08:46:55+00:00');
 
-        $generator = new SitemapGenerator($siteUrl, $this->saveDir);
+        $generator = new SitemapGenerator($config);
         $generator->addURL("/path/to/page-1/", $lastmod, 'always', 0.5);
 
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
 
         $stylesheetAttrs = $this->getXMLStylesheetAttributes($sitemapFilepath);
@@ -147,10 +153,11 @@ class SitemapGeneratorTest extends TestCase
 
     public function testSingleSitemapWithCustomSitemapName()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $generator->setSitemapFilename('custom.xml');
 
         $alternates = [
@@ -164,7 +171,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'custom.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'custom.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
@@ -172,16 +179,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'custom.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($sitemapFilepath, $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/custom.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithExtendedSiteUrl()
     {
-        $siteUrl = 'https://example.com/submodule/';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com/submodule/');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/submodule/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/submodule/fr"],
@@ -196,7 +204,7 @@ class SitemapGeneratorTest extends TestCase
 
         $generator->flush();
         $generator->finalize();
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
 
         $this->assertFileExists($sitemapFilepath);
 
@@ -234,16 +242,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($sitemapFilepath, $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/submodule/sitemap.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithEnabledCompression()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $generator->enableCompression();
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
@@ -260,8 +269,8 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml.gz';
-        $sitemapFilepathUncompressed = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml.gz';
+        $sitemapFilepathUncompressed = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         copy('compress.zlib://' . $sitemapFilepath, $sitemapFilepathUncompressed);
 
@@ -300,16 +309,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml.gz', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($sitemapFilepath, $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/sitemap.xml.gz', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSingleSitemapWithEnabledCompressionAndCreatedRobots()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $generator->enableCompression();
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
@@ -326,8 +336,8 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml.gz';
-        $sitemapFilepathUncompressed = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml.gz';
+        $sitemapFilepathUncompressed = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         copy('compress.zlib://' . $sitemapFilepath, $sitemapFilepathUncompressed);
 
@@ -363,7 +373,7 @@ class SitemapGeneratorTest extends TestCase
         unlink($sitemapFilepathUncompressed);
 
         $generator->updateRobots();
-        $robotsPath = $this->saveDir . DIRECTORY_SEPARATOR . 'robots.txt';
+        $robotsPath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'robots.txt';
         $this->assertFileExists($robotsPath);
         $robotsContent = file_get_contents($robotsPath);
         $this->assertStringContainsString('Sitemap: https://example.com/sitemap.xml.gz', $robotsContent);
@@ -373,16 +383,17 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml.gz', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml.gz', $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/sitemap.xml.gz', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testMultipleSitemapsWithDefaultValues()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $generator->setMaxUrlsPerSitemap(1);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
@@ -399,7 +410,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapIndexFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap-index.xml';
+        $sitemapIndexFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap-index.xml';
         $this->assertFileExists($sitemapIndexFilepath);
         $sitemapIndex = new SimpleXMLElement(file_get_contents($sitemapIndexFilepath));
         $this->assertEquals('sitemapindex', $sitemapIndex->getName());
@@ -413,7 +424,7 @@ class SitemapGeneratorTest extends TestCase
         $this->assertNotNull($sitemapIndex->sitemap[1]->lastmod);
         unlink($sitemapIndexFilepath);
 
-        $sitemapFilepath1 = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap1.xml';
+        $sitemapFilepath1 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml';
         $this->assertFileExists($sitemapFilepath1);
 
         $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath1), 0, false, 'xhtml', true);
@@ -439,7 +450,7 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('0.5', $sitemap1->url[0]->priority);
         unlink($sitemapFilepath1);
 
-        $sitemapFilepath2 = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap2.xml';
+        $sitemapFilepath2 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml';
         $this->assertFileExists($sitemapFilepath2);
 
         $sitemapXHTML = new SimpleXMLElement(file_get_contents($sitemapFilepath2), 0, false, 'xhtml', true);
@@ -469,18 +480,19 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(3, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(2, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
         $this->assertEquals('https://example.com/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testMultipleSitemapsWithCustomSitemapIndexName()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $generator->setSitemapIndexFilename('custom-index.xml');
         $generator->setMaxUrlsPerSitemap(1);
         $alternates = [
@@ -497,15 +509,15 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapIndexFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'custom-index.xml';
+        $sitemapIndexFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'custom-index.xml';
         $this->assertFileExists($sitemapIndexFilepath);
         unlink($sitemapIndexFilepath);
 
-        $sitemapFilepath1 = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap1.xml';
+        $sitemapFilepath1 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml';
         $this->assertFileExists($sitemapFilepath1);
         unlink($sitemapFilepath1);
 
-        $sitemapFilepath2 = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap2.xml';
+        $sitemapFilepath2 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml';
         $this->assertFileExists($sitemapFilepath2);
         unlink($sitemapFilepath2);
 
@@ -513,18 +525,19 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(3, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(2, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'custom-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'custom-index.xml', $generatedFiles['sitemaps_index_location']);
         $this->assertEquals('https://example.com/custom-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testMultipleSitemapsCompressionAndCreatedRobots()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
         $generator->setMaxUrlsPerSitemap(1);
         $generator->enableCompression();
         $alternates = [
@@ -542,7 +555,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapIndexFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap-index.xml';
+        $sitemapIndexFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap-index.xml';
         $this->assertFileExists($sitemapIndexFilepath);
         $sitemapIndex = new SimpleXMLElement(file_get_contents($sitemapIndexFilepath));
         $this->assertEquals('sitemapindex', $sitemapIndex->getName());
@@ -556,7 +569,7 @@ class SitemapGeneratorTest extends TestCase
         $this->assertNotNull($sitemapIndex->sitemap[1]->lastmod);
         unlink($sitemapIndexFilepath);
 
-        $sitemapFilepath1 = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap1.xml';
+        $sitemapFilepath1 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml';
         $sitemapFilepath1Compressed = $sitemapFilepath1 . '.gz';
         $this->assertFileExists($sitemapFilepath1Compressed);
         copy('compress.zlib://' . $sitemapFilepath1Compressed, $sitemapFilepath1);
@@ -585,7 +598,7 @@ class SitemapGeneratorTest extends TestCase
         unlink($sitemapFilepath1);
         unlink($sitemapFilepath1Compressed);
 
-        $sitemapFilepath2 = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap2.xml';
+        $sitemapFilepath2 = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml';
         $sitemapFilepath2Compressed = $sitemapFilepath2 . '.gz';
         $this->assertFileExists($sitemapFilepath2Compressed);
         copy('compress.zlib://' . $sitemapFilepath2Compressed, $sitemapFilepath2);
@@ -616,7 +629,7 @@ class SitemapGeneratorTest extends TestCase
         unlink($sitemapFilepath2Compressed);
 
         $generator->updateRobots();
-        $robotsPath = $this->saveDir . DIRECTORY_SEPARATOR . 'robots.txt';
+        $robotsPath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'robots.txt';
         $this->assertFileExists($robotsPath);
         $robotsContent = file_get_contents($robotsPath);
         $this->assertStringContainsString('Sitemap: https://example.com/sitemap-index.xml', $robotsContent);
@@ -626,16 +639,14 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(3, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(2, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap1.xml.gz', $generatedFiles['sitemaps_location'][0]);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap2.xml.gz', $generatedFiles['sitemaps_location'][1]);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap1.xml.gz', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap2.xml.gz', $generatedFiles['sitemaps_location'][1]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap-index.xml', $generatedFiles['sitemaps_index_location']);
         $this->assertEquals('https://example.com/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 
     public function testSubmitValues()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
         $submitUrls = [
             'http://www.google.com/ping?sitemap=https://example.com/sitemap.xml',
             'http://www.webmaster.yandex.ru/ping?sitemap=https://example.com/sitemap.xml',
@@ -668,7 +679,12 @@ class SitemapGeneratorTest extends TestCase
             ->method('curl_exec')
             ->willReturn(true);
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir, null, $runtimeMock);
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+        $config->setRuntime($runtimeMock);
+
+        $generator = new SitemapGenerator($config);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -683,7 +699,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
@@ -691,7 +707,7 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml', $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
 
         $generator->submitSitemap('');
@@ -700,8 +716,6 @@ class SitemapGeneratorTest extends TestCase
     public function testExceptionWhenCurlIsNotPresent()
     {
         $this->expectException(BadMethodCallException::class);
-        $siteUrl = 'https://example.com';
-        $outputDir = $this->saveDir;
 
         $runtimeMock = $this->createMock(Runtime::class);
         $runtimeMock
@@ -710,7 +724,12 @@ class SitemapGeneratorTest extends TestCase
             ->with('curl')
             ->willReturn(false);
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir, null, $runtimeMock);
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+        $config->setRuntime($runtimeMock);
+
+        $generator = new SitemapGenerator($config);
         $alternates = [
             ['hreflang' => 'de', 'href' => "http://www.example.com/de"],
             ['hreflang' => 'fr', 'href' => "http://www.example.com/fr"],
@@ -725,7 +744,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
         unlink($sitemapFilepath);
 
@@ -733,7 +752,7 @@ class SitemapGeneratorTest extends TestCase
         $this->assertCount(2, $generatedFiles);
         $this->assertNotEmpty($generatedFiles['sitemaps_location']);
         $this->assertCount(1, $generatedFiles['sitemaps_location']);
-        $this->assertEquals($this->saveDir . DIRECTORY_SEPARATOR . 'sitemap.xml', $generatedFiles['sitemaps_location'][0]);
+        $this->assertEquals($config->getSaveDirectory() . DIRECTORY_SEPARATOR . 'sitemap.xml', $generatedFiles['sitemaps_location'][0]);
         $this->assertEquals('https://example.com/sitemap.xml', $generatedFiles['sitemaps_index_url']);
 
         $generator->submitSitemap('');
@@ -741,10 +760,11 @@ class SitemapGeneratorTest extends TestCase
 
     public function testGoogleVideoExtension()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = sys_get_temp_dir();
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
 
         $extensions = [
             'google_video' => [
@@ -793,7 +813,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $outputDir . '/sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
 
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'video', true);
@@ -828,9 +848,12 @@ class SitemapGeneratorTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: thumbnail_loc, title, description');
-        $siteUrl = 'https://example.com';
-        $outputDir = sys_get_temp_dir();
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+
+        $generator = new SitemapGenerator($config);
         $extensions = ['google_video' => []];
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
         $generator->flush();
@@ -839,10 +862,11 @@ class SitemapGeneratorTest extends TestCase
 
     public function testGoogleImageExtension()
     {
-        $siteUrl = 'https://example.com';
-        $outputDir = sys_get_temp_dir();
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+        $generator = new SitemapGenerator($config);
 
         $extensions = [
             'google_image' => [
@@ -859,7 +883,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->flush();
         $generator->finalize();
 
-        $sitemapFilepath = $outputDir . '/sitemap.xml';
+        $sitemapFilepath = $config->getSaveDirectory() . '/sitemap.xml';
         $this->assertFileExists($sitemapFilepath);
 
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'image', true);
@@ -875,9 +899,12 @@ class SitemapGeneratorTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: loc');
-        $siteUrl = 'https://example.com';
-        $outputDir = sys_get_temp_dir();
-        $generator = new SitemapGenerator($siteUrl, $outputDir);
+
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+
+        $generator = new SitemapGenerator($config);
         $extensions = ['google_image' => []];
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
         $generator->flush();
@@ -934,13 +961,14 @@ class SitemapGeneratorTest extends TestCase
      */
     public function testEncodeEscapeURL($inputPath, $expectedURL)
     {
-        $siteURL = 'https://example.com';
-        $outputDir = sys_get_temp_dir();
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
 
         $class = new ReflectionClass('Icamys\SitemapGenerator\SitemapGenerator');
         $method = $class->getMethod('encodeEscapeURL');
         $method->setAccessible(true);
-        $obj = new SitemapGenerator($siteURL, $outputDir);
+        $obj = new SitemapGenerator($config);
         try {
             $gotURL = $method->invokeArgs($obj, array($inputPath));
         } catch (Exception $e) {
