@@ -8,7 +8,7 @@ class Config implements IConfig
      * @var string URL of the website.
      * It is used as a prefix to the paths added to sitemap using addURL() method.
      */
-    private string $baseURL;
+    private string $baseURL = "";
 
     /**
      * @var string URL of the sitemap file.

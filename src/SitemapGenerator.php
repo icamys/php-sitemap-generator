@@ -215,6 +215,10 @@ class SitemapGenerator
      */
     public function __construct(IConfig $config)
     {
+        if ($config->getBaseURL() === null || $config->getBaseURL() === '') {
+            throw new InvalidArgumentException('baseURL config parameter is required');
+        }
+
         $this->baseURL = rtrim($config->getBaseURL(), '/');
         $this->sitemapIndexURL = rtrim($config->getBaseURL(), '/');
 
