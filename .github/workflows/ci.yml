@@ -34,17 +34,6 @@ jobs:
       - name: Validate composer.json and composer.lock
         run: "composer validate --strict"
 
-      - name: Determine composer cache directory
-        id: "determine-composer-cache-directory"
-        run: echo "directory=$(composer config cache-dir)" >> $GITHUB_OUTPUT
-
-      - name: Set up cache for Composer dependencies
-        uses: actions/cache@v3.3.1
-        with:
-          path: "${{ steps.determine-composer-cache-directory.outputs.directory }}"
-          key: "php-8.2-composer-${{ hashFiles('composer.lock') }}"
-          restore-keys: "php-8.2-composer-"
-
       - name: Install dependencies with Composer
         run: composer install --no-interaction --prefer-source --no-progress
 
