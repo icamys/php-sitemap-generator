@@ -213,6 +213,7 @@ class SitemapGenerator
 
     /**
      * @param IConfig $config Configuration object.
+     * @throws InvalidArgumentException
      */
     public function __construct(IConfig $config)
     {
@@ -267,7 +268,10 @@ class SitemapGenerator
 
     /**
      * @param string $filename
+     *
      * @return SitemapGenerator
+     *
+     * @throws InvalidArgumentException
      */
     public function setSitemapFilename(string $filename = ''): SitemapGenerator
     {
@@ -297,7 +301,10 @@ class SitemapGenerator
 
     /**
      * @param string $filename
+     *
      * @return $this
+     *
+     * @throws InvalidArgumentException
      */
     public function setSitemapIndexFilename(string $filename = ''): SitemapGenerator
     {
@@ -311,6 +318,7 @@ class SitemapGenerator
     /**
      * @param string $filename
      * @return $this
+     * @throws InvalidArgumentException
      */
     public function setRobotsFileName(string $filename): SitemapGenerator
     {
@@ -324,6 +332,7 @@ class SitemapGenerator
     /**
      * @param int $value
      * @return $this
+     * @throws OutOfRangeException
      */
     public function setMaxURLsPerSitemap(int $value): SitemapGenerator
     {
@@ -353,6 +362,14 @@ class SitemapGenerator
         return $this->isCompressionEnabled;
     }
 
+    /**
+     * @param string $path
+     * @param string|null $changeFrequency
+     * @param float|null $priority
+     * @param array $extensions
+     * @return void
+     * @throws InvalidArgumentException
+     */
     public function validate(
         string   $path,
         string   $changeFrequency = null,
@@ -395,6 +412,9 @@ class SitemapGenerator
      * @param array|null $alternates
      * @param array $extensions
      * @return $this
+     * @throws OutOfRangeException
+     * @throws UnexpectedValueException
+     * @throws InvalidArgumentException
      */
     public function addURL(
         string   $path,
@@ -466,6 +486,15 @@ class SitemapGenerator
         return htmlspecialchars($encoded, ENT_QUOTES, 'UTF-8');
     }
 
+    /**
+     * @param string $loc
+     * @param DateTime|null $lastModified
+     * @param string|null $changeFrequency
+     * @param float|null $priority
+     * @param array|null $alternates
+     * @param array $extensions
+     * @throws UnexpectedValueException
+     */
     private function writeSitemapUrl(
         string   $loc,
         DateTime $lastModified = null,
@@ -560,6 +589,7 @@ class SitemapGenerator
 
     /**
      * Move flushed files to their final location. Compress if necessary.
+     * @throws RuntimeException
      */
     public function finalize(): void
     {
@@ -641,6 +671,10 @@ class SitemapGenerator
         $this->xmlWriter->writeAttribute('xsi:schemaLocation', 'http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd');
     }
 
+    /**
+     * @param string $url
+     * @throws UnexpectedValueException
+     */
     private function writeSitemapIndexUrl(string $url): void
     {
         $this->xmlWriter->startElement('sitemap');
@@ -738,6 +772,7 @@ class SitemapGenerator
     /**
      * @param string $filepath
      * @return string
+     * @throws RuntimeException
      */
     private function createNewRobotsContentFromFile(string $filepath): string
     {
