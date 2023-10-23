@@ -90,7 +90,7 @@ $generator->finalize();
 // Update robots.txt file in output directory or create a new one
 $generator->updateRobots();
 
-// Submit your sitemaps to Google and Yandex.
+// Submit your sitemaps to Yandex.
 $generator->submitSitemap();
 ```
 
