@@ -1,0 +1,9 @@
+/.github        export-ignore
+/.psalm         export-ignore
+/test           export-ignore
+/.editorconfig  export-ignore
+/.gitattributes export-ignore
+/.gitignore     export-ignore
+/phpunit.xml    export-ignore
+
+*.php diff=php
