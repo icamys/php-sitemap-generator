@@ -394,7 +394,7 @@ class SitemapGenerator
             }
 
             if (isset($extensions['google_image'])) {
-                GoogleImageExtension::validate($extensions['google_image']);
+                GoogleImageExtension::validateEntryFields($extensions['google_image']);
             }
         }
     }

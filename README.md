@@ -169,7 +169,7 @@ To create image sitemap, pass the `$extensions` parameter to the `addURL()` meth
 // Initialize the generator
 // ...
 
-// Initialize variable with image tags
+// Initialize a variable with image tags.
 // For more see the official google documentation:
 // https://developers.google.com/search/docs/advanced/sitemaps/image-sitemaps
 $imageTags = [
@@ -178,6 +178,25 @@ $imageTags = [
     'caption' => 'A funny picture of a cat eating cabbage',
     'geo_location' => 'Lyon, France',
     'license' => 'https://example.com/image-license',
+];
+
+// Alternatively, if you need to pass multiple images per URL, use the format below.
+// Maximum number of images per URL is 1000.
+$imageTags = [
+    [
+        'loc' => 'https://www.example.com/thumbs/123.jpg',
+        'title' => 'Cat vs Cabbage',
+        'caption' => 'A funny picture of a cat eating cabbage',
+        'geo_location' => 'Lyon, France',
+        'license' => 'https://example.com/image-license',
+    ],
+    [
+        'loc' => 'https://www.example.com/thumbs/456.jpg',
+        'title' => 'Dog vs Carrot',
+        'caption' => 'A funny picture of a dog eating carrot',
+        'geo_location' => 'Lyon, France',
+        'license' => 'https://example.com/image-license',
+    ]
 ];
 
 $extensions = [

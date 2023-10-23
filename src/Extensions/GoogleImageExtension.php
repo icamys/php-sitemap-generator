@@ -7,7 +7,17 @@ use XMLWriter;
 
 class GoogleImageExtension
 {
-    private static $requiredFields = [
+    /**
+     * @var int Maximum number of images allowed per page.
+     */
+    private const maxImageCount = 1000;
+
+    /**
+     * @var string
+     */
+    private const maxImageCountRefLink = 'https://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd';
+
+    private static array $requiredFields = [
         'loc',
     ];
 
@@ -19,7 +29,34 @@ class GoogleImageExtension
      */
     public static function writeImageTag(XMLWriter $xmlWriter, array $extFields): void
     {
-        self::validate($extFields);
+        if (has_string_keys($extFields)) {
+            self::writeImageTagSingle($xmlWriter, $extFields);
+        } else {
+            if (count($extFields) > self::maxImageCount) {
+                throw new InvalidArgumentException(
+                    sprintf("Too many images for a single URL. Maximum number of images allowed per page is %d, got %d. For more information, see %s",
+                        self::maxImageCount,
+                        count($extFields),
+                        self::maxImageCountRefLink
+                    )
+                );
+            }
+
+            foreach ($extFields as $extFieldSingle) {
+                self::writeImageTagSingle($xmlWriter, $extFieldSingle);
+            }
+        }
+    }
+
+    /**
+     * @param XMLWriter $xmlWriter
+     * @param array $extFields
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private static function writeImageTagSingle(XMLWriter $xmlWriter, array $extFields): void
+    {
+        self::validateEntryFields($extFields);
 
         $xmlWriter->startElement('image:image');
         $xmlWriter->writeElement('image:loc', $extFields['loc']);
@@ -46,9 +83,23 @@ class GoogleImageExtension
     /**
      * @throws InvalidArgumentException
      */
-    public static function validate($extFields)
+    public static function validateEntryFields($fields): void
     {
-        $extFieldNames = array_keys($extFields);
+        if (has_string_keys($fields))  {
+            self::validateSingleEntryFields($fields);
+        }  else {
+            foreach ($fields as $extFieldSingle) {
+                self::validateSingleEntryFields($extFieldSingle);
+            }
+        }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private static function validateSingleEntryFields($fields): void
+    {
+        $extFieldNames = array_keys($fields);
 
         if (count(array_intersect(self::$requiredFields, $extFieldNames)) !== count(self::$requiredFields)) {
             throw new InvalidArgumentException(
@@ -56,4 +107,13 @@ class GoogleImageExtension
             );
         }
     }
+}
+
+/**
+ * @param array $array
+ * @return bool
+ */
+function has_string_keys(array $array): bool
+{
+    return count(array_filter(array_keys($array), 'is_string')) > 0;
 }
