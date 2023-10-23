@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="3"
+    resolveFromConfigFile="false"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config ../vendor/vimeo/psalm/config.xsd"
+    cacheDirectory=".psalm/cache"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="false"
+    checkForThrowsDocblock="true"
+    findUnusedVariablesAndParams="false"
+    errorBaseline=".psalm/baseline.xml"
+>
+    <projectFiles>
+        <directory name="src" />
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

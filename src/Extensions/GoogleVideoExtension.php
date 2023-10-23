@@ -28,7 +28,14 @@ class GoogleVideoExtension
         'tv',
     ];
 
-    public static function writeVideoTag(XMLWriter $xmlWriter, string $loc, array $extFields)
+    /**
+     * @param XMLWriter $xmlWriter
+     * @param string $loc
+     * @param array $extFields
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    public static function writeVideoTag(XMLWriter $xmlWriter, string $loc, array $extFields): void
     {
         self::validate($loc, $extFields);
 
@@ -117,6 +124,9 @@ class GoogleVideoExtension
         $xmlWriter->endElement();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function validate($loc, $extFields)
     {
         $extFieldNames = array_keys($extFields);

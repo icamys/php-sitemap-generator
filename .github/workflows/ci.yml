@@ -11,8 +11,52 @@ env:
   XDEBUG_MODE: coverage
 
 jobs:
+  code-analysis:
+    name: Code Analysis
+
+    runs-on: ubuntu-latest
+
+    env:
+      PHP_EXTENSIONS: none, curl, dom, mbstring, openssl, simplexml, tokenizer, xml, xmlwriter, zlib
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.5.0
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@2.25.0
+        with:
+          php-version: 8.2
+          tools: none
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+
+      - name: Validate composer.json and composer.lock
+        run: "composer validate --strict"
+
+      - name: Determine composer cache directory
+        id: "determine-composer-cache-directory"
+        run: echo "directory=$(composer config cache-dir)" >> $GITHUB_OUTPUT
+
+      - name: Set up cache for Composer dependencies
+        uses: actions/cache@v3.3.1
+        with:
+          path: "${{ steps.determine-composer-cache-directory.outputs.directory }}"
+          key: "php-8.2-composer-${{ hashFiles('composer.lock') }}"
+          restore-keys: "php-8.2-composer-"
+
+      - name: Install dependencies with Composer
+        run: composer install --no-interaction --prefer-source --no-progress
+
+      - name: Run Psalm on internal code
+        run: vendor/bin/psalm --config=.psalm/config.xml --no-progress --shepherd --show-info=false --stats
+
+
   unit-tests:
     name: Unit Tests
+
+    needs:
+      - code-analysis
 
     runs-on: ${{ matrix.os }}
 
@@ -54,7 +98,7 @@ jobs:
           restore-keys: "php-${{ matrix.php }}-composer-"
 
       - name: Install dependencies with Composer
-        run: composer install --no-interaction --prefer-source
+        run: composer install --no-interaction --prefer-source --no-progress
 
       - name: Run tests
         run: "vendor/bin/phpunit"
@@ -97,7 +141,7 @@ jobs:
           restore-keys: "php-8.2-composer-"
 
       - name: Install dependencies with Composer
-        run: composer install --no-interaction --prefer-source
+        run: composer install --no-interaction --prefer-source --no-progress
 
       - name: Run tests
         run: vendor/bin/phpunit --coverage-clover=coverage.xml

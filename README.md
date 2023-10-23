@@ -2,7 +2,7 @@
 
 ![CI status](https://github.com/icamys/php-sitemap-generator/actions/workflows/ci.yml/badge.svg)
 [![codecov.io](https://codecov.io/github/icamys/php-sitemap-generator/coverage.svg?branch=master)](https://codecov.io/github/icamys/php-sitemap-generator?branch=master)
-[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.3%20%7C%7C%20%3E%3D%208.0-8892BF.svg)](https://php.net/)
+[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%208.0-8892BF.svg)](https://php.net/)
 [![Latest Stable Version](https://poser.pugx.org/icamys/php-sitemap-generator/v/stable.png)](https://packagist.org/packages/icamys/php-sitemap-generator)
 [![Total Downloads](https://poser.pugx.org/icamys/php-sitemap-generator/downloads)](https://packagist.org/packages/icamys/php-sitemap-generator)
 
@@ -32,15 +32,22 @@ If you found this package useful, please [take a short survey](https://forms.gle
 
 include "vendor/autoload.php";
 
-$yourSiteUrl = 'https://example.com';
+$config = new \Icamys\SitemapGenerator\Config();
 
-// Setting the current working directory to be output directory
+// Your site URL.
+$config->setBaseURL('https://example.com');
+
+// OPTIONAL. Setting the current working directory to be output directory
 // for generated sitemaps (and, if needed, robots.txt)
 // The output directory setting is optional and provided for demonstration purposes.
 // The generator writes output to the current directory by default. 
-$outputDir = getcwd();
+$config->setSaveDirectory(sys_get_temp_dir());
 
-$generator = new \Icamys\SitemapGenerator\SitemapGenerator($yourSiteUrl, $outputDir);
+// OPTIONAL. Setting a custom sitemap URL base in case if the sitemap files location
+// is different from the website root. Most of the time this is unnecessary and can be skipped. 
+$config->setSitemapIndexURL('https://example.com/sitemaps/');
+
+$generator = new \Icamys\SitemapGenerator\SitemapGenerator($config);
 
 // Create a compressed sitemap
 $generator->enableCompression();
@@ -50,7 +57,7 @@ $generator->enableCompression();
 // and your sitemap is out of allowed size (50Mb)
 // according to the standard protocol 50000 urls per sitemap
 // is the maximum allowed value (see http://www.sitemaps.org/protocol.html)
-$generator->setMaxUrlsPerSitemap(50000);
+$generator->setMaxURLsPerSitemap(50000);
 
 // Set the sitemap file name
 $generator->setSitemapFileName("sitemap.xml");

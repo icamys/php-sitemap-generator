@@ -3,3 +3,4 @@ vendor
 coverage
 *.cache
 clover.xml
+.psalm/cache

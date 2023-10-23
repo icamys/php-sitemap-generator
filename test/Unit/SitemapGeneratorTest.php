@@ -16,8 +16,6 @@ class SitemapGeneratorTest extends TestCase
 {
     use PHPMock;
 
-    private $testDomain = 'http://example.com';
-
     /**
      * @var SitemapGenerator
      */
@@ -115,13 +113,13 @@ class SitemapGeneratorTest extends TestCase
     public function testSetMaxURLsPerSitemapLeftOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
-        $this->g->setMaxUrlsPerSitemap(0);
+        $this->g->setMaxURLsPerSitemap(0);
     }
 
     public function testSetMaxURLsPerSitemapRightOutOfRangeException()
     {
         $this->expectException(OutOfRangeException::class);
-        $this->g->setMaxUrlsPerSitemap(50001);
+        $this->g->setMaxURLsPerSitemap(50001);
     }
 
     public function testAddURLWithInvalidChangeFreq()
@@ -187,6 +185,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->flush();
         $this->g->finalize();
 
+        $curlHandle = curl_init();
+
         $this->runtime->expects(self::any())
             ->method('extension_loaded')
             ->with('curl')
@@ -195,7 +195,7 @@ class SitemapGeneratorTest extends TestCase
         $this->runtime->expects(self::any())
             ->method('curl_init')
             ->with(self::anything())
-            ->willReturn(true);
+            ->willReturn($curlHandle);
 
         $this->runtime->expects(self::any())
             ->method('curl_setopt')
@@ -212,6 +212,8 @@ class SitemapGeneratorTest extends TestCase
         $this->g->flush();
         $this->g->finalize();
 
+        $curlHandle = curl_init();
+
         $this->runtime->expects(self::any())
             ->method('extension_loaded')
             ->with('curl')
@@ -220,7 +222,7 @@ class SitemapGeneratorTest extends TestCase
         $this->runtime->expects(self::any())
             ->method('curl_init')
             ->with(self::anything())
-            ->willReturn(true);
+            ->willReturn($curlHandle);
 
         $this->runtime->expects(self::any())
             ->method('curl_setopt')
@@ -236,11 +238,143 @@ class SitemapGeneratorTest extends TestCase
         $this->g->submitSitemap();
     }
 
+    public function robotsContentProvider()
+    {
+        return [
+            'withExistingContent_NoSitemapURL' => [
+                'file_get_contents_return' => 'User-agent: *',
+                'file_exists_return' => true,
+            ],
+            'withExistingContent_WithSitemapURL' => [
+                'file_get_contents_return' => "Sitemap: http://example.com/sitemap.xml\nUser-agent: *",
+                'file_exists_return' => true,
+            ],
+            'withoutExistingContent' => [
+                'file_get_contents_return' => true,
+                'file_exists_return' => true,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider robotsContentProvider
+     */
+    public function testCreateNewRobotsContentFromFile($file_get_contents_return, $file_exists_return)
+    {
+        $this->fs->expects($this->once())
+            ->method('file_get_contents')
+            ->willReturn($file_get_contents_return);
+
+        $this->fs->expects($this->exactly(3))
+            ->method('file_put_contents')
+            ->willReturnCallback(function ($filename, $content, $flags) {
+                $sitemapFilenameMatcher = $this->stringContains('sm-0-');
+                $sitemapContentsHeaderMatcher = $this->stringContains('<?xml version="1.0" encoding="UTF-8"?>');
+                $sitemapContentsCloserMatcher = $this->stringContains('</urlset>');
+                $robotsFilenameMatcher = $this->stringContains('robots.txt');
+                $robotsContentMatcher = $this->stringContains("User-Agent");
+
+                return match ([$filename, $content, $flags]) {
+                    [$sitemapFilenameMatcher, $sitemapContentsHeaderMatcher, FILE_APPEND] => true,
+                    [$sitemapFilenameMatcher, $sitemapContentsCloserMatcher, FILE_APPEND] => true,
+                    [$robotsFilenameMatcher, $robotsContentMatcher, FILE_APPEND] => true,
+                    default => false,
+                };
+            });
+
+        $this->fs->expects($this->once())
+            ->method('file_exists')
+            ->willReturn($file_exists_return);
+
+        $this->g->addURL('/product/', $this->now, 'always', 0.8);
+        $this->g->flush();
+        $this->g->finalize();
+
+        $this->g->updateRobots();
+    }
+
+    public function testCreateNewRobotsContentFromFile_withoutExistingContent()
+    {
+        $this->fs->expects($this->once())
+            ->method('file_get_contents')
+            ->willReturn(true);
+
+        $this->fs->expects($this->exactly(3))
+            ->method('file_put_contents')
+            ->willReturnCallback(function ($filename, $content, $flags) {
+                $sitemapFilenameMatcher = $this->stringContains('sm-0-');
+                $sitemapContentsHeaderMatcher = $this->stringContains('<?xml version="1.0" encoding="UTF-8"?>');
+                $sitemapContentsCloserMatcher = $this->stringContains('</urlset>');
+                $robotsFilenameMatcher = $this->stringContains('robots.txt');
+                $robotsContentMatcher = $this->stringContains("User-Agent");
+
+                return match ([$filename, $content, $flags]) {
+                    [$sitemapFilenameMatcher, $sitemapContentsHeaderMatcher, FILE_APPEND] => true,
+                    [$sitemapFilenameMatcher, $sitemapContentsCloserMatcher, FILE_APPEND] => true,
+                    [$robotsFilenameMatcher, $robotsContentMatcher, FILE_APPEND] => true,
+                    default => false,
+                };
+            });
+
+        $this->fs->expects($this->once())
+            ->method('file_exists')
+            ->willReturn(true);
+
+        $this->g->addURL('/product/', $this->now, 'always', 0.8);
+        $this->g->flush();
+        $this->g->finalize();
+
+        $this->g->updateRobots();
+    }
+
+    public function testCreateNewRobotsContentFromFile_invalidFileGetContentsResponse()
+    {
+        $this->expectExceptionMessage('Failed to read existing robots.txt file: robots.txt');
+
+        $this->fs->expects($this->once())
+            ->method('file_get_contents')
+            ->willReturn(false);
+
+        $this->fs->expects($this->exactly(2))
+            ->method('file_put_contents')
+            ->willReturnCallback(function ($filename, $content, $flags) {
+                $sitemapFilenameMatcher = $this->stringContains('sm-0-');
+                $sitemapContentsHeaderMatcher = $this->stringContains('<?xml version="1.0" encoding="UTF-8"?>');
+                $sitemapContentsCloserMatcher = $this->stringContains('</urlset>');
+
+                return match ([$filename, $content, $flags]) {
+                    [$sitemapFilenameMatcher, $sitemapContentsHeaderMatcher, FILE_APPEND] => true,
+                    [$sitemapFilenameMatcher, $sitemapContentsCloserMatcher, FILE_APPEND] => true,
+                    default => false,
+                };
+            });
+
+        $this->fs->expects($this->once())
+            ->method('file_exists')
+            ->willReturn(true);
+
+        $this->g->addURL('/product/', $this->now, 'always', 0.8);
+        $this->g->flush();
+        $this->g->finalize();
+
+        $this->g->updateRobots();
+    }
+
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
         $this->runtime = $this->createMock(Runtime::class);
-        $this->g = new SitemapGenerator($this->testDomain, '', $this->fs, $this->runtime);
+        $this->runtime
+            ->expects($this->once())
+            ->method('is_writable')
+            ->willReturn(true);
+
+        $config = new Config();
+        $config->setBaseURL('http://example.com');
+        $config->setFS($this->fs);
+        $config->setRuntime($this->runtime);
+
+        $this->g = new SitemapGenerator($config);
         $this->now = new DateTime();
     }
 

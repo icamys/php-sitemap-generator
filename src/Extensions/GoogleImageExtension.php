@@ -11,7 +11,13 @@ class GoogleImageExtension
         'loc',
     ];
 
-    public static function writeImageTag(XMLWriter $xmlWriter, array $extFields)
+    /**
+     * @param XMLWriter $xmlWriter
+     * @param array $extFields
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    public static function writeImageTag(XMLWriter $xmlWriter, array $extFields): void
     {
         self::validate($extFields);
 
@@ -37,6 +43,9 @@ class GoogleImageExtension
         $xmlWriter->endElement();
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function validate($extFields)
     {
         $extFieldNames = array_keys($extFields);
