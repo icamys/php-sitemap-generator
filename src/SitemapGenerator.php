@@ -121,7 +121,7 @@ class SitemapGenerator
      * @access private
      */
     private array $searchEngines = [
-        "http://www.webmaster.yandex.ru/ping?sitemap=",
+        "https://webmaster.yandex.ru/ping?sitemap=",
     ];
     /**
      * Lines for robots.txt file that are written if file does not exist
