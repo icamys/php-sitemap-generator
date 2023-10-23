@@ -648,7 +648,6 @@ class SitemapGeneratorTest extends TestCase
     public function testSubmitValues()
     {
         $submitUrls = [
-            'http://www.google.com/ping?sitemap=https://example.com/sitemap.xml',
             'http://www.webmaster.yandex.ru/ping?sitemap=https://example.com/sitemap.xml',
         ];
         $consecutiveCallUrls = [];

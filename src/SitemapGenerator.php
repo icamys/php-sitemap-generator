@@ -121,7 +121,6 @@ class SitemapGenerator
      * @access private
      */
     private array $searchEngines = [
-        "http://www.google.com/ping?sitemap=",
         "http://www.webmaster.yandex.ru/ping?sitemap=",
     ];
     /**
