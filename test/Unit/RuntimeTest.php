@@ -1,8 +1,9 @@
 <?php
 
-namespace Icamys\SitemapGenerator;
+namespace Unit;
 
 use CurlHandle;
+use Icamys\SitemapGenerator\Runtime;
 use phpmock\phpunit\PHPMock;
 use phpmock\spy\Spy;
 use PHPUnit\Framework\TestCase;
@@ -95,27 +96,29 @@ class RuntimeTest extends TestCase
      */
     protected function setUp(): void
     {
+        $srcNamespace = "Icamys\SitemapGenerator";
+
         $this->curlHandle = curl_init();
         $this->r = new Runtime();
-        $this->extensionLoadedSpy = new Spy(__NAMESPACE__, "extension_loaded", function (){
+        $this->extensionLoadedSpy = new Spy($srcNamespace, "extension_loaded", function (){
             return true;
         });
         $this->extensionLoadedSpy->enable();
-        $this->curlInitSpy = new Spy(__NAMESPACE__, "curl_init", function (){
+        $this->curlInitSpy = new Spy($srcNamespace, "curl_init", function (){
             return $this->curlHandle;
         });
         $this->curlInitSpy->enable();
-        $this->curlSetoptSpy = new Spy(__NAMESPACE__, "curl_setopt", function (){
+        $this->curlSetoptSpy = new Spy($srcNamespace, "curl_setopt", function (){
             return true;
         });
         $this->curlSetoptSpy->enable();
-        $this->curlExecSpy = new Spy(__NAMESPACE__, "curl_exec", function (){
+        $this->curlExecSpy = new Spy($srcNamespace, "curl_exec", function (){
             return "";
         });
         $this->curlExecSpy->enable();
-        $this->curlGetinfoSpy = new Spy(__NAMESPACE__, "curl_getinfo", function (){});
+        $this->curlGetinfoSpy = new Spy($srcNamespace, "curl_getinfo", function (){});
         $this->curlGetinfoSpy->enable();
-        $this->curlErrorSpy = new Spy(__NAMESPACE__, "curl_error", function (){
+        $this->curlErrorSpy = new Spy($srcNamespace, "curl_error", function (){
             return "";
         });
         $this->curlErrorSpy->enable();

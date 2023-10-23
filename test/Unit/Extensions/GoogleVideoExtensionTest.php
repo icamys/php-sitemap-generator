@@ -1,7 +1,10 @@
 <?php
 
+namespace Unit\Extensions;
+
 use Icamys\SitemapGenerator\Extensions\GoogleVideoExtension;
 use PHPUnit\Framework\TestCase;
+use \InvalidArgumentException;
 
 class GoogleVideoExtensionTest extends TestCase
 {

@@ -1,9 +1,19 @@
 <?php
 
+namespace Feature;
+
+use BadMethodCallException;
+use DateTime;
+use DOMDocument;
+use DOMXPath;
+use Exception;
 use Icamys\SitemapGenerator\Config;
 use Icamys\SitemapGenerator\Runtime;
 use Icamys\SitemapGenerator\SitemapGenerator;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use SimpleXMLElement;
 
 class SitemapGeneratorTest extends TestCase
 {
