@@ -27,6 +27,11 @@
   "autoload": {
     "psr-4": {"Icamys\\SitemapGenerator\\": "src/"}
   },
+  "autoload-dev": {
+    "psr-0": {
+      "Icamys\\SitemapGenerator\\Tests\\": "test/"
+    }
+  },
   "require-dev": {
     "phpunit/phpunit": "^9.6",
     "php-mock/php-mock-phpunit": "^2.7",

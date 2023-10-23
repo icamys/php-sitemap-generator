@@ -1,9 +1,13 @@
 <?php
 
-namespace Icamys\SitemapGenerator;
+namespace Unit;
 
 use BadMethodCallException;
 use DateTime;
+use Icamys\SitemapGenerator\Config;
+use Icamys\SitemapGenerator\FileSystem;
+use Icamys\SitemapGenerator\Runtime;
+use Icamys\SitemapGenerator\SitemapGenerator;
 use InvalidArgumentException;
 use OutOfRangeException;
 use phpmock\phpunit\PHPMock;
