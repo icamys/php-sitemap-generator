@@ -852,7 +852,7 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('baking', $video->category);
     }
 
-    public function testGoogleVideoExtensionValidationErrorOnUrlAdd()
+    public function testGoogleVideoExtension_ValidationErrorOnUrlAdd()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: thumbnail_loc, title, description');
@@ -868,7 +868,7 @@ class SitemapGeneratorTest extends TestCase
         $generator->finalize();
     }
 
-    public function testGoogleImageExtension()
+    public function testGoogleImageExtension_WithASingleImage()
     {
         $config = new Config();
         $config->setBaseURL('https://example.com');
@@ -895,15 +895,91 @@ class SitemapGeneratorTest extends TestCase
         $this->assertFileExists($sitemapFilepath);
 
         $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'image', true);
-        $image = $sitemap->children()[0]->children('image', true)->image;
-        $this->assertEquals('https://www.example.com/thumbs/123.jpg', $image->loc);
-        $this->assertEquals('Cat vs Cabbage', $image->title);
-        $this->assertEquals('A funny picture of a cat eating cabbage', $image->caption);
-        $this->assertEquals('Lyon, France', $image->geo_location);
-        $this->assertEquals('https://example.com/image-license', $image->license);
+
+        $image = $sitemap->children()[0]->children('image', true)->image[0];
+        $this->assertEquals($extensions['google_image']['loc'], $image->loc);
+        $this->assertEquals($extensions['google_image']['title'], $image->title);
+        $this->assertEquals($extensions['google_image']['caption'], $image->caption);
+        $this->assertEquals($extensions['google_image']['geo_location'], $image->geo_location);
+        $this->assertEquals($extensions['google_image']['license'], $image->license);
     }
 
-    public function testGoogleImageExtensionValidationErrorOnUrlAdd()
+    public function testGoogleImageExtension_WithMultipleImages()
+    {
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+
+        $generator = new SitemapGenerator($config);
+
+        $extensions = [
+            'google_image' => [
+                [
+                    'loc' => 'https://www.example.com/thumbs/123.jpg',
+                    'title' => 'Cat vs Cabbage',
+                    'caption' => 'A funny picture of a cat eating cabbage',
+                    'geo_location' => 'Lyon, France',
+                    'license' => 'https://example.com/image-license',
+                ],
+                [
+                    'loc' => 'https://www.example.com/thumbs/456.jpg',
+                    'title' => 'Dog vs Carrot',
+                    'caption' => 'A funny picture of a dog eating carrot',
+                    'geo_location' => 'Lyon, France',
+                    'license' => 'https://example.com/image-license',
+                ]
+            ]
+        ];
+
+        $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
+
+        $generator->flush();
+        $generator->finalize();
+
+        $sitemapFilepath = $config->getSaveDirectory() . '/sitemap.xml';
+        $this->assertFileExists($sitemapFilepath);
+
+        $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath), 0, false, 'image', true);
+
+        $imageOne = $sitemap->children()[0]->children('image', true)->image[0];
+        $this->assertEquals($extensions['google_image'][0]['loc'], $imageOne->loc);
+        $this->assertEquals($extensions['google_image'][0]['title'], $imageOne->title);
+        $this->assertEquals($extensions['google_image'][0]['caption'], $imageOne->caption);
+        $this->assertEquals($extensions['google_image'][0]['geo_location'], $imageOne->geo_location);
+        $this->assertEquals($extensions['google_image'][0]['license'], $imageOne->license);
+
+        $imageTwo = $sitemap->children()[0]->children('image', true)->image[1];
+        $this->assertEquals($extensions['google_image'][1]['loc'], $imageTwo->loc);
+        $this->assertEquals($extensions['google_image'][1]['title'], $imageTwo->title);
+        $this->assertEquals($extensions['google_image'][1]['caption'], $imageTwo->caption);
+        $this->assertEquals($extensions['google_image'][1]['geo_location'], $imageTwo->geo_location);
+        $this->assertEquals($extensions['google_image'][1]['license'], $imageTwo->license);
+    }
+
+    public function testGoogleImageExtension_WithTooManyImages()
+    {
+        $this->expectExceptionMessage('Too many images for a single URL. Maximum number of images allowed per page is 1000, got 1001. For more information, see https://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd');
+
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory(sys_get_temp_dir());
+
+        $generator = new SitemapGenerator($config);
+
+        $extensions = [
+            'google_image' => []
+        ];
+
+        for ($i = 0; $i < 1001; $i++) {
+            $extensions['google_image'][] = [
+                'loc' => 'https://www.example.com/thumbs/123.jpg',
+            ];
+        }
+
+        $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
+    }
+
+    public function testGoogleImageExtension_ValidationErrorOnUrlAdd()
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required fields: loc');
@@ -913,7 +989,7 @@ class SitemapGeneratorTest extends TestCase
         $config->setSaveDirectory(sys_get_temp_dir());
 
         $generator = new SitemapGenerator($config);
-        $extensions = ['google_image' => []];
+        $extensions = ['google_image' => ['foo' => 'bar']];
         $generator->addURL("/path/to/page/", null, null, null, null, $extensions);
         $generator->flush();
         $generator->finalize();
