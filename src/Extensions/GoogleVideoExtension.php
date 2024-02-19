@@ -48,7 +48,7 @@ class GoogleVideoExtension
             $xmlWriter->writeElement('video:content_loc', $extFields['content_loc']);
         }
         if (isset($extFields['player_loc'])) {
-            $xmlWriter->writeElement('video:content_loc', $extFields['player_loc']);
+            $xmlWriter->writeElement('video:player_loc', $extFields['player_loc']);
         }
         if (isset($extFields['duration'])) {
             $xmlWriter->writeElement('video:duration', $extFields['duration']);
