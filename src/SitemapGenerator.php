@@ -435,7 +435,9 @@ class SitemapGenerator
             $this->writeSitemapStart();
         }
 
-        $this->writeSitemapUrl($this->baseURL . $path, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
+        $link = preg_match('/^https?:\/\//i', trim($path)) ? $path : $this->baseURL . $path;
+        
+        $this->writeSitemapUrl($link, $lastModified, $changeFrequency, $priority, $alternates, $extensions);
 
         if ($this->totalURLCount % 1000 === 0 || $this->sitemapURLCount >= $this->maxURLsPerSitemap) {
             $this->flushWriter();
