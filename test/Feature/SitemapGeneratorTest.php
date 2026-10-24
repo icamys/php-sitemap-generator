@@ -496,6 +496,44 @@ class SitemapGeneratorTest extends TestCase
         $this->assertEquals('https://example.com/sitemap-index.xml', $generatedFiles['sitemaps_index_url']);
     }
 
+    public function testMultipleSitemapsWhenMaxFileSizeIsReached()
+    {
+        $saveDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sitemap-max-file-size-' . uniqid();
+        mkdir($saveDirectory);
+
+        $config = new Config();
+        $config->setBaseURL('https://example.com');
+        $config->setSaveDirectory($saveDirectory);
+
+        $generator = new SitemapGenerator($config);
+
+        // About 2 KB per URL, so 30000 URLs exceed the 50 MB sitemap file size limit.
+        $urlCount = 30000;
+        $longPath = '/' . str_repeat('a', 2000);
+        for ($i = 0; $i < $urlCount; $i++) {
+            $generator->addURL("$longPath/$i");
+        }
+
+        $generator->flush();
+        $generator->finalize();
+
+        $generatedFiles = $generator->getGeneratedFiles();
+        $this->assertCount(2, $generatedFiles['sitemaps_location']);
+
+        $foundUrlCount = 0;
+        foreach ($generatedFiles['sitemaps_location'] as $sitemapFilepath) {
+            $this->assertLessThanOrEqual(52428800, filesize($sitemapFilepath));
+            $sitemap = new SimpleXMLElement(file_get_contents($sitemapFilepath));
+            $this->assertEquals('urlset', $sitemap->getName());
+            $foundUrlCount += $sitemap->count();
+            unlink($sitemapFilepath);
+        }
+        $this->assertEquals($urlCount, $foundUrlCount);
+
+        unlink($generatedFiles['sitemaps_index_location']);
+        rmdir($saveDirectory);
+    }
+
     public function testMultipleSitemapsWithCustomSitemapIndexName()
     {
         $config = new Config();

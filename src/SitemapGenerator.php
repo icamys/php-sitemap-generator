@@ -208,6 +208,12 @@ class SitemapGenerator
      */
     private int $urlsetClosingTagLen = 10; // strlen("</urlset>\n")
     private int $sitemapURLCount = 0;
+
+    /**
+     * Number of URLs written to the XML writer memory but not yet flushed to disk.
+     * @var int
+     */
+    private int $unflushedURLCount = 0;
     private array $generatedFiles = [];
 
     /**
@@ -541,25 +547,33 @@ class SitemapGenerator
         $this->xmlWriter->endElement(); // url
         $this->sitemapURLCount++;
         $this->totalURLCount++;
+        $this->unflushedURLCount++;
     }
 
     private function flushWriter(): void
     {
-        $targetSitemapFilepath = $this->saveDirectory . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $flushedString = $this->xmlWriter->outputMemory();
-        $flushedStringLen = mb_strlen($flushedString);
+        $flushedStringLen = strlen($flushedString);
 
         if ($flushedStringLen === 0) {
             return;
         }
 
-        $this->flushedSitemapSize += $flushedStringLen;
-
-        if ($this->flushedSitemapSize > self::MAX_FILE_SIZE - $this->urlsetClosingTagLen) {
+        // If the pending URLs do not fit into the current sitemap, close it and move them to a new one.
+        if ($this->flushedSitemapSize > 0
+            && $this->flushedSitemapSize + $flushedStringLen > self::MAX_FILE_SIZE - $this->urlsetClosingTagLen) {
             $this->writeSitemapEnd();
             $this->writeSitemapStart();
+            $this->xmlWriter->writeRaw(''); // closes the pending <urlset> start tag
+            $flushedString = $this->xmlWriter->outputMemory() . $flushedString;
+            $flushedStringLen = strlen($flushedString);
+            $this->sitemapURLCount = $this->unflushedURLCount;
         }
+
+        $targetSitemapFilepath = $this->saveDirectory . sprintf($this->flushedSitemapFilenameFormat, $this->flushedSitemapCounter);
         $this->fs->file_put_contents($targetSitemapFilepath, $flushedString, FILE_APPEND);
+        $this->flushedSitemapSize += $flushedStringLen;
+        $this->unflushedURLCount = 0;
     }
 
     private function writeSitemapEnd(): void
