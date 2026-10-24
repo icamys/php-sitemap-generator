@@ -35,8 +35,9 @@ class GoogleVideoExtension
      * @return void
      * @throws InvalidArgumentException
      */
-    public static function writeVideoTag(XMLWriter $xmlWriter, string $loc, array $extFields): void
-    {
+	//   Write the validated video fields as sitemap XML.
+	//   Used by SitemapGenerator\writeSitemapUrl, GoogleVideoUploaderTest\testUploaderTextRoundTrips.
+	public static function writeVideoTag(XMLWriter $xmlWriter, string $loc, array $extFields): void {
         self::validate($loc, $extFields);
 
         $xmlWriter->startElement('video:video');
@@ -106,7 +107,9 @@ class GoogleVideoExtension
             if (isset($extFields['uploader']['info'])) {
                 $xmlWriter->writeAttribute('info', $extFields['uploader']['info']);
             }
-            $xmlWriter->writeRaw($extFields['uploader']['value']);
+
+			// Preserve the uploader name as text, including XML metacharacters.
+			$xmlWriter->text($extFields['uploader']['value']);
             $xmlWriter->endElement();
         }
         if (isset($extFields['live'])) {
