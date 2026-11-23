@@ -364,6 +364,43 @@ class SitemapGeneratorTest extends TestCase
         $this->g->updateRobots();
     }
 
+    public function robotsLineEndingProvider()
+    {
+        return [
+            'LF' => ["\n"],
+            'CRLF' => ["\r\n"],
+            'CR' => ["\r"],
+        ];
+    }
+
+    /**
+     * @dataProvider robotsLineEndingProvider
+     * @throws ReflectionException
+     */
+    public function testCreateNewRobotsContentFromFileReplacesSitemapWithAnyLineEnding(string $eol)
+    {
+        $existingContent = "User-agent: *{$eol}Sitemap: http://example.com/old-sitemap.xml{$eol}Disallow: /private";
+
+        $this->fs->expects($this->once())
+            ->method('file_exists')
+            ->willReturn(true);
+
+        $this->fs->expects($this->once())
+            ->method('file_get_contents')
+            ->willReturn($existingContent);
+
+        $generatedFiles = new \ReflectionProperty(SitemapGenerator::class, 'generatedFiles');
+        $generatedFiles->setAccessible(true);
+        $generatedFiles->setValue($this->g, ['sitemaps_index_url' => 'http://example.com/sitemap.xml']);
+
+        $newContent = $this->invokeMethod($this->g, 'createNewRobotsContentFromFile', ['robots.txt']);
+
+        $this->assertSame(
+            "User-agent: *{$eol}Disallow: /private{$eol}Sitemap: http://example.com/sitemap.xml",
+            $newContent
+        );
+    }
+
     protected function setUp(): void
     {
         $this->fs = $this->createMock(FileSystem::class);
