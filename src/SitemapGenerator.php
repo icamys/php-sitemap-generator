@@ -781,8 +781,14 @@ class SitemapGenerator
             if (is_bool($existingContent) && !$existingContent) {
                 throw new RuntimeException("Failed to read existing robots.txt file: $filepath");
             }
+            $lineEnding = PHP_EOL;
             if (is_string($existingContent)) {
-                $contentLines = explode(PHP_EOL, $existingContent);
+                // Split on any line ending, as the file may have been written on another OS
+                $contentLines = preg_split('/\r\n|\r|\n/', $existingContent);
+                // Keep the line ending already used by the file
+                if (preg_match('/\r\n|\r|\n/', $existingContent, $lineEndingMatch)) {
+                    $lineEnding = $lineEndingMatch[0];
+                }
             } else {
                 $contentLines = [];
             }
@@ -791,7 +797,7 @@ class SitemapGenerator
                 if (str_starts_with($line, 'Sitemap:')) {
                     unset($contentLines[$key]);
                 } else {
-                    $newContent .= $line . PHP_EOL;
+                    $newContent .= $line . $lineEnding;
                 }
             }
         } else {
